@@ -1,0 +1,14 @@
+{
+  "OptionsExchange": {
+    "42":"0xef1029a23cbaf78823a89b4f793c293163a65fcb"
+  },
+  "CreditToken": {
+    "42":"0x286e5ce4c2231279750aa79eff7c097f85e309e9"
+  },
+  "LinearLiquidityPool": {
+    "42":"0x5e40a65621d14102e2fa532694bcd640bdd53cfb"
+  },
+  "FakeCoin": {
+    "42":"0xdd831B3a8D411129e423C9457a110f984e0f2A61"
+  }
+}
