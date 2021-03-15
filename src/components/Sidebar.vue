@@ -26,7 +26,7 @@
       <!-- END Nav Item - Main Page -->
 
       <!-- Nav Item - Invest -->
-      <router-link to="/invest" style="text-decoration: none">
+      <router-link to="/invest" style="text-decoration: none" v-if="isUserConnected">
         <li class="nav-item" :class="{active:this.$route.name === 'invest'}">
             <a class="nav-link" href="/invest">
                 <i class="fas fa-fw fa-wallet"></i>
@@ -36,7 +36,7 @@
       <!-- END Nav Item - Invest -->
 
       <!-- Nav Item - Profile -->
-      <router-link to="/profile" style="text-decoration: none">
+      <router-link to="/profile" style="text-decoration: none" v-if="isUserConnected">
         <li class="nav-item" :class="{active:this.$route.name === 'profile'}">
             <a class="nav-link" href="/profile">
                 <i class="fas fa-fw fa-user"></i>

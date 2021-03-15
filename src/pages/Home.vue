@@ -11,16 +11,31 @@
     <p v-if="isUserConnected">
       <strong>Your current chain:</strong> {{getChainName}}
     </p>
+
+    <p v-if="!isUserConnected">
+      <strong>Please connect your Ethereum wallet.</strong>
+
+      <br>
+
+      <button type="button" class="btn btn-success mt-3" @click="connectWeb3Modal">Connect wallet</button>
+    </p>
   </div>
 </template>
 
 <script>
-import { mapGetters } from "vuex";
+import { mapGetters, mapActions } from "vuex";
 
 export default {
   name: "Home",
   computed: {
     ...mapGetters("accounts", ["getChainName", "isUserConnected"]),
   },
+  created() {
+    this.$store.dispatch("accounts/initWeb3Modal");
+    this.$store.dispatch("accounts/ethereumListener");
+  },
+  methods: {
+    ...mapActions("accounts", ["connectWeb3Modal"]),
+  }
 }
 </script>

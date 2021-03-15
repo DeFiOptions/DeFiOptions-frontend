@@ -2,6 +2,7 @@ import Web3Modal from "web3modal";
 import Web3 from "web3";
 import BurnerConnectProvider from "@burner-wallet/burner-connect-provider";
 import Authereum from "authereum";
+import router from '@/router';
 
 const state = {
   activeAccount: null,
@@ -137,7 +138,8 @@ const mutations = {
     state.providerW3m = null;
     await state.web3Modal.clearCachedProvider();
 
-    window.location.href = '../'; // redirect to the Main page
+    // window.location.href = '../'; // redirect to the Main page
+    router.push({ name: 'home'});
   },
 
   setActiveAccount(state, selectedAddress) {
