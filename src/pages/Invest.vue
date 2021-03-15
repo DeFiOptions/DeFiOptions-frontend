@@ -67,7 +67,7 @@ export default {
   },
   created() {
     if (!this.getWeb3 || !this.isUserConnected) {
-      document.location.href="/";
+      this.$router.push({ name: 'home'});
     }
 
     this.$store.dispatch("optionsExchange/fetchContract");

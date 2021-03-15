@@ -1,7 +1,33 @@
 # DeFiOptions Vue.js front-end
 
-npm install
+GH Pages: 
 
+### Install npm packages
+
+```bash
+npm install
+```
+
+### Run the web app
+
+```bash
 npm run serve
+```
 
 (Make sure your network is set to Kovan.)
+
+### Deploy to GitHub Pages
+
+```bash
+npm run build
+
+cd dist/
+
+git init
+
+git add -A
+
+git commit -m "deployment to GH Pages"
+
+git push -f git@github.com:remote-gildor/DeFiOptions-frontend.git master:gh-pages
+```
