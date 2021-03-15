@@ -19,6 +19,9 @@
                 <p>{{ getActiveAccount }}</p>
                 <p><strong>Your ETH balance:</strong> {{ Number(getActiveBalanceEth).toFixed(4) }} ETH</p>
                 <p><strong>Your Exchange balance:</strong> {{ Number(getExchangeUserBalance).toFixed(4) }} ???</p>
+                <p><strong>Your Fakecoin balance:</strong> {{ Number(getUserFakecoinBalance).toFixed(2) }} fkUSD</p>
+
+                <button type="button" class="btn btn-success btn-user btn-block mt-3" @click="addFakecoinToMetaMask">Add Fakecoin to MetaMask</button>
 
               </div>
             </div>
@@ -69,7 +72,7 @@ export default {
   computed: {
     ...mapGetters("accounts", ["getActiveAccount", "getActiveBalanceEth", "getWeb3", "isUserConnected"]),
     ...mapGetters("optionsExchange", ["getExchangeUserBalance"]),
-    ...mapGetters("fakecoin", ["getFakecoinContract"])
+    ...mapGetters("fakecoin", ["getFakecoinContract", "getUserFakecoinBalance"])
   },
   created() {
     if (!this.getWeb3 || !this.isUserConnected) {
@@ -78,6 +81,7 @@ export default {
 
     this.$store.dispatch("optionsExchange/fetchContract");
     this.$store.dispatch("fakecoin/fetchContract");
+    this.$store.dispatch("fakecoin/fetchUserBalance");
 
     this.$store.dispatch("optionsExchange/fetchExchangeUserBalance");
   },
@@ -95,6 +99,20 @@ export default {
 
       await this.getFakecoinContract.methods.issue(this.getActiveAccount, tokensWei).send({
         from: this.getActiveAccount
+      });
+    },
+    async addFakecoinToMetaMask() {
+      await window.ethereum.request({
+        method: 'wallet_watchAsset',
+        params: {
+          type: 'ERC20', // Initially only supports ERC20, but eventually more!
+          options: {
+            address: this.getFakecoinContract._address, // The address that the token is at.
+            symbol: "fkUSD", // A ticker symbol or shorthand, up to 5 chars.
+            decimals: 18, // The number of decimals in the token
+            image: "", // TODO: A string url of the token logo
+          },
+        },
       });
     }
   }

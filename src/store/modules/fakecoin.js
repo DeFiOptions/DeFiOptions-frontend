@@ -6,7 +6,8 @@ const ContractName = "FakeCoin";
 const state = {
   abi: null,
   address: null,
-  contract: null
+  contract: null,
+  userBalance: null
 };
 
 const getters = {
@@ -18,6 +19,9 @@ const getters = {
   },
   getFakecoinContract(state) {
     return state.contract;
+  },
+  getUserFakecoinBalance(state) {
+    return state.userBalance;
   }
 };
 
@@ -28,6 +32,19 @@ const actions = {
     let address = addresses[ContractName][chainIdDec];
     let contract = new web3.eth.Contract(ContractJson.abi, address);
     commit("setContract", contract);
+  },
+  async fetchUserBalance({ commit, state, rootState }) {
+    if (!state.contract) {
+      this.fetchContract();
+    }
+
+    let address = rootState.accounts.activeAccount;
+    let balanceWei = await state.contract.methods.balanceOf(address).call();
+
+    let web3 = rootState.accounts.web3;
+    let balance = web3.utils.fromWei(balanceWei, "ether");
+
+    commit("setUserBalance", balance);
   },
   storeAbi({commit}) {
     commit("setAbi", ContractJson.abi);
@@ -47,6 +64,9 @@ const mutations = {
   },
   setContract(state, _contract) {
     state.contract = _contract;
+  },
+  setUserBalance(state, balance) {
+    state.userBalance = balance;
   }
 };
 

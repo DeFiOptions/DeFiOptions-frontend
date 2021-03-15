@@ -59,7 +59,8 @@ const actions = {
       this.fetchContract();
     }
 
-    let address = "0x5E40A65621D14102e2fA532694BcD640Bdd53CFb"; // hardcoded for now
+    let chainIdDec = parseInt(rootState.accounts.chainId);
+    let address = addresses["LinearLiquidityPool"][chainIdDec];
     let balanceWei = await state.contract.methods.balanceOf(address).call();
 
     let web3 = rootState.accounts.web3;
