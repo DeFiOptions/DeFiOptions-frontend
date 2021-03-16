@@ -69,8 +69,14 @@ const actions = {
       providerOptions // required
     });
 
-    // This will get deprecated soon. Setting it to false removes a warning from the console.
-    window.ethereum.autoRefreshOnNetworkChange = false;
+    
+    try {
+      // This setting will get deprecated soon. Setting it to false removes a warning from the console.
+      window.ethereum.autoRefreshOnNetworkChange = false;
+    }
+    catch(err) {
+      console.log(err.message);
+    }
 
     // if the user is flagged as already connected, automatically connect back to Web3Modal
     if (localStorage.getItem('isConnected') === "true") {
@@ -103,19 +109,29 @@ const actions = {
 
   async ethereumListener({ commit }) {
 
-    window.ethereum.on('accountsChanged', (accounts) => {
-      if (state.isConnected) {
-        commit("setActiveAccount", accounts[0]);
+    try {
+      window.ethereum.on('accountsChanged', (accounts) => {
+        if (state.isConnected) {
+          commit("setActiveAccount", accounts[0]);
+          commit("setWeb3Provider", state.providerW3m);
+          actions.fetchActiveBalance({ commit });
+        }
+      });
+    }
+    catch(err) {
+      console.log(err.message);
+    }
+
+    try {
+      window.ethereum.on('chainChanged', (chainId) => {
+        commit("setChainData", chainId);
         commit("setWeb3Provider", state.providerW3m);
         actions.fetchActiveBalance({ commit });
-      }
-    });
-
-    window.ethereum.on('chainChanged', (chainId) => {
-      commit("setChainData", chainId);
-      commit("setWeb3Provider", state.providerW3m);
-      actions.fetchActiveBalance({ commit });
-    });
+      });
+    }
+    catch(err) {
+      console.log(err.message);
+    }
 
   },
 
