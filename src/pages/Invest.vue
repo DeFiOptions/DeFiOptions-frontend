@@ -131,7 +131,7 @@ export default {
       let component = this;
       let tokensWei = this.getWeb3.utils.toWei(this.depositValue, "ether");
 
-      if (this.allowanceWei < tokensWei) {
+      if (Number(this.allowanceWei) < Number(tokensWei)) {
 
         // call the approve method to increase the allowance
         await this.getFakecoinContract.methods.approve(this.getLiquidityPoolAddress, tokensWei).send({
@@ -159,7 +159,7 @@ export default {
 
               // success
               if (event) {
-                component.$toast.success("Approval was successfull. Please make a deposit now.");
+                component.$toast.success("Approval was successful. Please make a deposit now.");
 
                 // refresh values
                 component.checkFakecoinAllowance();

@@ -1,6 +1,6 @@
 # DeFiOptions Vue.js front-end
 
-GH Pages: 
+GH Pages: https://remote-gildor.github.io/DeFiOptions-frontend/ 
 
 ### Install npm packages
 

@@ -85,6 +85,7 @@ export default {
     this.$store.dispatch("fakecoin/fetchContract");
     this.$store.dispatch("fakecoin/fetchUserBalance");
     this.$store.dispatch("optionsExchange/fetchExchangeUserBalance");
+    this.$store.dispatch("accounts/fetchActiveBalance");
   },
   data() {
     return {
@@ -127,6 +128,9 @@ export default {
               component.$store.dispatch("fakecoin/fetchUserBalance"); // refresh the user's fakecoin balance
               component.ctValue = null;
             }
+
+            // Refresh the ETH balance no matter if the tx was successful or not
+            component.$store.dispatch("accounts/fetchActiveBalance");
           });
         }
       });
