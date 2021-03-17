@@ -60,12 +60,16 @@
                           <input type="text" v-model="depositValue" class="form-control form-control-user"
                               placeholder="Enter the amount to deposit">
                           
-                          <small>Your balance: {{ Number(getUserFakecoinBalance).toFixed(2) }} fkUSD</small>
+                          <small>
+                            Your fakecoin balance: {{ Number(getUserFakecoinBalance).toFixed(2) }} fkUSD
+                            (allowance: {{Number(allowance).toFixed(2)}} fkUSD)
+                          </small>
                       </div>
-                      <button v-if="allowanceWei < depositValue" class="btn btn-success btn-block">Approve fkUSD</button>
-                      <button v-if="allowanceWei >= depositValue" :disabled="depositValue == null || depositValue == 0" class="btn btn-primary btn-block">Deposit fkUSD</button>
 
-                      <span v-if="allowanceWei < depositValue">
+                      <button v-if="Number(allowance) < Number(depositValue)" class="btn btn-success btn-block">Approve fkUSD</button>
+                      <button v-if="Number(allowance) >= Number(depositValue)" :disabled="depositValue == null || Number(depositValue) == 0" class="btn btn-primary btn-block">Deposit fkUSD</button>
+
+                      <span v-if="Number(allowance) < Number(depositValue)">
                         <small>
                           (Two transactions are needed: 1. Approval, 2. Deposit)
                         </small>
@@ -90,7 +94,7 @@ export default {
   computed: {
     ...mapGetters("accounts", ["getChainName", "isUserConnected", "getActiveAccount", "getWeb3"]),
     ...mapGetters("accounts", ["getActiveAccount", "getActiveBalanceEth"]),
-    ...mapGetters("optionsExchange", ["getExchangeUserBalance", "getLiquidityPoolBalance"]),
+    ...mapGetters("optionsExchange", ["getLiquidityPoolBalance"]),
     ...mapGetters("liquidityPool", ["getApy", "getLiquidityPoolContract", "getLiquidityPoolAddress"]),
     ...mapGetters("fakecoin", ["getFakecoinAddress", "getUserFakecoinBalance", "getFakecoinContract"])
   },
@@ -102,9 +106,8 @@ export default {
     this.$store.dispatch("optionsExchange/fetchContract");
     this.$store.dispatch("liquidityPool/fetchContract");
     this.$store.dispatch("fakecoin/fetchContract");
-    this.$store.dispatch("fakecoin/fetchContract");
+    this.$store.dispatch("fakecoin/fetchUserBalance");
     this.$store.dispatch("fakecoin/storeAddress");
-    this.$store.dispatch("optionsExchange/fetchExchangeUserBalance");
     this.$store.dispatch("optionsExchange/fetchLiquidityPoolBalance");
     this.$store.dispatch("liquidityPool/fetchApy");
     this.$store.dispatch("liquidityPool/storeAddress");
@@ -114,27 +117,93 @@ export default {
   data() {
     return {
       depositValue: null,
-      allowanceWei: null
+      allowanceWei: null,
+      allowance: null
     }
   },
   methods: {
     async checkFakecoinAllowance() {
       // check current allowance size
       this.allowanceWei = await this.getFakecoinContract.methods.allowance(this.getActiveAccount, this.getLiquidityPoolAddress).call();
-      window.console.log("this.allowanceWei", this.allowanceWei);
+      this.allowance = this.getWeb3.utils.fromWei(this.allowanceWei, "ether");
     },
     async depositIntoPool() {
+      let component = this;
       let tokensWei = this.getWeb3.utils.toWei(this.depositValue, "ether");
 
       if (this.allowanceWei < tokensWei) {
+
         // call the approve method to increase the allowance
         await this.getFakecoinContract.methods.approve(this.getLiquidityPoolAddress, tokensWei).send({
           from: this.getActiveAccount
+        }, function(error, hash) {
+
+          // Approval tx error
+          if (error) {
+            component.$toast.error("The transaction has been rejected. Please try again.");
+          }
+
+          // Approval transaction sent
+          if (hash) {
+            // show a "tx submitted" toast
+            component.$toast.info("The Approval transaction has been submitted. Please wait for it to be confirmed.");
+
+            // listen for the Approval event
+            component.getFakecoinContract.once("Approval", {
+              filter: { owner: component.getActiveAccount }
+            }, function(error, event) {
+              // failed transaction
+              if (error) {
+                component.$toast.error("The Approval transaction has failed. Please try again, perhaps with a higher gas limit.");
+              }
+
+              // success
+              if (event) {
+                component.$toast.success("Approval was successfull. Please make a deposit now.");
+
+                // refresh values
+                component.checkFakecoinAllowance();
+                component.$store.dispatch("fakecoin/fetchUserBalance"); // refresh the user's fakecoin balance
+              }
+            });
+          }
         });
+
       } else {
         // make a deposit
         await this.getLiquidityPoolContract.methods.depositTokens(this.getActiveAccount, this.getFakecoinAddress, tokensWei).send({
           from: this.getActiveAccount
+        }, function(error, hash) {
+          // Deposit tx error
+          if (error) {
+            component.$toast.error("The transaction has been rejected. Please try again.");
+          }
+
+          // Deposit transaction sent
+          if (hash) {
+            // show a "tx submitted" toast
+            component.$toast.info("The Deposit transaction has been submitted. Please wait for it to be confirmed.");
+
+            // listen for the Transfer event
+            component.getFakecoinContract.once("Transfer", {
+              filter: { owner: component.getActiveAccount }
+            }, function(error, event) {
+              // failed transaction
+              if (error) {
+                component.$toast.error("The Deposit transaction has failed. Please try again, perhaps with a higher gas limit.");
+              }
+
+              // success
+              if (event) {
+                component.$toast.success("Your deposit was successfull.");
+
+                // refresh values
+                component.checkFakecoinAllowance();
+                component.$store.dispatch("fakecoin/fetchUserBalance");
+                component.$store.dispatch("optionsExchange/fetchLiquidityPoolBalance");
+              }
+            });
+          }
         });
       }
     }

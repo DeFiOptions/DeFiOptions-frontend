@@ -19,7 +19,7 @@
                 <Gravatar v-if="getActiveAccount" class="img-fluid mb-3" :email="getActiveAccount" default-img="robohash" :size=150 />
               
                 <p><strong>Your ETH balance:</strong> {{ Number(getActiveBalanceEth).toFixed(4) }} ETH</p>
-                <p><strong>Your Exchange balance:</strong> {{ Number(getExchangeUserBalance).toFixed(4) }} fkUSD</p>
+                <p><strong>Your Exchange balance:</strong> {{ Number(getExchangeUserBalance).toFixed(2) }} fkUSD</p>
                 <p><strong>Your Fakecoin balance:</strong> {{ Number(getUserFakecoinBalance).toFixed(2) }} fkUSD</p>
 
                 <button type="button" class="btn btn-success btn-user btn-block mt-3" @click="addFakecoinToMetaMask">Add Fakecoin to MetaMask</button>
@@ -57,7 +57,7 @@
       </div>
 
     </div>
-    
+
   </div>
 </template>
 
@@ -84,7 +84,6 @@ export default {
     this.$store.dispatch("optionsExchange/fetchContract");
     this.$store.dispatch("fakecoin/fetchContract");
     this.$store.dispatch("fakecoin/fetchUserBalance");
-
     this.$store.dispatch("optionsExchange/fetchExchangeUserBalance");
   },
   data() {
@@ -101,48 +100,30 @@ export default {
         from: this.getActiveAccount
       }, function(error, hash) {
         if (error) {
-          // show an error toast
-          component.$toasted.show('The transaction has been rejected. Please try again.', {
-            type: 'error',
-            duration: 9000,
-            theme: "bubble",
-            position: "top-center"
+          component.$toast.error("The transaction has been rejected. Please try again.", {
+              timeout: 5000
           });
         }
 
         if (hash) {
           // show a "tx submitted" toast
-          component.$toasted.show('The transaction has been submitted. Please wait for it to be confirmed.', {
-            type: 'success',
-            duration: 9000,
-            theme: "bubble",
-            position: "top-center"
-          });
+          component.$toast.info("The transaction has been submitted. Please wait for it to be confirmed.");
 
           // listen for the Transfer event
           component.getFakecoinContract.once("Transfer", {
             filter: { owner: component.getActiveAccount }
           }, function(error, event) {
             // failed transaction
+            
             if (error) {
-              component.$toasted.show('The Fakecoin issue transaction has failed. Please try again, perhaps with a higher gas limit.', {
-                type: 'error',
-                duration: 9000,
-                theme: "bubble",
-                position: "top-center"
-              });
+              component.$toast.error("The Fakecoin issue transaction has failed. Please try again, perhaps with a higher gas limit.");
             }
 
             // success
             if (event) {
-              component.$toasted.show('You have successfully issued yourself fakecoins! Now go and spend it :)', {
-                type: 'success',
-                duration: 9000,
-                theme: "bubble",
-                position: "top-center"
-              });
+              component.$toast.success("You have successfully issued yourself fakecoins! Now go and spend it :)");
 
-              // TODO
+              // Refresh values
               component.$store.dispatch("fakecoin/fetchUserBalance"); // refresh the user's fakecoin balance
               component.ctValue = null;
             }
