@@ -94,13 +94,60 @@ export default {
   },
   methods: {
     async getFakeUsd() {
-      window.console.log("ctValue:", this.ctValue);
+      let component = this;
       let tokensWei = this.getWeb3.utils.toWei(this.ctValue, "ether");
-
-      window.console.log("ctValue WEI:", tokensWei);
 
       await this.getFakecoinContract.methods.issue(this.getActiveAccount, tokensWei).send({
         from: this.getActiveAccount
+      }, function(error, hash) {
+        if (error) {
+          // show an error toast
+          component.$toasted.show('The transaction has been rejected. Please try again.', {
+            type: 'error',
+            duration: 9000,
+            theme: "bubble",
+            position: "top-center"
+          });
+        }
+
+        if (hash) {
+          // show a "tx submitted" toast
+          component.$toasted.show('The transaction has been submitted. Please wait for it to be confirmed.', {
+            type: 'success',
+            duration: 9000,
+            theme: "bubble",
+            position: "top-center"
+          });
+
+          // listen for the Transfer event
+          component.getFakecoinContract.once("Transfer", {
+            filter: { owner: component.getActiveAccount }
+          }, function(error, event) {
+            // failed transaction
+            if (error) {
+              component.$toasted.show('The Fakecoin issue transaction has failed. Please try again, perhaps with a higher gas limit.', {
+                type: 'error',
+                duration: 9000,
+                theme: "bubble",
+                position: "top-center"
+              });
+            }
+
+            // success
+            if (event) {
+              component.$toasted.show('You have successfully issued yourself fakecoins! Now go and spend it :)', {
+                type: 'success',
+                duration: 9000,
+                theme: "bubble",
+                position: "top-center"
+              });
+
+              // TODO
+              component.$store.dispatch("fakecoin/fetchUserBalance"); // refresh the user's fakecoin balance
+              component.ctValue = null;
+            }
+          });
+        }
       });
     },
     async addFakecoinToMetaMask() {
