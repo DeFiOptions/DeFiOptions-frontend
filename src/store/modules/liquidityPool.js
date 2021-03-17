@@ -27,11 +27,7 @@ const actions = {
   async fetchContract({ commit, rootState }) {
     let web3 = rootState.accounts.web3;
     let chainIdDec = parseInt(rootState.accounts.chainId);
-
     let address = addresses.LinearLiquidityPool[chainIdDec];
-
-    console.log("LiquidityPool address:", address);
-
     let contract = new web3.eth.Contract(LiquidityPool.abi, address);
     commit("setContract", contract);
   },

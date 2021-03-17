@@ -9,16 +9,17 @@
     <!-- Outer Row -->
     <div class="row justify-content-center">
 
-      <div class="col-lg-6">
-        <div class="card o-hidden border-0 shadow-lg my-5">
+      <div class="col-md-6">
+        <div class="card o-hidden border-0 shadow-lg mt-2">
           <div class="card-body p-0">
             <div class="p-5">
               <div class="text-center">
-                <Gravatar v-if="getActiveAccount" class="img-fluid" :email="getActiveAccount" default-img="robohash" :size=200 />
+                <h2 class="h4 text-gray-900 mb-2">{{ getActiveAccount }}</h2>
+
+                <Gravatar v-if="getActiveAccount" class="img-fluid mb-3" :email="getActiveAccount" default-img="robohash" :size=150 />
               
-                <p>{{ getActiveAccount }}</p>
                 <p><strong>Your ETH balance:</strong> {{ Number(getActiveBalanceEth).toFixed(4) }} ETH</p>
-                <p><strong>Your Exchange balance:</strong> {{ Number(getExchangeUserBalance).toFixed(4) }} ???</p>
+                <p><strong>Your Exchange balance:</strong> {{ Number(getExchangeUserBalance).toFixed(4) }} fkUSD</p>
                 <p><strong>Your Fakecoin balance:</strong> {{ Number(getUserFakecoinBalance).toFixed(2) }} fkUSD</p>
 
                 <button type="button" class="btn btn-success btn-user btn-block mt-3" @click="addFakecoinToMetaMask">Add Fakecoin to MetaMask</button>
@@ -30,18 +31,18 @@
       </div>
 
       <div class="col-md-6">
-          <div class="card o-hidden border-0 shadow-lg my-5">
+          <div class="card o-hidden border-0 shadow-lg mt-2">
               <div class="card-body p-0">
                   <div class="p-5">
                     <div class="text-center">
-                        <h1 class="h4 text-gray-900 mb-2">Get yourself some fake USD</h1>
+                        <h2 class="h4 text-gray-900 mb-2">Get yourself some fake USD</h2>
                         <p class="mb-4">
                           This is for a testnet only. You'll need some fake stablecoin tokens and here's where you 
                           can mint them.
                         </p>
                     </div>
 
-                    <form class="user" @submit.prevent="getFakeUsd">
+                    <form @submit.prevent="getFakeUsd">
                         <div class="form-group">
                             <input type="text" v-model="ctValue" class="form-control form-control-user"
                                 placeholder="Enter the amount of fake USD">

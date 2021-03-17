@@ -31,13 +31,7 @@ const actions = {
   async fetchContract({ commit, rootState }) {
     let web3 = rootState.accounts.web3;
     let chainIdDec = parseInt(rootState.accounts.chainId);
-
-    console.log("chainIdDec:", chainIdDec);
-
     let address = addresses.OptionsExchange[chainIdDec];
-
-    console.log("OptionsExchange address:", address);
-
     let contract = new web3.eth.Contract(OptionsExchange.abi, address);
     commit("setContract", contract);
   },

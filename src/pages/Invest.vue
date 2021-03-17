@@ -46,6 +46,35 @@
           </div>
       </div>
     </div>
+
+    <div class="col-xl-6">
+        <div class="card o-hidden border-0 shadow-lg">
+            <div class="card-body p-0">
+                <div class="p-5">
+                  <div class="text-center">
+                      <h2 class="h4 text-gray-900 mb-2">Deposit funds in the liquidity pool</h2>
+                  </div>
+
+                  <form @submit.prevent="depositIntoPool" class="mt-3">
+                      <div class="form-group">
+                          <input type="text" v-model="depositValue" class="form-control form-control-user"
+                              placeholder="Enter the amount to deposit">
+                          
+                          <small>Your balance: {{ Number(getUserFakecoinBalance).toFixed(2) }} fkUSD</small>
+                      </div>
+                      <button v-if="allowanceWei < depositValue" class="btn btn-success btn-block">Approve fkUSD</button>
+                      <button v-if="allowanceWei >= depositValue" :disabled="depositValue == null || depositValue == 0" class="btn btn-primary btn-block">Deposit fkUSD</button>
+
+                      <span v-if="allowanceWei < depositValue">
+                        <small>
+                          (Two transactions are needed: 1. Approval, 2. Deposit)
+                        </small>
+                      </span>
+                  </form>
+              </div>
+            </div>
+        </div>
+    </div>
     
   </div>
 </template>
@@ -62,7 +91,8 @@ export default {
     ...mapGetters("accounts", ["getChainName", "isUserConnected", "getActiveAccount", "getWeb3"]),
     ...mapGetters("accounts", ["getActiveAccount", "getActiveBalanceEth"]),
     ...mapGetters("optionsExchange", ["getExchangeUserBalance", "getLiquidityPoolBalance"]),
-    ...mapGetters("liquidityPool", ["getApy"]),
+    ...mapGetters("liquidityPool", ["getApy", "getLiquidityPoolContract", "getLiquidityPoolAddress"]),
+    ...mapGetters("fakecoin", ["getFakecoinAddress", "getUserFakecoinBalance", "getFakecoinContract"])
   },
   created() {
     if (!this.getWeb3 || !this.isUserConnected) {
@@ -71,9 +101,43 @@ export default {
 
     this.$store.dispatch("optionsExchange/fetchContract");
     this.$store.dispatch("liquidityPool/fetchContract");
+    this.$store.dispatch("fakecoin/fetchContract");
+    this.$store.dispatch("fakecoin/fetchContract");
+    this.$store.dispatch("fakecoin/storeAddress");
     this.$store.dispatch("optionsExchange/fetchExchangeUserBalance");
     this.$store.dispatch("optionsExchange/fetchLiquidityPoolBalance");
     this.$store.dispatch("liquidityPool/fetchApy");
+    this.$store.dispatch("liquidityPool/storeAddress");
+
+    this.checkFakecoinAllowance();
+  },
+  data() {
+    return {
+      depositValue: null,
+      allowanceWei: null
+    }
+  },
+  methods: {
+    async checkFakecoinAllowance() {
+      // check current allowance size
+      this.allowanceWei = await this.getFakecoinContract.methods.allowance(this.getActiveAccount, this.getLiquidityPoolAddress).call();
+      window.console.log("this.allowanceWei", this.allowanceWei);
+    },
+    async depositIntoPool() {
+      let tokensWei = this.getWeb3.utils.toWei(this.depositValue, "ether");
+
+      if (this.allowanceWei < tokensWei) {
+        // call the approve method to increase the allowance
+        await this.getFakecoinContract.methods.approve(this.getLiquidityPoolAddress, tokensWei).send({
+          from: this.getActiveAccount
+        });
+      } else {
+        // make a deposit
+        await this.getLiquidityPoolContract.methods.depositTokens(this.getActiveAccount, this.getFakecoinAddress, tokensWei).send({
+          from: this.getActiveAccount
+        });
+      }
+    }
   }
 }
 </script>
