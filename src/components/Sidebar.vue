@@ -25,6 +25,16 @@
       </router-link>
       <!-- END Nav Item - Main Page -->
 
+      <!-- Nav Item - Trade -->
+      <router-link to="/trade" style="text-decoration: none" v-if="isUserConnected">
+        <li class="nav-item" :class="{active:this.$route.name === 'trade'}">
+            <a class="nav-link" href="/trade">
+                <i class="fas fa-fw fa-exchange-alt"></i>
+                <span>Trade</span></a>
+        </li>
+      </router-link>
+      <!-- END Nav Item - Trade -->
+
       <!-- Nav Item - Invest -->
       <router-link to="/invest" style="text-decoration: none" v-if="isUserConnected">
         <li class="nav-item" :class="{active:this.$route.name === 'invest'}">

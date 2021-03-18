@@ -16,8 +16,6 @@
               <div class="text-center">
                 <h2 class="h4 text-gray-900 mb-2">{{ getActiveAccount }}</h2>
 
-                <Gravatar v-if="getActiveAccount" class="img-fluid mb-3" :email="getActiveAccount" default-img="robohash" :size=150 />
-              
                 <p><strong>Your ETH balance:</strong> {{ Number(getActiveBalanceEth).toFixed(4) }} ETH</p>
                 <p><strong>Your Exchange balance:</strong> {{ Number(getExchangeUserBalance).toFixed(2) }} fkUSD</p>
                 <p><strong>Your Fakecoin balance:</strong> {{ Number(getUserFakecoinBalance).toFixed(2) }} fkUSD</p>
@@ -63,12 +61,11 @@
 
 <script>
 import { mapGetters } from "vuex";
-import Gravatar from "vue-gravatar";
 
 export default {
   name: 'Profile',
   components: {
-    Gravatar
+    
   },
   computed: {
     ...mapGetters("accounts", ["getActiveAccount", "getActiveBalanceEth", "getWeb3", "isUserConnected"]),
@@ -77,7 +74,6 @@ export default {
   },
   created() {
     if (!this.getWeb3 || !this.isUserConnected) {
-      // document.location.href="/";
       this.$router.push({ name: 'home'});
     }
 

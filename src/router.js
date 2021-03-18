@@ -3,6 +3,7 @@ import Router from "vue-router";
 import Home from "./pages/Home";
 import Profile from "./pages/Profile";
 import Invest from "./pages/Invest";
+import Trade from "./pages/Trade";
 
 Vue.use(Router);
 
@@ -31,6 +32,11 @@ export default new Router({
             path: "/invest",
             name: "invest",
             component: Invest
+        },
+        {
+            path: "/trade",
+            name: "trade",
+            component: Trade
         }
     ],
     linkActiveClass: "active"
