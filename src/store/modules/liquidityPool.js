@@ -40,9 +40,10 @@ const actions = {
       this.fetchContract();
     }
 
-    let apy = await state.contract.methods.apy().call();
+    let apy = await state.contract.methods.yield(365).call();
+    let apyBig = apy/1e8;
 
-    commit("setApy", apy);
+    commit("setApy", apyBig);
   },
   async fetchSymbolsList({ commit, state, rootState }) {
     if (!state.contract) {
@@ -55,6 +56,7 @@ const actions = {
     let symbolsLines = symbolsRaw.split("\n");
 
     let symbolsList = [];
+    let counter = 1;
     for (let item of symbolsLines) {
       let itemList = item.split("-");
 
@@ -64,6 +66,7 @@ const actions = {
       }
 
       symbolsList.push({
+        id: counter,
         pair: itemList[0],
         typeCode: itemList[1],
         typeName: typeName,
@@ -74,9 +77,9 @@ const actions = {
                                                                                                month: 'long', 
                                                                                                year: 'numeric' })
       });
-    }
 
-    console.log("symbolsList:", symbolsList);
+      counter++;
+    }
 
     commit("setSymbolsList", symbolsList);
   },
@@ -109,10 +112,8 @@ const mutations = {
   setUserExchangeBalance(state, balance) {
     state.userBalance = balance;
   },
-  setSymbolsList(state, symbolsRaw) {
-    state;
-    symbolsRaw;
-    //state.symbolsListJson = symbolsRaw;
+  setSymbolsList(state, symbolsList) {
+    state.symbolsListJson = symbolsList;
   }
 };
 
