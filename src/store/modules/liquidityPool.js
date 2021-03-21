@@ -40,8 +40,8 @@ const actions = {
       this.fetchContract();
     }
 
-    let apy = await state.contract.methods.yield(365).call();
-    let apyBig = apy/1e8;
+    let apy = await state.contract.methods.yield(365 * 24 * 60 * 60).call();
+    let apyBig = ((apy-1e9)/1e9)*100;
 
     commit("setApy", apyBig);
   },
