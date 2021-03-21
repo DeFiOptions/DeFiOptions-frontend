@@ -53,35 +53,92 @@ const actions = {
     let web3 = rootState.accounts.web3;
 
     let symbolsRaw = await state.contract.methods.listSymbols().call();
+    console.log(symbolsRaw);
+
+    // for testing purposes only:
+    // let symbolsRaw = "ETH/USD-EC-165e19-161784e4\nETH/USD-EC-175e19-161784e4\nBTC/USD-EC-5742e19-161784e4\nETH/USD-EP-175e19-1618012800"
+    
     let symbolsLines = symbolsRaw.split("\n");
 
-    let symbolsList = [];
-    let counter = 1;
+    let symbolsArray = {};
+
+    /*
+    symbols are stored in symbolsArray like this:
+
+    {
+      "ETH/USD": {
+        "8 April 2021": {
+          "Call": [
+            {
+              "strike": "1650",
+              "symbol": "ETH/USD-EC-165e19-161784e4"
+            },
+            {
+              "strike": "1750",
+              "symbol": "ETH/USD-EC-175e19-161784e4"
+            }
+          ]
+        },
+        "10 April 2021": {
+          "Put": [
+            {
+              "strike": "1750",
+              "symbol": "ETH/USD-EP-175e19-1618012800"
+            }
+          ]
+        }
+      }
+    }
+    */
+
     for (let item of symbolsLines) {
       let itemList = item.split("-");
 
-      let typeName = "Call";
+      let typeName = "CALL";
       if (itemList[1] === "EP") {
-        typeName = "Put";
+        typeName = "PUT";
       }
 
-      symbolsList.push({
-        id: counter,
-        pair: itemList[0],
-        typeCode: itemList[1],
-        typeName: typeName,
-        strikePriceSmallestUnit: Number(itemList[2]),
-        strikePriceBigUnit: web3.utils.fromWei(Number(itemList[2]).toString(16), "ether"),
-        maturityTimestamp: Number(itemList[3]),
-        maturityHumanReadable: new Date(Number(itemList[3])*1e3).toLocaleDateString('en-GB', { day: 'numeric', 
-                                                                                               month: 'long', 
-                                                                                               year: 'numeric' })
-      });
+      let pair = itemList[0];
+      let maturityHumanReadable = new Date(Number(itemList[3])*1e3).toLocaleDateString('en-GB', { day: 'numeric', 
+        month: 'long', 
+        year: 'numeric' });
+      let strikePriceBigUnit = Math.round(web3.utils.fromWei(Number(itemList[2]).toString(16), "ether"));
 
-      counter++;
+      // populate symbolsArray
+      if (pair in symbolsArray) {
+        if (maturityHumanReadable in symbolsArray[pair]) {
+          if (typeName in symbolsArray[pair][maturityHumanReadable]) {
+            if (!(strikePriceBigUnit in symbolsArray[pair][maturityHumanReadable][typeName])) {
+              symbolsArray[pair][maturityHumanReadable][typeName].push({strike: strikePriceBigUnit, symbol: item});
+            }
+          } else {
+            symbolsArray[pair][maturityHumanReadable][typeName] = [
+              {strike: strikePriceBigUnit, symbol: item}
+            ]
+          }
+        } else {
+          symbolsArray[pair][maturityHumanReadable] = {
+            [typeName]: [
+              {strike: strikePriceBigUnit, symbol: item}
+            ]
+          }
+        }
+      } else {
+        symbolsArray[pair] = {
+          [maturityHumanReadable]: {
+            [typeName]: [
+              {strike: strikePriceBigUnit, symbol: item}
+            ]
+          }
+        }
+      }
+
     }
 
-    commit("setSymbolsList", symbolsList);
+    //console.log(symbolsArray);
+
+    commit("setSymbolsList", symbolsArray);
   },
   storeAbi({commit}) {
     commit("setAbi", LiquidityPool.abi);
