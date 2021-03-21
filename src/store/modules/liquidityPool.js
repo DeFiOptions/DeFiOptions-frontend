@@ -6,12 +6,24 @@ const state = {
   address: null,
   contract: null,
   apy: null,
-  symbolsListJson: []
+  symbolsListJson: [],
+  defaultPair: null,
+  defaultType: null,
+  defaultMaturity: null
 };
 
 const getters = {
   getApy(state) {
     return state.apy;
+  },
+  getDefaultMaturity(state) {
+    return state.defaultMaturity;
+  },
+  getDefaultPair(state) {
+    return state.defaultPair;
+  },
+  getDefaultType(state) {
+    return state.defaultType;
   },
   getLiquidityPoolAbi(state) {
     return state.abi;
@@ -35,9 +47,9 @@ const actions = {
     let contract = new web3.eth.Contract(LiquidityPool.abi, address);
     commit("setContract", contract);
   },
-  async fetchApy({ commit, state }) {
+  async fetchApy({ commit, dispatch, state }) {
     if (!state.contract) {
-      this.fetchContract();
+      dispatch("fetchContract");
     }
 
     let apy = await state.contract.methods.yield(365 * 24 * 60 * 60).call();
@@ -45,43 +57,15 @@ const actions = {
 
     commit("setApy", apyBig);
   },
-  async fetchSymbolsList({ commit, state, rootState }) {
+  async fetchSymbolsList({ commit, dispatch, state, rootState }) {
     if (!state.contract) {
-      this.fetchContract();
+      dispatch("fetchContract");
     }
 
     let web3 = rootState.accounts.web3;
-
     let symbolsRaw = await state.contract.methods.listSymbols().call();
-    let symbolsLines = symbolsRaw.split("\n");
 
-    let symbolsList = [];
-    let counter = 1;
-    for (let item of symbolsLines) {
-      let itemList = item.split("-");
-
-      let typeName = "Call";
-      if (itemList[1] === "EP") {
-        typeName = "Put";
-      }
-
-      symbolsList.push({
-        id: counter,
-        pair: itemList[0],
-        typeCode: itemList[1],
-        typeName: typeName,
-        strikePriceSmallestUnit: Number(itemList[2]),
-        strikePriceBigUnit: web3.utils.fromWei(Number(itemList[2]).toString(16), "ether"),
-        maturityTimestamp: Number(itemList[3]),
-        maturityHumanReadable: new Date(Number(itemList[3])*1e3).toLocaleDateString('en-GB', { day: 'numeric', 
-                                                                                               month: 'long', 
-                                                                                               year: 'numeric' })
-      });
-
-      counter++;
-    }
-
-    commit("setSymbolsList", symbolsList);
+    commit("setSymbolsList", {web3, symbolsRaw});
   },
   storeAbi({commit}) {
     commit("setAbi", LiquidityPool.abi);
@@ -106,14 +90,81 @@ const mutations = {
   setContract(state, _contract) {
     state.contract = _contract;
   },
+  setDefaultMaturity(state, maturity) {
+    state.defaultMaturity = maturity;
+  },
+  setDefaultPair(state, pair) {
+    state.defaultPair = pair;
+  },
+  setDefaultType(state, type) {
+    state.defaultType = type;
+  },
   setLiquidityPoolBalance(state, balance) {
     state.poolBalance = balance;
   },
   setUserExchangeBalance(state, balance) {
     state.userBalance = balance;
   },
-  setSymbolsList(state, symbolsList) {
-    state.symbolsListJson = symbolsList;
+  setSymbolsList(state, {web3, symbolsRaw}) {
+    let symbolsLines = symbolsRaw.split("\n");
+
+    let symbolsArray = {};
+
+    for (let item of symbolsLines) {
+      let itemList = item.split("-");
+
+      // pair
+      let pair = itemList[0];
+      state.defaultPair = pair
+
+      // type
+      let typeName = "CALL";
+      if (itemList[1] === "EP") {
+        typeName = "PUT";
+      }
+      state.defaultType = typeName;
+
+      // maturity
+      let maturityHumanReadable = new Date(Number(itemList[3])*1e3).toLocaleDateString('en-GB', { day: 'numeric', 
+        month: 'long', 
+        year: 'numeric' });
+      state.defaultMaturity = maturityHumanReadable;
+      
+      // strike price
+      let strikePriceBigUnit = Math.round(web3.utils.fromWei(Number(itemList[2]).toString(16), "ether"));
+
+      // populate symbolsArray
+      if (pair in symbolsArray) {
+        if (maturityHumanReadable in symbolsArray[pair]) {
+          if (typeName in symbolsArray[pair][maturityHumanReadable]) {
+            if (!(strikePriceBigUnit in symbolsArray[pair][maturityHumanReadable][typeName])) {
+              symbolsArray[pair][maturityHumanReadable][typeName].push({strike: strikePriceBigUnit, symbol: item});
+            }
+          } else {
+            symbolsArray[pair][maturityHumanReadable][typeName] = [
+              {strike: strikePriceBigUnit, symbol: item}
+            ]
+          }
+        } else {
+          symbolsArray[pair][maturityHumanReadable] = {
+            [typeName]: [
+              {strike: strikePriceBigUnit, symbol: item}
+            ]
+          }
+        }
+      } else {
+        symbolsArray[pair] = {
+          [maturityHumanReadable]: {
+            [typeName]: [
+              {strike: strikePriceBigUnit, symbol: item}
+            ]
+          }
+        }
+      }
+
+    }
+
+    state.symbolsListJson = symbolsArray;
   }
 };
 
