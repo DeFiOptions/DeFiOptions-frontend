@@ -1,6 +1,6 @@
 <template>
   <!-- Sidebar -->
-  <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
+  <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" :class="{ toggled: getCollapsedStatus }" id="accordionSidebar">
 
       <!-- Sidebar - Brand -->
       <router-link to="/" style="text-decoration: none">
@@ -60,7 +60,7 @@
 
       <!-- Sidebar Toggler (Sidebar) -->
       <div class="text-center d-none d-md-inline">
-          <button class="rounded-circle border-0" id="sidebarToggle"></button>
+          <button class="rounded-circle border-0" id="sidebarToggle" @click="toggleSidebar"></button>
       </div>
 
       <!-- Divider -->
@@ -89,6 +89,7 @@ export default {
   name: "Sidebar",
   computed: {
     ...mapGetters("accounts", ["getChainName", "isUserConnected", "getWeb3Modal"]),
+    ...mapGetters("sidebar", ["getCollapsedStatus"]),
 
     showChainAlert() {
       switch (this.getChainName) {
@@ -105,6 +106,18 @@ export default {
   },
   methods: {
     ...mapActions("accounts", ["connectWeb3Modal", "disconnectWeb3Modal"]),
+
+    toggleSidebar() {
+      const el = document.body;
+
+      if (this.getCollapsedStatus === true) {
+        this.$store.dispatch("sidebar/sidebarCollapsedFalse");
+        el.classList.remove("sidebar-toggled");
+      } else {
+        this.$store.dispatch("sidebar/sidebarCollapsedTrue");
+        el.classList.add("sidebar-toggled");
+      }
+    }
   }
 }
 </script>

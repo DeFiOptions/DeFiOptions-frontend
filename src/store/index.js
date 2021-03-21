@@ -5,6 +5,7 @@ import optionsExchange from "./modules/optionsExchange";
 import liquidityPool from "./modules/liquidityPool";
 import creditToken from "./modules/creditToken";
 import fakecoin from "./modules/fakecoin";
+import sidebar from "./modules/sidebar";
 
 Vue.use(Vuex);
 
@@ -14,6 +15,7 @@ export default new Vuex.Store({
         optionsExchange,
         liquidityPool,
         creditToken,
-        fakecoin
+        fakecoin,
+        sidebar
     }
 });

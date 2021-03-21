@@ -2,7 +2,7 @@
   <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
 
       <!-- Sidebar Toggle (Topbar) -->
-      <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
+      <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3" @click="toggleSidebar">
           <i class="fa fa-bars"></i>
       </button>
 
@@ -27,6 +27,7 @@ export default {
   name: "Navbar",
   computed: {
     ...mapGetters("accounts", ["getActiveAccount", "isUserConnected", "getWeb3Modal"]),
+    ...mapGetters("sidebar", ["getCollapsedStatus"]),
   },
   created() {
     this.$store.dispatch("accounts/initWeb3Modal");
@@ -34,6 +35,18 @@ export default {
   },
   methods: {
     ...mapActions("accounts", ["connectWeb3Modal", "disconnectWeb3Modal"]),
+    
+    toggleSidebar() {
+      const el = document.body;
+
+      if (this.getCollapsedStatus === true) {
+        this.$store.dispatch("sidebar/sidebarCollapsedFalse");
+        el.classList.remove("sidebar-toggled");
+      } else {
+        this.$store.dispatch("sidebar/sidebarCollapsedTrue");
+        el.classList.add("sidebar-toggled");
+      }
+    }
   }
 }
 </script>

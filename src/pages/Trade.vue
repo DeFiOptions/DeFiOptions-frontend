@@ -15,7 +15,7 @@
         <div class="form-inline">
 
           <!-- Pair dropdown -->
-          <div class="btn-group mt-3 mb-3 mr-3">
+          <div class="btn-group mb-3 mr-3">
             <button type="button" class="btn btn-light dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
               {{getSelectedPair}}
             </button>
@@ -25,7 +25,7 @@
           </div>
 
           <!-- Maturity dropdown -->
-          <div class="btn-group mt-3 mb-3 mr-3">
+          <div class="btn-group mb-3 mr-3">
             <button type="button" class="btn btn-light dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
               {{getSelectedMaturity}}
             </button>
@@ -35,7 +35,7 @@
           </div>
 
           <!-- Type dropdown -->
-          <div class="btn-group mt-3 mb-3">
+          <div class="btn-group mb-3">
             <button type="button" class="btn btn-light dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
               {{getSelectedType}}
             </button>
@@ -58,6 +58,7 @@
                     <th>Type</th>
                     <th>Strike</th>
                     <th>Maturity</th>
+                    <th>Buy/Sell</th>
                 </tr>
             </thead>
             
@@ -69,6 +70,10 @@
                     <td>{{getSelectedType}}</td>
                     <td><strong>${{option.strike}}</strong></td>
                     <td>{{getSelectedMaturity}}</td>
+                    <td>
+                      <button class="btn btn-outline-success btn-sm mr-2" disabled>Buy</button>
+                      <button class="btn btn-outline-danger btn-sm" disabled>Sell</button>
+                    </td>
                 </tr>
                 
             </tbody>
