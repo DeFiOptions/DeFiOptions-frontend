@@ -6,12 +6,24 @@ const state = {
   address: null,
   contract: null,
   apy: null,
-  symbolsListJson: []
+  symbolsListJson: [],
+  defaultPair: null,
+  defaultType: null,
+  defaultMaturity: null
 };
 
 const getters = {
   getApy(state) {
     return state.apy;
+  },
+  getDefaultMaturity(state) {
+    return state.defaultMaturity;
+  },
+  getDefaultPair(state) {
+    return state.defaultPair;
+  },
+  getDefaultType(state) {
+    return state.defaultType;
   },
   getLiquidityPoolAbi(state) {
     return state.abi;
@@ -35,9 +47,9 @@ const actions = {
     let contract = new web3.eth.Contract(LiquidityPool.abi, address);
     commit("setContract", contract);
   },
-  async fetchApy({ commit, state }) {
+  async fetchApy({ commit, dispatch, state }) {
     if (!state.contract) {
-      this.fetchContract();
+      dispatch("fetchContract");
     }
 
     let apy = await state.contract.methods.yield(365 * 24 * 60 * 60).call();
@@ -45,64 +57,80 @@ const actions = {
 
     commit("setApy", apyBig);
   },
-  async fetchSymbolsList({ commit, state, rootState }) {
+  async fetchSymbolsList({ commit, dispatch, state, rootState }) {
     if (!state.contract) {
-      this.fetchContract();
+      dispatch("fetchContract");
     }
 
     let web3 = rootState.accounts.web3;
-
     let symbolsRaw = await state.contract.methods.listSymbols().call();
-    console.log(symbolsRaw);
 
-    // for testing purposes only:
-    // let symbolsRaw = "ETH/USD-EC-165e19-161784e4\nETH/USD-EC-175e19-161784e4\nBTC/USD-EC-5742e19-161784e4\nETH/USD-EP-175e19-1618012800"
-    
+    commit("setSymbolsList", {web3, symbolsRaw});
+  },
+  storeAbi({commit}) {
+    commit("setAbi", LiquidityPool.abi);
+  },
+  storeAddress({ commit, rootState }) {
+    let chainIdDec = parseInt(rootState.accounts.chainId);
+
+    commit("setAddress", addresses.LinearLiquidityPool[chainIdDec]);
+  }
+};
+
+const mutations = {
+  setAbi(state, abi) {
+    state.abi = abi;
+  },
+  setAddress(state, address) {
+    state.address = address;
+  },
+  setApy(state, apy) {
+    state.apy = apy;
+  },
+  setContract(state, _contract) {
+    state.contract = _contract;
+  },
+  setDefaultMaturity(state, maturity) {
+    state.defaultMaturity = maturity;
+  },
+  setDefaultPair(state, pair) {
+    state.defaultPair = pair;
+  },
+  setDefaultType(state, type) {
+    state.defaultType = type;
+  },
+  setLiquidityPoolBalance(state, balance) {
+    state.poolBalance = balance;
+  },
+  setUserExchangeBalance(state, balance) {
+    state.userBalance = balance;
+  },
+  setSymbolsList(state, {web3, symbolsRaw}) {
     let symbolsLines = symbolsRaw.split("\n");
 
     let symbolsArray = {};
 
-    /*
-    symbols are stored in symbolsArray like this:
-
-    {
-      "ETH/USD": {
-        "8 April 2021": {
-          "Call": [
-            {
-              "strike": "1650",
-              "symbol": "ETH/USD-EC-165e19-161784e4"
-            },
-            {
-              "strike": "1750",
-              "symbol": "ETH/USD-EC-175e19-161784e4"
-            }
-          ]
-        },
-        "10 April 2021": {
-          "Put": [
-            {
-              "strike": "1750",
-              "symbol": "ETH/USD-EP-175e19-1618012800"
-            }
-          ]
-        }
-      }
-    }
-    */
-
     for (let item of symbolsLines) {
       let itemList = item.split("-");
 
+      // pair
+      let pair = itemList[0];
+      state.defaultPair = pair
+
+      // type
       let typeName = "CALL";
       if (itemList[1] === "EP") {
         typeName = "PUT";
       }
+      state.defaultType = typeName;
 
-      let pair = itemList[0];
+      // maturity
       let maturityHumanReadable = new Date(Number(itemList[3])*1e3).toLocaleDateString('en-GB', { day: 'numeric', 
         month: 'long', 
         year: 'numeric' });
+      state.defaultMaturity = maturityHumanReadable;
+      
+      // strike price
       let strikePriceBigUnit = Math.round(web3.utils.fromWei(Number(itemList[2]).toString(16), "ether"));
 
       // populate symbolsArray
@@ -136,41 +164,7 @@ const actions = {
 
     }
 
-    //console.log(symbolsArray);
-
-    commit("setSymbolsList", symbolsArray);
-  },
-  storeAbi({commit}) {
-    commit("setAbi", LiquidityPool.abi);
-  },
-  storeAddress({ commit, rootState }) {
-    let chainIdDec = parseInt(rootState.accounts.chainId);
-
-    commit("setAddress", addresses.LinearLiquidityPool[chainIdDec]);
-  }
-};
-
-const mutations = {
-  setAbi(state, abi) {
-    state.abi = abi;
-  },
-  setAddress(state, address) {
-    state.address = address;
-  },
-  setApy(state, apy) {
-    state.apy = apy;
-  },
-  setContract(state, _contract) {
-    state.contract = _contract;
-  },
-  setLiquidityPoolBalance(state, balance) {
-    state.poolBalance = balance;
-  },
-  setUserExchangeBalance(state, balance) {
-    state.userBalance = balance;
-  },
-  setSymbolsList(state, symbolsList) {
-    state.symbolsListJson = symbolsList;
+    state.symbolsListJson = symbolsArray;
   }
 };
 

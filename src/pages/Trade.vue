@@ -17,7 +17,7 @@
           <!-- Pair dropdown -->
           <div class="btn-group mt-3 mb-3 mr-3">
             <button type="button" class="btn btn-light dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-              {{selectedPair}}
+              {{getSelectedPair}}
             </button>
             <div class="dropdown-menu">
               <a class="dropdown-item" href="#" @click="changePair(pair)" v-for="pair in pairs" v-bind:key="pair">{{pair}}</a>
@@ -27,7 +27,7 @@
           <!-- Maturity dropdown -->
           <div class="btn-group mt-3 mb-3 mr-3">
             <button type="button" class="btn btn-light dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-              {{selectedMaturity}}
+              {{getSelectedMaturity}}
             </button>
             <div class="dropdown-menu">
               <a class="dropdown-item" href="#" @click="changeMaturity(maturity)" v-for="maturity in maturities" v-bind:key="maturity">{{maturity}}</a>
@@ -37,7 +37,7 @@
           <!-- Type dropdown -->
           <div class="btn-group mt-3 mb-3">
             <button type="button" class="btn btn-light dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-              {{selectedType}}
+              {{getSelectedType}}
             </button>
             <div class="dropdown-menu">
               <a class="dropdown-item" href="#" @click="changeOptionType('CALL')">CALL</a>
@@ -63,12 +63,12 @@
             
             <tbody>
 
-                <tr v-for="(option, index) in getFilteredSymbols" v-bind:key="index">
+                <tr v-for="(option, index) in getFilteredSymbols" v-bind:key="option.symbol">
                     <td>{{index + 1}}</td>
-                    <td>{{selectedPair}}</td>
-                    <td>{{selectedType}}</td>
+                    <td>{{getSelectedPair}}</td>
+                    <td>{{getSelectedType}}</td>
                     <td><strong>${{option.strike}}</strong></td>
-                    <td>{{selectedMaturity}}</td>
+                    <td>{{getSelectedMaturity}}</td>
                 </tr>
                 
             </tbody>
@@ -87,20 +87,43 @@ import { mapGetters } from "vuex";
 
 export default {
   name: 'Trade',
+
+  beforeDestroy() {
+    this.unsubscribe();
+  },
   components: {
     
   },
   computed: {
     ...mapGetters("accounts", ["getActiveAccount", "getActiveBalanceEth", "getWeb3", "isUserConnected"]),
-    ...mapGetters("liquidityPool", ["getSymbolsListJson"]),
+    ...mapGetters("liquidityPool", ["getSymbolsListJson", "getDefaultMaturity", "getDefaultPair", "getDefaultType"]),
 
     getFilteredSymbols() {
-      if (this.selectedPair && this.selectedMaturity && this.selectedType) {
-        return this.getSymbolsListJson[this.selectedPair][this.selectedMaturity][this.selectedType];
+      try {
+        return this.getSymbolsListJson[this.getSelectedPair][this.getSelectedMaturity][this.getSelectedType];
+      } catch {
+        return [];
       }
-      
-      return [];
-    }
+    },
+
+    getSelectedMaturity() {
+      if (this.selectedMaturity) {
+        return this.selectedMaturity;
+      }
+      return this.getDefaultMaturity;
+    },
+    getSelectedPair() {
+      if (this.selectedPair) {
+        return this.selectedPair;
+      }
+      return this.getDefaultPair;
+    },
+    getSelectedType() {
+      if (this.selectedType) {
+        return this.selectedType;
+      }
+      return this.getDefaultType;
+    },
   },
   created() {
     if (!this.getWeb3 || !this.isUserConnected) {
@@ -111,15 +134,19 @@ export default {
     this.$store.dispatch("liquidityPool/fetchContract");
     this.$store.dispatch("liquidityPool/fetchSymbolsList");
 
-    // extract values from getSymbolsListJson and pre-populate dropdowns (pair, maturity, type)
-    this.pairs = Object.keys(this.getSymbolsListJson);
-    this.selectedPair = this.pairs[0];
+    this.unsubscribe = this.$store.subscribe((mutation) => {
+      if (mutation.type === 'liquidityPool/setSymbolsList') {
+        // extract values from getSymbolsListJson and pre-populate dropdowns (pair, maturity, type)
+        this.pairs = Object.keys(this.getSymbolsListJson);
+        this.selectedPair = this.pairs[0];
 
-    this.maturities = Object.keys(this.getSymbolsListJson[this.selectedPair]);
-    this.selectedMaturity = this.maturities[0];
+        this.maturities = Object.keys(this.getSymbolsListJson[this.selectedPair]);
+        this.selectedMaturity = this.maturities[0];
 
-    this.typeNames = Object.keys(this.getSymbolsListJson[this.selectedPair][this.selectedMaturity]);
-    this.selectedType = this.typeNames[0];
+        this.typeNames = Object.keys(this.getSymbolsListJson[this.selectedPair][this.selectedMaturity]);
+        this.selectedType = this.typeNames[0];
+      }
+    });
   },
   data() {
     return {
