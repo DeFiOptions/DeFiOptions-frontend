@@ -1,6 +1,6 @@
 # DeFiOptions Vue.js front-end
 
-GH Pages: https://remote-gildor.github.io/DeFiOptions-frontend/ 
+GH Pages: https://DeFiOptions.github.io/DeFiOptions-frontend/ 
 
 ### Install npm packages
 
@@ -29,5 +29,5 @@ git add -A
 
 git commit -m "deployment to GH Pages"
 
-git push -f git@github.com:remote-gildor/DeFiOptions-frontend.git master:gh-pages
+git push -f git@github.com:DeFiOptions/DeFiOptions-frontend.git master:gh-pages
 ```
