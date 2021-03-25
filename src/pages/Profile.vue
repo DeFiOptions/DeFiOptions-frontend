@@ -6,29 +6,139 @@
     </div>
     <!-- END Page Heading -->
 
-    <!-- Outer Row -->
-    <div class="row justify-content-center">
+    <div class="row mt-3">
 
-      <div class="col-md-6">
-        <div class="card o-hidden border-0 shadow-lg mt-2">
-          <div class="card-body p-0">
-            <div class="p-5">
-              <div class="text-center">
-                <h2 class="h4 text-gray-900 mb-2">{{ getActiveAccount }}</h2>
-
-                <p><strong>Your ETH balance:</strong> {{ Number(getActiveBalanceEth).toFixed(4) }} ETH</p>
-                <p><strong>Your Exchange balance:</strong> ${{ Number(getExchangeUserBalance).toFixed(2) }}</p>
-                <p><strong>Your CreditToken balance:</strong> ${{ Number(getCreditTokenUserBalance).toFixed(2) }}</p>
-                <p><strong>Your Liquidity Pool balance:</strong> ${{ Number(getLiquidityPoolUserBalance).toFixed(2) }}</p>
-                <p><strong>Your Fakecoin balance:</strong> ${{ Number(getUserFakecoinBalance).toFixed(2) }}</p>
-
-                <button type="button" class="btn btn-success btn-user btn-block mt-3" @click="addFakecoinToMetaMask">Add Fakecoin to MetaMask</button>
-
+      <div class="col-xl-3 col-md-6 mb-4">
+          <div class="card bg-primary text-white shadow h-100 py-2">
+              <div class="card-body">
+                  <div class="row no-gutters align-items-center">
+                      <div class="col mr-2">
+                          <div class="text-xs font-weight-bold text-uppercase mb-1">
+                              Address
+                          </div>
+                        
+                          <div class="h5 mb-0 font-weight-bold">
+                            {{getActiveAccount.substring(0, 7)}}...{{ getActiveAccount.substring(35, 42) }}
+                          </div>
+                      </div>
+                  </div>
               </div>
-            </div>
           </div>
-        </div>
       </div>
+
+      <div class="col-xl-3 col-md-6 mb-4">
+          <div class="card bg-primary text-white shadow h-100 py-2">
+              <div class="card-body">
+                  <div class="row no-gutters align-items-center">
+                      <div class="col mr-2">
+                          <div class="text-xs font-weight-bold text-uppercase mb-1">
+                              ETH
+                          </div>
+                        
+                          <div class="h5 mb-0 font-weight-bold">
+                            {{ Number(getActiveBalanceEth).toFixed(2) }} ETH
+                          </div>
+                      </div>
+                      <div class="col-auto">
+                          <i class="fab fa-ethereum fa-2x text-gray-300"></i>
+                      </div>
+                  </div>
+              </div>
+          </div>
+      </div>
+
+      <div class="col-xl-3 col-md-6 mb-4">
+          <div class="card bg-primary text-white shadow h-100 py-2">
+              <div class="card-body">
+                  <div class="row no-gutters align-items-center">
+                      <div class="col mr-2">
+                          <div class="text-xs font-weight-bold text-uppercase mb-1">
+                              Exchange Balance
+                          </div>
+                        
+                          <div class="h5 mb-0 font-weight-bold">
+                            ${{ Number(getExchangeUserBalance).toFixed(2) }}<br>
+                          </div>
+                      </div>
+                      <div class="col-auto">
+                          <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+                      </div>
+                  </div>
+              </div>
+          </div>
+      </div>
+
+      <div class="col-xl-3 col-md-6 mb-4">
+          <div class="card bg-primary text-white shadow h-100 py-2">
+              <div class="card-body">
+                  <div class="row no-gutters align-items-center">
+                      <div class="col mr-2">
+                          <div class="text-xs font-weight-bold text-uppercase mb-1">
+                              Credit Tokens
+                          </div>
+                        
+                          <div class="h5 mb-0 font-weight-bold">
+                            ${{ Number(getCreditTokenUserBalance).toFixed(2) }}
+                          </div>
+                      </div>
+                      <div class="col-auto">
+                          <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+                      </div>
+                  </div>
+              </div>
+          </div>
+      </div>
+
+      <div class="col-xl-3 col-md-6 mb-4">
+          <div class="card bg-primary text-white shadow h-100 py-2">
+              <div class="card-body">
+                  <div class="row no-gutters align-items-center">
+                      <div class="col mr-2">
+                          <div class="text-xs font-weight-bold text-uppercase mb-1">
+                              Pool Tokens
+                          </div>
+                        
+                          <div class="h5 mb-0 font-weight-bold">
+                            ${{ Number(getLiquidityPoolUserBalance).toFixed(2) }}
+                          </div>
+                      </div>
+                      <div class="col-auto">
+                          <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+                      </div>
+                  </div>
+              </div>
+          </div>
+      </div>
+
+      <div class="col-xl-3 col-md-6 mb-4">
+          <div class="card bg-primary text-white shadow h-100 py-2">
+              <div class="card-body">
+                  <div class="row no-gutters align-items-center">
+                      <div class="col mr-2">
+                          <div class="text-xs font-weight-bold text-uppercase mb-1">
+                              Fakecoin
+                          </div>
+                        
+                          <div class="h5 mb-0 font-weight-bold">
+                            ${{ Number(getUserFakecoinBalance).toFixed(2) }}
+
+                            <button class="btn btn-primary btn-sm" @click="addFakecoinToMetaMask">
+                              <i class="fas fa-plus-circle"></i>
+                            </button>
+                          </div>
+                      </div>
+                      <div class="col-auto">
+                          <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+                      </div>
+                  </div>
+              </div>
+          </div>
+      </div>
+
+    </div>
+
+    <!-- Outer Row -->
+    <div class="row justify-content-center mb-4">
 
       <div class="col-md-6">
           <div class="card o-hidden border-0 shadow-lg mt-2">
