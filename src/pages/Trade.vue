@@ -75,15 +75,20 @@
                       <button class="btn btn-outline-danger btn-sm" @click="setModalData('Sell', option.symbol, option.strike)" data-toggle="modal" data-target="#optionsModal">Sell</button>
                     </td>
                 </tr>
-                
+
             </tbody>
+            
           </table>
+
+          <p v-if="getFilteredSymbols === undefined || getFilteredSymbols.length === 0" class="ml-2">
+            No options here. Try other filters.
+          </p>
         </div>
         <!-- Table END-->
       </div>
     </div>
 
-    <!-- Modal START-->
+    <!-- Buy/Sell Modal START-->
     <div class="modal fade" id="optionsModal" tabindex="-1" aria-labelledby="optionsModalLabel" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -136,11 +141,10 @@
         </div>
       </div>
     </div>
-    <!-- Modal END-->
+    <!-- Buy/Sell Modal END-->
 
   </div>
 </template>
-
 
 <script>
 import { mapGetters } from "vuex";
@@ -212,7 +216,7 @@ export default {
       selectedMaturity: null,
       selectedOptionPrice: null,
       selectedOptionSize: 1,
-      selectedOptionVolume: null,
+      selectedOptionVolume: null, // max possible option size
       selectedPair: null,
       selectedStrike: null,
       selectedSymbol: null,
@@ -238,7 +242,7 @@ export default {
 
       // fetch option price and volume
       let result;
-      
+
       if (action === "Buy") {
         result = await this.getLiquidityPoolContract.methods.queryBuy(this.selectedSymbol).call();
       } else {
