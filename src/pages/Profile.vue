@@ -17,8 +17,10 @@
                 <h2 class="h4 text-gray-900 mb-2">{{ getActiveAccount }}</h2>
 
                 <p><strong>Your ETH balance:</strong> {{ Number(getActiveBalanceEth).toFixed(4) }} ETH</p>
-                <p><strong>Your Exchange balance:</strong> {{ Number(getExchangeUserBalance).toFixed(2) }} fkUSD</p>
-                <p><strong>Your Fakecoin balance:</strong> {{ Number(getUserFakecoinBalance).toFixed(2) }} fkUSD</p>
+                <p><strong>Your Exchange balance:</strong> ${{ Number(getExchangeUserBalance).toFixed(2) }}</p>
+                <p><strong>Your CreditToken balance:</strong> ${{ Number(getCreditTokenUserBalance).toFixed(2) }}</p>
+                <p><strong>Your Liquidity Pool balance:</strong> ${{ Number(getLiquidityPoolUserBalance).toFixed(2) }}</p>
+                <p><strong>Your Fakecoin balance:</strong> ${{ Number(getUserFakecoinBalance).toFixed(2) }}</p>
 
                 <button type="button" class="btn btn-success btn-user btn-block mt-3" @click="addFakecoinToMetaMask">Add Fakecoin to MetaMask</button>
 
@@ -70,7 +72,9 @@ export default {
   computed: {
     ...mapGetters("accounts", ["getActiveAccount", "getActiveBalanceEth", "getWeb3", "isUserConnected"]),
     ...mapGetters("optionsExchange", ["getExchangeUserBalance"]),
-    ...mapGetters("fakecoin", ["getFakecoinContract", "getUserFakecoinBalance"])
+    ...mapGetters("fakecoin", ["getFakecoinContract", "getUserFakecoinBalance"]),
+    ...mapGetters("creditToken", ["getCreditTokenUserBalance"]),
+    ...mapGetters("liquidityPool", ["getLiquidityPoolUserBalance"])
   },
   created() {
     if (!this.getWeb3 || !this.isUserConnected) {
@@ -78,9 +82,13 @@ export default {
     }
 
     this.$store.dispatch("optionsExchange/fetchContract");
+    this.$store.dispatch("liquidityPool/fetchContract");
     this.$store.dispatch("fakecoin/fetchContract");
+    this.$store.dispatch("creditToken/fetchContract");
+    this.$store.dispatch("liquidityPool/fetchUserBalance");
     this.$store.dispatch("fakecoin/fetchUserBalance");
     this.$store.dispatch("optionsExchange/fetchExchangeUserBalance");
+    this.$store.dispatch("creditToken/fetchUserBalance");
     this.$store.dispatch("accounts/fetchActiveBalance");
   },
   data() {

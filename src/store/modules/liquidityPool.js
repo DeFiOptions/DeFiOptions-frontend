@@ -9,7 +9,8 @@ const state = {
   symbolsListJson: [],
   defaultPair: null,
   defaultType: null,
-  defaultMaturity: null
+  defaultMaturity: null,
+  userBalance: null
 };
 
 const getters = {
@@ -36,6 +37,9 @@ const getters = {
   },
   getSymbolsListJson(state) {
     return state.symbolsListJson;
+  },
+  getLiquidityPoolUserBalance(state) {
+    return state.userBalance;
   }
 };
 
@@ -66,6 +70,19 @@ const actions = {
     let symbolsRaw = await state.contract.methods.listSymbols().call();
 
     commit("setSymbolsList", {web3, symbolsRaw});
+  },
+  async fetchUserBalance({ commit, dispatch, rootState }) {
+    if (!state.contract) {
+      dispatch("fetchContract");
+    }
+
+    let activeAccount = rootState.accounts.activeAccount;
+    let balanceWei = await state.contract.methods.balanceOf(activeAccount).call();
+
+    let web3 = rootState.accounts.web3;
+    let balance = web3.utils.fromWei(balanceWei, "ether");
+
+    commit("setUserLiquidityPoolBalance", balance);
   },
   storeAbi({commit}) {
     commit("setAbi", LiquidityPool.abi);
@@ -99,10 +116,7 @@ const mutations = {
   setDefaultType(state, type) {
     state.defaultType = type;
   },
-  setLiquidityPoolBalance(state, balance) {
-    state.poolBalance = balance;
-  },
-  setUserExchangeBalance(state, balance) {
+  setUserLiquidityPoolBalance(state, balance) {
     state.userBalance = balance;
   },
   setSymbolsList(state, {web3, symbolsRaw}) {
