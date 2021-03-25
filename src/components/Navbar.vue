@@ -11,8 +11,8 @@
 
           <!-- Nav Item - Connect Wallet -->
           <li class="nav-item">
-            <a class="nav-link" href="#" v-if="!isUserConnected" @click="connectWeb3Modal">Connect your wallet</a>
-            <a class="nav-link" href="#" v-if="isUserConnected" @click="disconnectWeb3Modal">Disconnect {{getActiveAccount.substring(0, 7)}}...</a>
+            <a class="nav-link text-muted" href="#" v-if="!isUserConnected" @click="connectWeb3Modal">Connect your wallet</a>
+            <a class="nav-link text-muted" href="#" v-if="isUserConnected" @click="disconnectWeb3Modal">Disconnect {{getActiveAccount.substring(0, 7)}}...</a>
           </li>
           <!-- End of Nav Item - Connect Wallet -->
       </ul>

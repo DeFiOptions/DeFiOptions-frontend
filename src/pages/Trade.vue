@@ -71,8 +71,8 @@
                     <td><strong>${{option.strike}}</strong></td>
                     <td>{{getSelectedMaturity}}</td>
                     <td>
-                      <button class="btn btn-outline-success btn-sm mr-2" disabled>Buy</button>
-                      <button class="btn btn-outline-danger btn-sm" disabled>Sell</button>
+                      <button class="btn btn-outline-success btn-sm mr-2" @click="setModalData('Buy', option.symbol, option.strike)" data-toggle="modal" data-target="#optionsModal">Buy</button>
+                      <button class="btn btn-outline-danger btn-sm" @click="setModalData('Sell', option.symbol, option.strike)" data-toggle="modal" data-target="#optionsModal">Sell</button>
                     </td>
                 </tr>
                 
@@ -83,6 +83,61 @@
       </div>
     </div>
 
+    <!-- Modal START-->
+    <div class="modal fade" id="optionsModal" tabindex="-1" aria-labelledby="optionsModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+
+          <div class="modal-header">
+            <h5 class="modal-title" id="optionsModalLabel">{{selectedAction}} option</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+
+          <div class="modal-body">
+
+            <div class="form-group row">
+              <label for="optionSymbol" class="col-sm-3 col-form-label font-weight-bold">Option</label>
+              <div class="col-sm-9">
+                <input type="text" readonly class="form-control-plaintext" id="optionSymbol" :value="selectedPair+' '+selectedType+' at $'+selectedStrike+' ('+selectedMaturity+')'">
+              </div>
+            </div>
+
+            <div class="form-group row">
+              <label for="optionSize" class="col-sm-3 col-form-label font-weight-bold">Option size</label>
+              <div class="col-sm-9">
+                <input type="text" class="form-control" id="optionSize" v-model="selectedOptionSize">
+              </div>
+            </div>
+
+            <div class="form-group row">
+              <label for="optionPrice" class="col-sm-3 col-form-label font-weight-bold">Option price</label>
+              <div class="col-sm-9">
+                <input type="text" readonly class="form-control-plaintext" id="optionPrice" :value="'$'+Number(selectedOptionPrice).toFixed(2)">
+              </div>
+            </div>
+
+            <div class="form-group row">
+              <label for="optionTotal" class="col-sm-3 col-form-label font-weight-bold">TOTAL</label>
+              <div class="col-sm-9">
+                <input type="text" readonly class="form-control-plaintext" id="optionTotal" :value="'$'+Number(selectedOptionSize*selectedOptionPrice).toFixed(2)">
+              </div>
+            </div>
+
+          </div>
+
+          <div class="modal-footer">
+            <button v-if="selectedAction === 'Buy'" type="button" class="btn btn-success" disabled>Buy option</button>
+            <button v-if="selectedAction === 'Sell'" type="button" class="btn btn-danger" disabled>Sell option</button>
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+    <!-- Modal END-->
+
   </div>
 </template>
 
@@ -92,16 +147,12 @@ import { mapGetters } from "vuex";
 
 export default {
   name: 'Trade',
-
   beforeDestroy() {
     this.unsubscribe();
   },
-  components: {
-    
-  },
   computed: {
     ...mapGetters("accounts", ["getActiveAccount", "getActiveBalanceEth", "getWeb3", "isUserConnected"]),
-    ...mapGetters("liquidityPool", ["getSymbolsListJson", "getDefaultMaturity", "getDefaultPair", "getDefaultType"]),
+    ...mapGetters("liquidityPool", ["getLiquidityPoolContract", "getSymbolsListJson", "getDefaultMaturity", "getDefaultPair", "getDefaultType"]),
 
     getFilteredSymbols() {
       try {
@@ -155,12 +206,19 @@ export default {
   },
   data() {
     return {
-      pairs: null,
-      selectedPair: null,
       maturities: null,
+      pairs: null,
+      selectedAction: "Buy", // Buy or Sell
       selectedMaturity: null,
-      typeNames: null,
-      selectedType: null
+      selectedOptionPrice: null,
+      selectedOptionSize: 1,
+      selectedOptionVolume: null,
+      selectedPair: null,
+      selectedStrike: null,
+      selectedSymbol: null,
+      selectedType: null,
+      showModal: false,
+      typeNames: null
     }
   },
   methods: {
@@ -172,6 +230,23 @@ export default {
     },
     changeOptionType(optionType) {
       this.selectedType = optionType;
+    },
+    async setModalData(action, symbol, strike) {
+      this.selectedAction = action;
+      this.selectedSymbol = symbol;
+      this.selectedStrike = strike;
+
+      // fetch option price and volume
+      let result;
+      
+      if (action === "Buy") {
+        result = await this.getLiquidityPoolContract.methods.queryBuy(this.selectedSymbol).call();
+      } else {
+        result = await this.getLiquidityPoolContract.methods.querySell(this.selectedSymbol).call();
+      }
+      
+      this.selectedOptionPrice = this.getWeb3.utils.fromWei(result.price, "ether");
+      this.selectedOptionVolume = this.getWeb3.utils.fromWei(result.volume, "ether");
     }
   }
 }
