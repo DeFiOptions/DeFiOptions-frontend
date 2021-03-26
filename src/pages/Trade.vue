@@ -112,7 +112,9 @@
             <div class="form-group row">
               <label for="optionSize" class="col-sm-3 col-form-label font-weight-bold">Option size</label>
               <div class="col-sm-9">
-                <input type="text" class="form-control" id="optionSize" v-model="selectedOptionSize">
+                <input type="text" class="form-control" :class="isOptionSizeBiggerThanVolume ? 'is-invalid' : ''" id="optionSize" v-model="selectedOptionSize">
+                <small v-if="isOptionSizeBiggerThanVolume" class="invalid-feedback">Option size must not be biger than {{Math.floor(Number(selectedOptionVolume*1000))/1000}}!</small>
+                <small v-if="!isOptionSizeBiggerThanVolume">Maximum option size: {{Math.floor(Number(selectedOptionVolume*1000))/1000}}.</small>
               </div>
             </div>
 
@@ -133,8 +135,8 @@
           </div>
 
           <div class="modal-footer">
-            <button v-if="selectedAction === 'Buy'" type="button" class="btn btn-success" disabled>Buy option</button>
-            <button v-if="selectedAction === 'Sell'" type="button" class="btn btn-danger" disabled>Sell option</button>
+            <button v-if="selectedAction === 'Buy'" type="button" class="btn btn-success" :disabled="isOptionSizeBiggerThanVolume ? true : false">Buy option</button>
+            <button v-if="selectedAction === 'Sell'" type="button" class="btn btn-danger" :disabled="isOptionSizeBiggerThanVolume ? true : false">Sell option</button>
             <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
           </div>
 
@@ -184,6 +186,13 @@ export default {
       }
       return this.getDefaultType;
     },
+
+    isOptionSizeBiggerThanVolume() {
+      if (Number(this.selectedOptionSize) > Number(this.selectedOptionVolume)) {
+        return true;
+      }
+      return false;
+    }
   },
   created() {
     if (!this.getWeb3 || !this.isUserConnected) {

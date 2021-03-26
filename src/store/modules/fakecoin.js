@@ -1,4 +1,4 @@
-import ContractJson from "../../contracts/ERC20Mock.json";
+import ContractJson from "../../contracts/ERC20.json";
 import addresses from "../../contracts/addresses.json";
 
 const ContractName = "FakeCoin";
