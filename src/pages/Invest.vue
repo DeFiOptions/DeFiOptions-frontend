@@ -64,8 +64,25 @@
                           
                           <small>
                             Your fakecoin balance: {{ Number(getUserFakecoinBalance).toFixed(2) }} fkUSD
-                            (allowance: {{Number(allowance).toFixed(2)}} fkUSD)
+                            (allowance: 
+                            <span v-if="allowance > 100000000000">unlimited)</span>
+                            <span v-if="allowance < 100000000000">{{Number(allowance).toFixed(2)}} fkUSD)</span>
                           </small>
+                      </div>
+
+                      <div v-if="Number(allowance) < Number(depositValue)" class="mb-3">
+                        <div class="form-check">
+                          <input class="form-check-input" v-model="allowanceOption" type="radio" id="limitedApprovalChoice" value="limited" checked>
+                          <label class="form-check-label" for="limitedApprovalChoice">
+                            Approval for {{depositValue}} fkUSD.
+                          </label>
+                        </div>
+                        <div class="form-check">
+                          <input class="form-check-input" v-model="allowanceOption" type="radio" id="unlimitedApprovalChoice" value="unlimited">
+                          <label class="form-check-label" for="unlimitedApprovalChoice">
+                            Unlimited approval (you won't need to do approval transactions anymore).
+                          </label>
+                        </div>
                       </div>
 
                       <button v-if="Number(allowance) < Number(depositValue)" class="btn btn-success btn-block">Approve fkUSD</button>
@@ -120,7 +137,8 @@ export default {
     return {
       depositValue: null,
       allowanceWei: null,
-      allowance: null
+      allowance: null,
+      allowanceOption: "limited"
     }
   },
   methods: {
@@ -134,9 +152,13 @@ export default {
       let tokensWei = this.getWeb3.utils.toWei(this.depositValue, "ether");
 
       if (Number(this.allowanceWei) < Number(tokensWei)) {
+        let approvalValue = tokensWei;
+        if (this.allowanceOption === "unlimited") {
+          approvalValue = "1000000000000000000000000000000000"; // "unlimited" value
+        }
 
         // call the approve method to increase the allowance
-        await this.getFakecoinContract.methods.approve(this.getLiquidityPoolAddress, tokensWei).send({
+        await this.getFakecoinContract.methods.approve(this.getLiquidityPoolAddress, approvalValue).send({
           from: this.getActiveAccount
         }, function(error, hash) {
 
