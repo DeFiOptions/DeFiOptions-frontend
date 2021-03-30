@@ -168,8 +168,8 @@
                     <div class="text-center">
                         <h2 class="h4 text-gray-900 mb-2">Get yourself some Fakecoins</h2>
                         <p class="mb-4">
-                          This is for a testnet only. You'll need some fake stablecoin tokens and here's where you 
-                          can mint them.
+                          Fakecoin represents DAI (stablecoin with 18 decimals). Mint some fakecoins here and use 
+                          them on DeFiOptions (Kovan testnet only).
                         </p>
                     </div>
 
@@ -194,7 +194,8 @@
                     <div class="text-center">
                         <h2 class="h4 text-gray-900 mb-2">Get yourself some Fake Dollars</h2>
                         <p class="mb-4">
-                          This is another test stablecoin called Fake Dollar. This one uses permit() for approvals.
+                          This is another test stablecoin called Fake Dollar, and it represents USDC (6 decimals). 
+                          Mint some fakecoins here and use them on DeFiOptions (Kovan testnet only).
                         </p>
                     </div>
 
