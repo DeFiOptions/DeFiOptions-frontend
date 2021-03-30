@@ -113,7 +113,7 @@
               <label for="optionSize" class="col-sm-3 col-form-label font-weight-bold">Option size</label>
               <div class="col-sm-9">
                 <input type="text" class="form-control" :class="isOptionSizeBiggerThanVolume ? 'is-invalid' : ''" id="optionSize" v-model="selectedOptionSize">
-                <small v-if="isOptionSizeBiggerThanVolume" class="invalid-feedback">Option size must not be biger than {{Math.floor(Number(selectedOptionVolume*1000))/1000}}!</small>
+                <small v-if="isOptionSizeBiggerThanVolume" class="invalid-feedback">Option size must not be bigger than {{Math.floor(Number(selectedOptionVolume*1000))/1000}}!</small>
                 <small v-if="!isOptionSizeBiggerThanVolume">Maximum option size: {{Math.floor(Number(selectedOptionVolume*1000))/1000}}.</small>
               </div>
             </div>

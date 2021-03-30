@@ -1,7 +1,7 @@
 import ContractJson from "../../contracts/ERC20Mock.json";
 import addresses from "../../contracts/addresses.json";
 
-const ContractName = "FakeCoin";
+const ContractName = "FakeDollar";
 
 const state = {
   abi: null,
@@ -9,26 +9,26 @@ const state = {
   contract: null,
   userBalance: null,
   permit: true, // does this token have the permit() method?
-  decimals: 18
+  decimals: 6
 };
 
 const getters = {
-  getFakecoinDecimals(state) {
+  getFakeDollarDecimals(state) {
     return state.decimals;
   },
-  getFakecoinAbi(state) {
+  getFakeDollarAbi(state) {
     return state.abi;
   },
-  getFakecoinAddress(state) {
+  getFakeDollarAddress(state) {
     return state.address;
   },
-  getFakecoinContract(state) {
+  getFakeDollarContract(state) {
     return state.contract;
   },
-  getUserFakecoinBalance(state) {
+  getUserFakeDollarBalance(state) {
     return state.userBalance;
   },
-  usesPermitFakecoin(state) {
+  usesPermitFakeDollar(state) {
     return state.permit;
   }
 };
@@ -50,7 +50,7 @@ const actions = {
     let balanceWei = await state.contract.methods.balanceOf(address).call();
 
     let web3 = rootState.accounts.web3;
-    let balance = web3.utils.fromWei(balanceWei, "ether");
+    let balance = web3.utils.fromWei(balanceWei, "mwei"); // mwei because Fake Dollar has 6 decimals
 
     commit("setUserBalance", balance);
   },

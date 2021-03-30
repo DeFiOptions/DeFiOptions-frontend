@@ -135,6 +135,27 @@
           </div>
       </div>
 
+      <div class="col-xl-3 col-md-6 mb-4">
+          <div class="card bg-primary text-white shadow h-100 py-2">
+              <div class="card-body">
+                  <div class="row no-gutters align-items-center">
+                      <div class="col mr-2">
+                          <div class="text-xs font-weight-bold text-uppercase mb-1">
+                              Fake Dollars
+                          </div>
+                        
+                          <div class="h5 mb-0 font-weight-bold">
+                            ${{ Number(getUserFakeDollarBalance).toFixed(2) }}
+                          </div>
+                      </div>
+                      <div class="col-auto">
+                          <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+                      </div>
+                  </div>
+              </div>
+          </div>
+      </div>
+
     </div>
 
     <!-- Outer Row -->
@@ -145,20 +166,45 @@
               <div class="card-body p-0">
                   <div class="p-5">
                     <div class="text-center">
-                        <h2 class="h4 text-gray-900 mb-2">Get yourself some fake USD</h2>
+                        <h2 class="h4 text-gray-900 mb-2">Get yourself some Fakecoins</h2>
                         <p class="mb-4">
                           This is for a testnet only. You'll need some fake stablecoin tokens and here's where you 
                           can mint them.
                         </p>
                     </div>
 
-                    <form @submit.prevent="getFakeUsd">
+                    <form @submit.prevent="getFakecoins">
                         <div class="form-group">
-                            <input type="text" v-model="ctValue" class="form-control form-control-user"
-                                placeholder="Enter the amount of fake USD">
+                            <input type="text" v-model="fakecoinValue" class="form-control form-control-user"
+                                placeholder="Enter the amount of Fakecoins">
                         </div>
                         <button class="btn btn-primary btn-user btn-block">
-                            Gimme money! :)
+                            Gimme Fakecoins! :)
+                        </button>
+                    </form>
+                </div>
+              </div>
+          </div>
+      </div>
+
+      <div class="col-md-6">
+          <div class="card o-hidden border-0 shadow-lg mt-2">
+              <div class="card-body p-0">
+                  <div class="p-5">
+                    <div class="text-center">
+                        <h2 class="h4 text-gray-900 mb-2">Get yourself some Fake Dollars</h2>
+                        <p class="mb-4">
+                          This is another test stablecoin called Fake Dollar. This one uses permit() for approvals.
+                        </p>
+                    </div>
+
+                    <form @submit.prevent="getFakeDollars">
+                        <div class="form-group">
+                            <input type="text" v-model="fakeDollarValue" class="form-control form-control-user"
+                                placeholder="Enter the amount of Fake Dollars">
+                        </div>
+                        <button class="btn btn-primary btn-user btn-block">
+                            Gimme Fake Dollars! :)
                         </button>
                     </form>
                 </div>
@@ -183,6 +229,7 @@ export default {
     ...mapGetters("accounts", ["getActiveAccount", "getActiveBalanceEth", "getWeb3", "isUserConnected"]),
     ...mapGetters("optionsExchange", ["getExchangeUserBalance"]),
     ...mapGetters("fakecoin", ["getFakecoinContract", "getUserFakecoinBalance"]),
+    ...mapGetters("fakeDollar", ["getFakeDollarContract", "getUserFakeDollarBalance"]),
     ...mapGetters("creditToken", ["getCreditTokenUserBalance"]),
     ...mapGetters("liquidityPool", ["getLiquidityPoolUserBalance"])
   },
@@ -194,22 +241,25 @@ export default {
     this.$store.dispatch("optionsExchange/fetchContract");
     this.$store.dispatch("liquidityPool/fetchContract");
     this.$store.dispatch("fakecoin/fetchContract");
+    this.$store.dispatch("fakeDollar/fetchContract");
     this.$store.dispatch("creditToken/fetchContract");
     this.$store.dispatch("liquidityPool/fetchUserBalance");
     this.$store.dispatch("fakecoin/fetchUserBalance");
+    this.$store.dispatch("fakeDollar/fetchUserBalance");
     this.$store.dispatch("optionsExchange/fetchExchangeUserBalance");
     this.$store.dispatch("creditToken/fetchUserBalance");
     this.$store.dispatch("accounts/fetchActiveBalance");
   },
   data() {
     return {
-      ctValue: null
+      fakecoinValue: null,
+      fakeDollarValue: null
     }
   },
   methods: {
-    async getFakeUsd() {
+    async getFakecoins() {
       let component = this;
-      let tokensWei = this.getWeb3.utils.toWei(this.ctValue, "ether");
+      let tokensWei = this.getWeb3.utils.toWei(this.fakecoinValue, "ether");
 
       await this.getFakecoinContract.methods.issue(this.getActiveAccount, tokensWei).send({
         from: this.getActiveAccount
@@ -240,7 +290,50 @@ export default {
 
               // Refresh values
               component.$store.dispatch("fakecoin/fetchUserBalance"); // refresh the user's fakecoin balance
-              component.ctValue = null;
+              component.fakecoinValue = null;
+            }
+
+            // Refresh the ETH balance no matter if the tx was successful or not
+            component.$store.dispatch("accounts/fetchActiveBalance");
+          });
+        }
+      });
+    },
+    async getFakeDollars() {
+      let component = this;
+      // mwei because Fake Dollar has 6 decimals
+      let tokensWei = this.getWeb3.utils.toWei(this.fakeDollarValue, "mwei");
+
+      await this.getFakeDollarContract.methods.issue(this.getActiveAccount, tokensWei).send({
+        from: this.getActiveAccount
+      }, function(error, hash) {
+        if (error) {
+          component.$toast.error("The transaction has been rejected. Please try again.", {
+              timeout: 5000
+          });
+        }
+
+        if (hash) {
+          // show a "tx submitted" toast
+          component.$toast.info("The transaction has been submitted. Please wait for it to be confirmed.");
+
+          // listen for the Transfer event
+          component.getFakeDollarContract.once("Transfer", {
+            filter: { owner: component.getActiveAccount }
+          }, function(error, event) {
+            // failed transaction
+            
+            if (error) {
+              component.$toast.error("The Fake Dollar minting transaction has failed. Please try again, perhaps with a higher gas limit.");
+            }
+
+            // success
+            if (event) {
+              component.$toast.success("You have successfully issued yourself Fake Dollars! Now go and spend it :)");
+
+              // Refresh values
+              component.$store.dispatch("fakeDollar/fetchUserBalance"); // refresh the user's fakecoin balance
+              component.fakeDollarValue = null;
             }
 
             // Refresh the ETH balance no matter if the tx was successful or not
