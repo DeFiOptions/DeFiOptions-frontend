@@ -116,13 +116,13 @@
                   <div class="row no-gutters align-items-center">
                       <div class="col mr-2">
                           <div class="text-xs font-weight-bold text-uppercase mb-1">
-                              Fakecoin
+                              Dai
                           </div>
                         
                           <div class="h5 mb-0 font-weight-bold">
-                            ${{ Number(getUserFakecoinBalance).toFixed(2) }}
+                            ${{ Number(getUserDaiBalance).toFixed(2) }}
 
-                            <button class="btn btn-primary btn-sm" @click="addFakecoinToMetaMask" data-toggle="tooltip" data-placement="bottom" title="Add to MetaMask">
+                            <button class="btn btn-primary btn-sm" @click="addDaiToMetaMask" data-toggle="tooltip" data-placement="bottom" title="Add to MetaMask">
                               <i class="fas fa-plus-circle"></i>
                             </button>
                           </div>
@@ -166,20 +166,20 @@
               <div class="card-body p-0">
                   <div class="p-5">
                     <div class="text-center">
-                        <h2 class="h4 text-gray-900 mb-2">Get yourself some Fakecoins</h2>
+                        <h2 class="h4 text-gray-900 mb-2">Get yourself some DAI</h2>
                         <p class="mb-4">
-                          Fakecoin represents DAI (stablecoin with 18 decimals). Mint some fakecoins here and use 
-                          them on DeFiOptions (Kovan testnet only).
+                          Mint yourself some fake DAI tokens here and use 
+                          it on DeFiOptions (Kovan testnet only).
                         </p>
                     </div>
 
-                    <form @submit.prevent="getFakecoins">
+                    <form @submit.prevent="getDai">
                         <div class="form-group">
-                            <input type="text" v-model="fakecoinValue" class="form-control form-control-user"
-                                placeholder="Enter the amount of Fakecoins">
+                            <input type="text" v-model="daiValue" class="form-control form-control-user"
+                                placeholder="Enter the amount of DAI to receive">
                         </div>
                         <button class="btn btn-primary btn-user btn-block">
-                            Gimme Fakecoins! :)
+                            Gimme fake DAI! :)
                         </button>
                     </form>
                 </div>
@@ -194,8 +194,7 @@
                     <div class="text-center">
                         <h2 class="h4 text-gray-900 mb-2">Get yourself some Fake Dollars</h2>
                         <p class="mb-4">
-                          This is another test stablecoin called Fake Dollar, and it represents USDC (6 decimals). 
-                          Mint some fakecoins here and use them on DeFiOptions (Kovan testnet only).
+                          Mint some fake USDC here and use it on DeFiOptions (Kovan testnet only).
                         </p>
                     </div>
 
@@ -205,7 +204,7 @@
                                 placeholder="Enter the amount of Fake Dollars">
                         </div>
                         <button class="btn btn-primary btn-user btn-block">
-                            Gimme Fake Dollars! :)
+                            Gimme fake USDC! :)
                         </button>
                     </form>
                 </div>
@@ -229,7 +228,7 @@ export default {
   computed: {
     ...mapGetters("accounts", ["getActiveAccount", "getActiveBalanceEth", "getWeb3", "isUserConnected"]),
     ...mapGetters("optionsExchange", ["getExchangeUserBalance"]),
-    ...mapGetters("fakecoin", ["getFakecoinContract", "getUserFakecoinBalance"]),
+    ...mapGetters("dai", ["getDaiContract", "getUserDaiBalance"]),
     ...mapGetters("fakeDollar", ["getFakeDollarContract", "getUserFakeDollarBalance"]),
     ...mapGetters("creditToken", ["getCreditTokenUserBalance"]),
     ...mapGetters("liquidityPool", ["getLiquidityPoolUserBalance"])
@@ -241,11 +240,11 @@ export default {
 
     this.$store.dispatch("optionsExchange/fetchContract");
     this.$store.dispatch("liquidityPool/fetchContract");
-    this.$store.dispatch("fakecoin/fetchContract");
+    this.$store.dispatch("dai/fetchContract");
     this.$store.dispatch("fakeDollar/fetchContract");
     this.$store.dispatch("creditToken/fetchContract");
     this.$store.dispatch("liquidityPool/fetchUserBalance");
-    this.$store.dispatch("fakecoin/fetchUserBalance");
+    this.$store.dispatch("dai/fetchUserBalance");
     this.$store.dispatch("fakeDollar/fetchUserBalance");
     this.$store.dispatch("optionsExchange/fetchExchangeUserBalance");
     this.$store.dispatch("creditToken/fetchUserBalance");
@@ -253,16 +252,16 @@ export default {
   },
   data() {
     return {
-      fakecoinValue: null,
+      daiValue: null,
       fakeDollarValue: null
     }
   },
   methods: {
-    async getFakecoins() {
+    async getDai() {
       let component = this;
-      let tokensWei = this.getWeb3.utils.toWei(this.fakecoinValue, "ether");
+      let tokensWei = this.getWeb3.utils.toWei(this.daiValue, "ether");
 
-      await this.getFakecoinContract.methods.issue(this.getActiveAccount, tokensWei).send({
+      await this.getDaiContract.methods.issue(this.getActiveAccount, tokensWei).send({
         from: this.getActiveAccount
       }, function(error, hash) {
         if (error) {
@@ -276,22 +275,22 @@ export default {
           component.$toast.info("The transaction has been submitted. Please wait for it to be confirmed.");
 
           // listen for the Transfer event
-          component.getFakecoinContract.once("Transfer", {
+          component.getDaiContract.once("Transfer", {
             filter: { owner: component.getActiveAccount }
           }, function(error, event) {
             // failed transaction
             
             if (error) {
-              component.$toast.error("The Fakecoin issue transaction has failed. Please try again, perhaps with a higher gas limit.");
+              component.$toast.error("The Dai issue transaction has failed. Please try again, perhaps with a higher gas limit.");
             }
 
             // success
             if (event) {
-              component.$toast.success("You have successfully issued yourself fakecoins! Now go and spend it :)");
+              component.$toast.success("You have successfully issued yourself DAI! Now go and spend it :)");
 
               // Refresh values
-              component.$store.dispatch("fakecoin/fetchUserBalance"); // refresh the user's fakecoin balance
-              component.fakecoinValue = null;
+              component.$store.dispatch("dai/fetchUserBalance"); // refresh the user's dai balance
+              component.daiValue = null;
             }
 
             // Refresh the ETH balance no matter if the tx was successful or not
@@ -333,7 +332,7 @@ export default {
               component.$toast.success("You have successfully issued yourself Fake Dollars! Now go and spend it :)");
 
               // Refresh values
-              component.$store.dispatch("fakeDollar/fetchUserBalance"); // refresh the user's fakecoin balance
+              component.$store.dispatch("fakeDollar/fetchUserBalance"); // refresh the user's USDC balance
               component.fakeDollarValue = null;
             }
 
@@ -343,14 +342,14 @@ export default {
         }
       });
     },
-    async addFakecoinToMetaMask() {
+    async addDaiToMetaMask() {
       await window.ethereum.request({
         method: 'wallet_watchAsset',
         params: {
           type: 'ERC20', // Initially only supports ERC20, but eventually more!
           options: {
-            address: this.getFakecoinContract._address, // The address that the token is at.
-            symbol: "fkUSD", // A ticker symbol or shorthand, up to 5 chars.
+            address: this.getDaiContract._address, // The address that the token is at.
+            symbol: "DAI", // A ticker symbol or shorthand, up to 5 chars.
             decimals: 18, // The number of decimals in the token
             image: "", // TODO: A string url of the token logo
           },

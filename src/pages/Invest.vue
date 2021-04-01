@@ -63,10 +63,10 @@
                               placeholder="Enter the amount to deposit">
                           
                           <small>
-                            Your fakecoin balance: {{ Number(getUserFakecoinBalance).toFixed(2) }} fkUSD
+                            Your DAI balance: {{ Number(getUserDaiBalance).toFixed(2) }} DAI
                             (allowance: 
                             <span v-if="allowance > 100000000000">unlimited)</span>
-                            <span v-if="allowance < 100000000000">{{Number(allowance).toFixed(2)}} fkUSD)</span>
+                            <span v-if="allowance < 100000000000">{{Number(allowance).toFixed(2)}} DAI)</span>
                           </small>
                       </div>
 
@@ -74,7 +74,7 @@
                         <div class="form-check">
                           <input class="form-check-input" v-model="allowanceOption" type="radio" id="limitedApprovalChoice" value="limited" checked>
                           <label class="form-check-label" for="limitedApprovalChoice">
-                            Approval for {{depositValue}} fkUSD.
+                            Approval for {{depositValue}} DAI.
                           </label>
                         </div>
                         <div class="form-check">
@@ -85,8 +85,8 @@
                         </div>
                       </div>
 
-                      <button v-if="Number(allowance) < Number(depositValue)" class="btn btn-success btn-block">Approve fkUSD</button>
-                      <button v-if="Number(allowance) >= Number(depositValue)" :disabled="depositValue == null || Number(depositValue) == 0" class="btn btn-primary btn-block">Deposit fkUSD</button>
+                      <button v-if="Number(allowance) < Number(depositValue)" class="btn btn-success btn-block">Approve DAI</button>
+                      <button v-if="Number(allowance) >= Number(depositValue)" :disabled="depositValue == null || Number(depositValue) == 0" class="btn btn-primary btn-block">Deposit DAI</button>
 
                       <span v-if="Number(allowance) < Number(depositValue)">
                         <small>
@@ -115,7 +115,7 @@ export default {
     ...mapGetters("accounts", ["getActiveAccount", "getActiveBalanceEth"]),
     ...mapGetters("optionsExchange", ["getLiquidityPoolBalance"]),
     ...mapGetters("liquidityPool", ["getApy", "getLiquidityPoolContract", "getLiquidityPoolAddress"]),
-    ...mapGetters("fakecoin", ["getFakecoinAddress", "getUserFakecoinBalance", "getFakecoinContract"])
+    ...mapGetters("dai", ["getDaiAddress", "getUserDaiBalance", "getDaiContract"])
   },
   created() {
     if (!this.getWeb3 || !this.isUserConnected) {
@@ -124,14 +124,14 @@ export default {
 
     this.$store.dispatch("optionsExchange/fetchContract");
     this.$store.dispatch("liquidityPool/fetchContract");
-    this.$store.dispatch("fakecoin/fetchContract");
-    this.$store.dispatch("fakecoin/fetchUserBalance");
-    this.$store.dispatch("fakecoin/storeAddress");
+    this.$store.dispatch("dai/fetchContract");
+    this.$store.dispatch("dai/fetchUserBalance");
+    this.$store.dispatch("dai/storeAddress");
     this.$store.dispatch("optionsExchange/fetchLiquidityPoolBalance");
     this.$store.dispatch("liquidityPool/fetchApy");
     this.$store.dispatch("liquidityPool/storeAddress");
 
-    this.checkFakecoinAllowance();
+    this.checkDaiAllowance();
   },
   data() {
     return {
@@ -142,9 +142,9 @@ export default {
     }
   },
   methods: {
-    async checkFakecoinAllowance() {
+    async checkDaiAllowance() {
       // check current allowance size
-      this.allowanceWei = await this.getFakecoinContract.methods.allowance(this.getActiveAccount, this.getLiquidityPoolAddress).call();
+      this.allowanceWei = await this.getDaiContract.methods.allowance(this.getActiveAccount, this.getLiquidityPoolAddress).call();
       this.allowance = this.getWeb3.utils.fromWei(this.allowanceWei, "ether");
     },
     async depositIntoPool() {
@@ -158,7 +158,7 @@ export default {
         }
 
         // call the approve method to increase the allowance
-        await this.getFakecoinContract.methods.approve(this.getLiquidityPoolAddress, approvalValue).send({
+        await this.getDaiContract.methods.approve(this.getLiquidityPoolAddress, approvalValue).send({
           from: this.getActiveAccount
         }, function(error, hash) {
 
@@ -173,7 +173,7 @@ export default {
             component.$toast.info("The Approval transaction has been submitted. Please wait for it to be confirmed.");
 
             // listen for the Approval event
-            component.getFakecoinContract.once("Approval", {
+            component.getDaiContract.once("Approval", {
               filter: { owner: component.getActiveAccount }
             }, function(error, event) {
               // failed transaction
@@ -186,8 +186,8 @@ export default {
                 component.$toast.success("Approval was successful. Please make a deposit now.");
 
                 // refresh values
-                component.checkFakecoinAllowance();
-                component.$store.dispatch("fakecoin/fetchUserBalance"); // refresh the user's fakecoin balance
+                component.checkDaiAllowance();
+                component.$store.dispatch("dai/fetchUserBalance"); // refresh the user's DAI balance
               }
             });
           }
@@ -195,7 +195,7 @@ export default {
 
       } else {
         // make a deposit
-        await this.getLiquidityPoolContract.methods.depositTokens(this.getActiveAccount, this.getFakecoinAddress, tokensWei).send({
+        await this.getLiquidityPoolContract.methods.depositTokens(this.getActiveAccount, this.getDaiAddress, tokensWei).send({
           from: this.getActiveAccount
         }, function(error, hash) {
           // Deposit tx error
@@ -209,7 +209,7 @@ export default {
             component.$toast.info("The Deposit transaction has been submitted. Please wait for it to be confirmed.");
 
             // listen for the Transfer event
-            component.getFakecoinContract.once("Transfer", {
+            component.getDaiContract.once("Transfer", {
               filter: { owner: component.getActiveAccount }
             }, function(error, event) {
               // failed transaction
@@ -222,8 +222,8 @@ export default {
                 component.$toast.success("Your deposit was successfull.");
 
                 // refresh values
-                component.checkFakecoinAllowance();
-                component.$store.dispatch("fakecoin/fetchUserBalance");
+                component.checkDaiAllowance();
+                component.$store.dispatch("dai/fetchUserBalance");
                 component.$store.dispatch("optionsExchange/fetchLiquidityPoolBalance");
               }
             });

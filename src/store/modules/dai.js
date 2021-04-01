@@ -1,7 +1,7 @@
 import ContractJson from "../../contracts/ERC20Mock.json";
 import addresses from "../../contracts/addresses.json";
 
-const ContractName = "FakeCoin";
+const ContractName = "Dai";
 
 const state = {
   abi: null,
@@ -13,22 +13,22 @@ const state = {
 };
 
 const getters = {
-  getFakecoinDecimals(state) {
+  getDaiDecimals(state) {
     return state.decimals;
   },
-  getFakecoinAbi(state) {
+  getDaiAbi(state) {
     return state.abi;
   },
-  getFakecoinAddress(state) {
+  getDaiAddress(state) {
     return state.address;
   },
-  getFakecoinContract(state) {
+  getDaiContract(state) {
     return state.contract;
   },
-  getUserFakecoinBalance(state) {
+  getUserDaiBalance(state) {
     return state.userBalance;
   },
-  usesPermitFakecoin(state) {
+  usesPermitDai(state) {
     return state.permit;
   }
 };
