@@ -58,41 +58,50 @@
                   </div>
 
                   <form @submit.prevent="depositIntoPool" class="mt-3">
-                      <div class="form-group">
-                          <input type="text" v-model="depositValue" class="form-control form-control-user"
-                              placeholder="Enter the amount to deposit">
-                          
-                          <small>
-                            Your DAI balance: {{ Number(getUserDaiBalance).toFixed(2) }} DAI
-                            (allowance: 
-                            <span v-if="allowance > 100000000000">unlimited)</span>
-                            <span v-if="allowance < 100000000000">{{Number(allowance).toFixed(2)}} DAI)</span>
-                          </small>
-                      </div>
-
-                      <div v-if="Number(allowance) < Number(depositValue)" class="mb-3">
-                        <div class="form-check">
-                          <input class="form-check-input" v-model="allowanceOption" type="radio" id="limitedApprovalChoice" value="limited" checked>
-                          <label class="form-check-label" for="limitedApprovalChoice">
-                            Approval for {{depositValue}} DAI.
-                          </label>
-                        </div>
-                        <div class="form-check">
-                          <input class="form-check-input" v-model="allowanceOption" type="radio" id="unlimitedApprovalChoice" value="unlimited">
-                          <label class="form-check-label" for="unlimitedApprovalChoice">
-                            Unlimited approval (you won't need to do approval transactions anymore).
-                          </label>
+                    <div class="input-group">
+                      <input type="text" class="form-control" v-model="depositValue" placeholder="Enter the amount to deposit">
+                      <div class="input-group-append">
+                        <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">{{selectedToken}}</button>
+                        <div class="dropdown-menu dropdown-menu-right">
+                          <a class="dropdown-item" @click="changeStablecoin('DAI')" href="#">DAI</a>
+                          <a class="dropdown-item" @click="changeStablecoin('USDC')" href="#">USDC</a>
                         </div>
                       </div>
+                      
+                    </div>
 
-                      <button v-if="Number(allowance) < Number(depositValue)" class="btn btn-success btn-block">Approve DAI</button>
-                      <button v-if="Number(allowance) >= Number(depositValue)" :disabled="depositValue == null || Number(depositValue) == 0" class="btn btn-primary btn-block">Deposit DAI</button>
+                    <small>
+                      Your {{selectedToken}} balance: {{ Number(getUserStablecoinBalance).toFixed(2) }} {{selectedToken}}
+                      (allowance: 
+                      <span v-if="getAllowance > 100000000000">unlimited)</span>
+                      <span v-if="getAllowance < 100000000000">{{Number(getAllowance).toFixed(2)}} {{selectedToken}})</span>
+                    </small>
 
-                      <span v-if="Number(allowance) < Number(depositValue)">
-                        <small>
-                          (Two transactions are needed: 1. Approval, 2. Deposit)
-                        </small>
-                      </span>
+                    <div v-if="Number(getAllowance) < Number(depositValue)" class="mb-3 mt-2">
+                      <div class="form-check">
+                        <input class="form-check-input" v-model="allowanceOption" type="radio" id="limitedApprovalChoice" value="limited" checked>
+                        <label class="form-check-label" for="limitedApprovalChoice">
+                          Approval for {{depositValue}} {{selectedToken}}.
+                        </label>
+                      </div>
+                      <div class="form-check">
+                        <input class="form-check-input" v-model="allowanceOption" type="radio" id="unlimitedApprovalChoice" value="unlimited">
+                        <label class="form-check-label" for="unlimitedApprovalChoice">
+                          Unlimited approval (you won't need to do approval transactions anymore).
+                        </label>
+                      </div>
+                    </div>
+
+                    <div class="mt-2">
+                      <button v-if="Number(getAllowance) < Number(depositValue)" class="btn btn-success btn-block">Approve {{selectedToken}}</button>
+                      <button v-if="Number(getAllowance) >= Number(depositValue)" :disabled="depositValue == null || Number(depositValue) == 0" class="btn btn-primary btn-block">Deposit {{selectedToken}}</button>
+                    </div>
+                    
+                    <span v-if="Number(getAllowance) < Number(depositValue)">
+                      <small>
+                        (Two transactions are needed: 1. Approval, 2. Deposit)
+                      </small>
+                    </span>
                   </form>
               </div>
             </div>
@@ -115,7 +124,45 @@ export default {
     ...mapGetters("accounts", ["getActiveAccount", "getActiveBalanceEth"]),
     ...mapGetters("optionsExchange", ["getLiquidityPoolBalance"]),
     ...mapGetters("liquidityPool", ["getApy", "getLiquidityPoolContract", "getLiquidityPoolAddress"]),
-    ...mapGetters("dai", ["getDaiAddress", "getUserDaiBalance", "getDaiContract"])
+    ...mapGetters("dai", ["getDaiAddress", "getUserDaiBalance", "getDaiContract"]),
+    ...mapGetters("usdc", ["getUsdcAddress", "getUserUsdcBalance", "getUsdcContract"]),
+
+    getAllowance() {
+      if (this.selectedToken === "DAI") {
+        return this.allowanceDai;
+      } else if (this.selectedToken === "USDC") {
+        return this.allowanceUsdc;
+      }
+
+      return null;
+    },
+    getAllowanceWei() {
+      if (this.selectedToken === "DAI") {
+        return this.allowanceDaiWei;
+      } else if (this.selectedToken === "USDC") {
+        return this.allowanceUsdcWei;
+      }
+
+      return null;
+    },
+    getStablecoinContract() {
+      if (this.selectedToken === "DAI") {
+        return this.getDaiContract;
+      } else if (this.selectedToken === "USDC") {
+        return this.getUsdcContract;
+      }
+
+      return null;
+    },
+    getUserStablecoinBalance() {
+      if (this.selectedToken === "DAI") {
+        return this.getUserDaiBalance;
+      } else if (this.selectedToken === "USDC") {
+        return this.getUserUsdcBalance;
+      }
+
+      return null;
+    },
   },
   created() {
     if (!this.getWeb3 || !this.isUserConnected) {
@@ -127,38 +174,53 @@ export default {
     this.$store.dispatch("dai/fetchContract");
     this.$store.dispatch("dai/fetchUserBalance");
     this.$store.dispatch("dai/storeAddress");
+    this.$store.dispatch("usdc/fetchContract");
+    this.$store.dispatch("usdc/fetchUserBalance");
+    this.$store.dispatch("usdc/storeAddress");
     this.$store.dispatch("optionsExchange/fetchLiquidityPoolBalance");
     this.$store.dispatch("liquidityPool/fetchApy");
     this.$store.dispatch("liquidityPool/storeAddress");
 
     this.checkDaiAllowance();
+    this.checkUsdcAllowance();
   },
   data() {
     return {
       depositValue: null,
-      allowanceWei: null,
-      allowance: null,
-      allowanceOption: "limited"
+      allowanceDaiWei: null,
+      allowanceDai: null,
+      allowanceUsdcWei: null,
+      allowanceUsdc: null,
+      allowanceOption: "limited",
+      selectedToken: "DAI"
     }
   },
   methods: {
+    changeStablecoin(token) {
+      this.selectedToken = token;
+    },
     async checkDaiAllowance() {
       // check current allowance size
-      this.allowanceWei = await this.getDaiContract.methods.allowance(this.getActiveAccount, this.getLiquidityPoolAddress).call();
-      this.allowance = this.getWeb3.utils.fromWei(this.allowanceWei, "ether");
+      this.allowanceDaiWei = await this.getDaiContract.methods.allowance(this.getActiveAccount, this.getLiquidityPoolAddress).call();
+      this.allowanceDai = this.getWeb3.utils.fromWei(this.allowanceDaiWei, "ether");
+    },
+    async checkUsdcAllowance() {
+      // check current allowance size
+      this.allowanceUsdcWei = await this.getUsdcContract.methods.allowance(this.getActiveAccount, this.getLiquidityPoolAddress).call();
+      this.allowanceUsdc = this.getWeb3.utils.fromWei(this.allowanceUsdcWei, "mwei");
     },
     async depositIntoPool() {
       let component = this;
       let tokensWei = this.getWeb3.utils.toWei(this.depositValue, "ether");
 
-      if (Number(this.allowanceWei) < Number(tokensWei)) {
+      if (Number(this.getAllowanceWei) < Number(tokensWei)) {
         let approvalValue = tokensWei;
         if (this.allowanceOption === "unlimited") {
           approvalValue = "1000000000000000000000000000000000"; // "unlimited" value
         }
 
         // call the approve method to increase the allowance
-        await this.getDaiContract.methods.approve(this.getLiquidityPoolAddress, approvalValue).send({
+        await this.getStablecoinContract.methods.approve(this.getLiquidityPoolAddress, approvalValue).send({
           from: this.getActiveAccount
         }, function(error, hash) {
 
@@ -173,7 +235,7 @@ export default {
             component.$toast.info("The Approval transaction has been submitted. Please wait for it to be confirmed.");
 
             // listen for the Approval event
-            component.getDaiContract.once("Approval", {
+            component.getStablecoinContract.once("Approval", {
               filter: { owner: component.getActiveAccount }
             }, function(error, event) {
               // failed transaction
@@ -186,8 +248,13 @@ export default {
                 component.$toast.success("Approval was successful. Please make a deposit now.");
 
                 // refresh values
-                component.checkDaiAllowance();
-                component.$store.dispatch("dai/fetchUserBalance"); // refresh the user's DAI balance
+                if (this.selectedToken === "DAI") {
+                  component.checkDaiAllowance();
+                  component.$store.dispatch("dai/fetchUserBalance"); // refresh the user's DAI balance
+                } else if (this.selectedToken === "USDC") {
+                  component.checkUsdcAllowance();
+                  component.$store.dispatch("usdc/fetchUserBalance"); // refresh the user's USDC balance
+                }
               }
             });
           }
@@ -195,7 +262,7 @@ export default {
 
       } else {
         // make a deposit
-        await this.getLiquidityPoolContract.methods.depositTokens(this.getActiveAccount, this.getDaiAddress, tokensWei).send({
+        await this.getLiquidityPoolContract.methods.depositTokens(this.getActiveAccount, this.getStablecoinContract._address, tokensWei).send({
           from: this.getActiveAccount
         }, function(error, hash) {
           // Deposit tx error
@@ -209,7 +276,7 @@ export default {
             component.$toast.info("The Deposit transaction has been submitted. Please wait for it to be confirmed.");
 
             // listen for the Transfer event
-            component.getDaiContract.once("Transfer", {
+            component.getStablecoinContract.once("Transfer", {
               filter: { owner: component.getActiveAccount }
             }, function(error, event) {
               // failed transaction
@@ -222,8 +289,14 @@ export default {
                 component.$toast.success("Your deposit was successfull.");
 
                 // refresh values
-                component.checkDaiAllowance();
-                component.$store.dispatch("dai/fetchUserBalance");
+                if (this.selectedToken === "DAI") {
+                  component.checkDaiAllowance();
+                  component.$store.dispatch("dai/fetchUserBalance");
+                } else if (this.selectedToken === "USDC") {
+                  component.checkUsdcAllowance();
+                  component.$store.dispatch("usdc/fetchUserBalance");
+                }
+                
                 component.$store.dispatch("optionsExchange/fetchLiquidityPoolBalance");
               }
             });
