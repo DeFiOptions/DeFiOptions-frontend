@@ -141,11 +141,11 @@
                   <div class="row no-gutters align-items-center">
                       <div class="col mr-2">
                           <div class="text-xs font-weight-bold text-uppercase mb-1">
-                              Fake Dollars
+                              USDC
                           </div>
                         
                           <div class="h5 mb-0 font-weight-bold">
-                            ${{ Number(getUserFakeDollarBalance).toFixed(2) }}
+                            ${{ Number(getUserUsdcBalance).toFixed(2) }}
                           </div>
                       </div>
                       <div class="col-auto">
@@ -192,16 +192,16 @@
               <div class="card-body p-0">
                   <div class="p-5">
                     <div class="text-center">
-                        <h2 class="h4 text-gray-900 mb-2">Get yourself some Fake Dollars</h2>
+                        <h2 class="h4 text-gray-900 mb-2">Get yourself some USDC</h2>
                         <p class="mb-4">
                           Mint some fake USDC here and use it on DeFiOptions (Kovan testnet only).
                         </p>
                     </div>
 
-                    <form @submit.prevent="getFakeDollars">
+                    <form @submit.prevent="getUsdc">
                         <div class="form-group">
-                            <input type="text" v-model="fakeDollarValue" class="form-control form-control-user"
-                                placeholder="Enter the amount of Fake Dollars">
+                            <input type="text" v-model="usdcValue" class="form-control form-control-user"
+                                placeholder="Enter the amount of USDC to receive">
                         </div>
                         <button class="btn btn-primary btn-user btn-block">
                             Gimme fake USDC! :)
@@ -229,7 +229,7 @@ export default {
     ...mapGetters("accounts", ["getActiveAccount", "getActiveBalanceEth", "getWeb3", "isUserConnected"]),
     ...mapGetters("optionsExchange", ["getExchangeUserBalance"]),
     ...mapGetters("dai", ["getDaiContract", "getUserDaiBalance"]),
-    ...mapGetters("fakeDollar", ["getFakeDollarContract", "getUserFakeDollarBalance"]),
+    ...mapGetters("usdc", ["getUsdcContract", "getUserUsdcBalance"]),
     ...mapGetters("creditToken", ["getCreditTokenUserBalance"]),
     ...mapGetters("liquidityPool", ["getLiquidityPoolUserBalance"])
   },
@@ -241,11 +241,11 @@ export default {
     this.$store.dispatch("optionsExchange/fetchContract");
     this.$store.dispatch("liquidityPool/fetchContract");
     this.$store.dispatch("dai/fetchContract");
-    this.$store.dispatch("fakeDollar/fetchContract");
+    this.$store.dispatch("usdc/fetchContract");
     this.$store.dispatch("creditToken/fetchContract");
     this.$store.dispatch("liquidityPool/fetchUserBalance");
     this.$store.dispatch("dai/fetchUserBalance");
-    this.$store.dispatch("fakeDollar/fetchUserBalance");
+    this.$store.dispatch("usdc/fetchUserBalance");
     this.$store.dispatch("optionsExchange/fetchExchangeUserBalance");
     this.$store.dispatch("creditToken/fetchUserBalance");
     this.$store.dispatch("accounts/fetchActiveBalance");
@@ -253,7 +253,7 @@ export default {
   data() {
     return {
       daiValue: null,
-      fakeDollarValue: null
+      usdcValue: null
     }
   },
   methods: {
@@ -299,12 +299,12 @@ export default {
         }
       });
     },
-    async getFakeDollars() {
+    async getUsdc() {
       let component = this;
-      // mwei because Fake Dollar has 6 decimals
-      let tokensWei = this.getWeb3.utils.toWei(this.fakeDollarValue, "mwei");
+      // mwei because USDC has 6 decimals
+      let tokensWei = this.getWeb3.utils.toWei(this.usdcValue, "mwei");
 
-      await this.getFakeDollarContract.methods.issue(this.getActiveAccount, tokensWei).send({
+      await this.getUsdcContract.methods.issue(this.getActiveAccount, tokensWei).send({
         from: this.getActiveAccount
       }, function(error, hash) {
         if (error) {
@@ -318,22 +318,22 @@ export default {
           component.$toast.info("The transaction has been submitted. Please wait for it to be confirmed.");
 
           // listen for the Transfer event
-          component.getFakeDollarContract.once("Transfer", {
+          component.getUsdcContract.once("Transfer", {
             filter: { owner: component.getActiveAccount }
           }, function(error, event) {
             // failed transaction
             
             if (error) {
-              component.$toast.error("The Fake Dollar minting transaction has failed. Please try again, perhaps with a higher gas limit.");
+              component.$toast.error("The USDC minting transaction has failed. Please try again, perhaps with a higher gas limit.");
             }
 
             // success
             if (event) {
-              component.$toast.success("You have successfully issued yourself Fake Dollars! Now go and spend it :)");
+              component.$toast.success("You have successfully issued yourself USDC! Now go and spend it :)");
 
               // Refresh values
-              component.$store.dispatch("fakeDollar/fetchUserBalance"); // refresh the user's USDC balance
-              component.fakeDollarValue = null;
+              component.$store.dispatch("usdc/fetchUserBalance"); // refresh the user's USDC balance
+              component.usdcValue = null;
             }
 
             // Refresh the ETH balance no matter if the tx was successful or not
