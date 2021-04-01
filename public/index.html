@@ -37,5 +37,13 @@
 
     <!-- Page level plugins -->
     <script type="text/javascript" src="<%= BASE_URL %>assets/chart.js/Chart.min.js"></script>
+
+    <script type="text/javascript">
+      $(function () {
+        $('body').tooltip({
+            selector: '[data-toggle="tooltip"]'
+        });
+      });
+    </script>
   </body>
 </html>

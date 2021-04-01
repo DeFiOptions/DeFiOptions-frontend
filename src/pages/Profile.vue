@@ -122,7 +122,7 @@
                           <div class="h5 mb-0 font-weight-bold">
                             ${{ Number(getUserFakecoinBalance).toFixed(2) }}
 
-                            <button class="btn btn-primary btn-sm" @click="addFakecoinToMetaMask">
+                            <button class="btn btn-primary btn-sm" @click="addFakecoinToMetaMask" data-toggle="tooltip" data-placement="bottom" title="Add to MetaMask">
                               <i class="fas fa-plus-circle"></i>
                             </button>
                           </div>
