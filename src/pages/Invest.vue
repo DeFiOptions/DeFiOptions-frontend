@@ -59,15 +59,14 @@
 
                   <form @submit.prevent="depositIntoPool" class="mt-3">
                     <div class="input-group">
-                      <input type="text" class="form-control" v-model="depositValue" placeholder="Enter the amount to deposit">
-                      <div class="input-group-append">
+                      <div class="input-group-prepend">
                         <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">{{selectedToken}}</button>
-                        <div class="dropdown-menu dropdown-menu-right">
+                        <div class="dropdown-menu dropdown-menu-left">
                           <a class="dropdown-item" @click="changeStablecoin('DAI')" href="#">DAI</a>
                           <a class="dropdown-item" @click="changeStablecoin('USDC')" href="#">USDC</a>
                         </div>
                       </div>
-                      
+                      <input type="text" class="form-control" v-model="depositValue" placeholder="0.0">
                     </div>
 
                     <small>
@@ -94,7 +93,7 @@
 
                     <div class="mt-2">
                       <button v-if="Number(getAllowance) < Number(depositValue)" class="btn btn-success btn-block">Approve {{selectedToken}}</button>
-                      <button v-if="Number(getAllowance) >= Number(depositValue)" :disabled="depositValue == null || Number(depositValue) == 0" class="btn btn-primary btn-block">Deposit {{selectedToken}}</button>
+                      <button v-if="Number(getAllowance) >= Number(depositValue)" :disabled="depositValue == null || Number(depositValue) == 0" class="btn btn-primary btn-block">Deposit {{depositValue}} {{selectedToken}}</button>
                     </div>
                     
                     <span v-if="Number(getAllowance) < Number(depositValue)">
@@ -211,17 +210,23 @@ export default {
     },
     async depositIntoPool() {
       let component = this;
-      let tokensWei = this.getWeb3.utils.toWei(this.depositValue, "ether");
 
-      if (Number(this.getAllowanceWei) < Number(tokensWei)) {
+      let unit = "ether"; // DAI
+      if (component.selectedToken === "USDC") {
+        unit = "mwei"; // USDC
+      }
+
+      let tokensWei = component.getWeb3.utils.toWei(component.depositValue, unit);
+
+      if (Number(component.getAllowanceWei) < Number(tokensWei)) {
         let approvalValue = tokensWei;
-        if (this.allowanceOption === "unlimited") {
+        if (component.allowanceOption === "unlimited") {
           approvalValue = "1000000000000000000000000000000000"; // "unlimited" value
         }
 
         // call the approve method to increase the allowance
-        await this.getStablecoinContract.methods.approve(this.getLiquidityPoolAddress, approvalValue).send({
-          from: this.getActiveAccount
+        await component.getStablecoinContract.methods.approve(component.getLiquidityPoolAddress, approvalValue).send({
+          from: component.getActiveAccount
         }, function(error, hash) {
 
           // Approval tx error
@@ -248,10 +253,10 @@ export default {
                 component.$toast.success("Approval was successful. Please make a deposit now.");
 
                 // refresh values
-                if (this.selectedToken === "DAI") {
+                if (component.selectedToken === "DAI") {
                   component.checkDaiAllowance();
                   component.$store.dispatch("dai/fetchUserBalance"); // refresh the user's DAI balance
-                } else if (this.selectedToken === "USDC") {
+                } else if (component.selectedToken === "USDC") {
                   component.checkUsdcAllowance();
                   component.$store.dispatch("usdc/fetchUserBalance"); // refresh the user's USDC balance
                 }
@@ -262,8 +267,8 @@ export default {
 
       } else {
         // make a deposit
-        await this.getLiquidityPoolContract.methods.depositTokens(this.getActiveAccount, this.getStablecoinContract._address, tokensWei).send({
-          from: this.getActiveAccount
+        await component.getLiquidityPoolContract.methods.depositTokens(component.getActiveAccount, component.getStablecoinContract._address, tokensWei).send({
+          from: component.getActiveAccount
         }, function(error, hash) {
           // Deposit tx error
           if (error) {
@@ -289,15 +294,16 @@ export default {
                 component.$toast.success("Your deposit was successfull.");
 
                 // refresh values
-                if (this.selectedToken === "DAI") {
+                if (component.selectedToken === "DAI") {
                   component.checkDaiAllowance();
                   component.$store.dispatch("dai/fetchUserBalance");
-                } else if (this.selectedToken === "USDC") {
+                } else if (component.selectedToken === "USDC") {
                   component.checkUsdcAllowance();
                   component.$store.dispatch("usdc/fetchUserBalance");
                 }
                 
                 component.$store.dispatch("optionsExchange/fetchLiquidityPoolBalance");
+                component.depositValue = null;
               }
             });
           }
