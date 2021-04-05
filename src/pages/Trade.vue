@@ -105,30 +105,49 @@
             <div class="form-group row">
               <label for="optionSymbol" class="col-sm-3 col-form-label font-weight-bold">Option</label>
               <div class="col-sm-9">
-                <input type="text" readonly class="form-control-plaintext" id="optionSymbol" :value="selectedPair+' '+selectedType+' at $'+selectedStrike+' ('+selectedMaturity+')'">
+                <input type="text" readonly class="form-control-plaintext ml-1" id="optionSymbol" :value="selectedPair+' '+selectedType+' at $'+selectedStrike+' ('+selectedMaturity+')'">
               </div>
             </div>
 
             <div class="form-group row">
               <label for="optionSize" class="col-sm-3 col-form-label font-weight-bold">Option size</label>
-              <div class="col-sm-9">
-                <input type="text" class="form-control" :class="isOptionSizeBiggerThanVolume ? 'is-invalid' : ''" id="optionSize" v-model="selectedOptionSize">
-                <small v-if="isOptionSizeBiggerThanVolume" class="invalid-feedback">Option size must not be bigger than {{Math.floor(Number(selectedOptionVolume*1000))/1000}}!</small>
-                <small v-if="!isOptionSizeBiggerThanVolume">Maximum option size: {{Math.floor(Number(selectedOptionVolume*1000))/1000}}.</small>
+              <div class="col-sm-8">
+                <input type="text" class="form-control ml-1" :class="isOptionSizeBiggerThanVolume ? 'is-invalid' : ''" id="optionSize" v-model="selectedOptionSize">
+                <small v-if="isOptionSizeBiggerThanVolume" class="invalid-feedback ml-1">Option size must not be bigger than {{Math.floor(Number(selectedOptionVolume*1000))/1000}}!</small>
+                <small class="ml-1" v-if="!isOptionSizeBiggerThanVolume">Maximum option size: {{Math.floor(Number(selectedOptionVolume*1000))/1000}}.</small>
               </div>
             </div>
 
             <div class="form-group row">
               <label for="optionPrice" class="col-sm-3 col-form-label font-weight-bold">Option price</label>
               <div class="col-sm-9">
-                <input type="text" readonly class="form-control-plaintext" id="optionPrice" :value="'$'+Number(selectedOptionPrice).toFixed(2)">
+                <input type="text" readonly class="form-control-plaintext ml-1" id="optionPrice" :value="'$'+Number(selectedOptionPrice).toFixed(2)">
+              </div>
+            </div>
+
+            <div class="form-group row">
+              <label for="optionBuyWith" class="col-sm-3 col-form-label font-weight-bold">Buy with</label>
+              <div class="col-sm-9">
+                <div class="dropdown" id="optionBuyWith">
+                  <button class="btn btn-light dropdown-toggle" type="button" id="buyWithDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    {{ buyWith }}
+                  </button>
+                  
+                  <div class="dropdown-menu" aria-labelledby="buyWithDropdown">
+                    <button class="dropdown-item" type="button" @click="changeBuyWith('DAI')">DAI</button>
+                    <button class="dropdown-item" type="button" @click="changeBuyWith('USDC')">USDC</button>
+                    <button class="dropdown-item" type="button" @click="changeBuyWith('Exchange Balance')">Exchange Balance</button>
+                  </div>
+                  
+                </div>
+                <small class="ml-1">Max: $0.0 {{buyWith}} (allowance: $0.0).</small>
               </div>
             </div>
 
             <div class="form-group row">
               <label for="optionTotal" class="col-sm-3 col-form-label font-weight-bold">TOTAL</label>
               <div class="col-sm-9">
-                <input type="text" readonly class="form-control-plaintext" id="optionTotal" :value="'$'+Number(selectedOptionSize*selectedOptionPrice).toFixed(2)">
+                <input type="text" readonly class="form-control-plaintext ml-1" id="optionTotal" :value="'$'+Number(selectedOptionSize*selectedOptionPrice).toFixed(2)">
               </div>
             </div>
 
@@ -219,6 +238,7 @@ export default {
   },
   data() {
     return {
+      buyWith: "DAI",
       maturities: null,
       pairs: null,
       selectedAction: "Buy", // Buy or Sell
@@ -235,6 +255,9 @@ export default {
     }
   },
   methods: {
+    changeBuyWith(stablecoin) {
+      this.buyWith = stablecoin;
+    },
     changePair(pair) {
       this.selectedPair = pair;
     },
