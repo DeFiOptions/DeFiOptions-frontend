@@ -145,23 +145,23 @@ export default {
     ...mapGetters("accounts", ["getActiveAccount", "getActiveBalanceEth"]),
     ...mapGetters("optionsExchange", ["getLiquidityPoolBalance"]),
     ...mapGetters("liquidityPool", ["getApy", "getLiquidityPoolContract", "getLiquidityPoolAddress", "getLiquidityPoolUserBalance"]),
-    ...mapGetters("dai", ["getDaiAddress", "getUserDaiBalance", "getDaiContract"]),
-    ...mapGetters("usdc", ["getUsdcAddress", "getUserUsdcBalance", "getUsdcContract"]),
+    ...mapGetters("dai", ["getDaiAddress", "getUserDaiBalance", "getDaiContract", "getLpDaiAllowance"]),
+    ...mapGetters("usdc", ["getUsdcAddress", "getUserUsdcBalance", "getUsdcContract", "getLpUsdcAllowance"]),
 
     getAllowance() {
       if (this.selectedToken === "DAI") {
-        return this.allowanceDai;
+        return this.getLpDaiAllowance;
       } else if (this.selectedToken === "USDC") {
-        return this.allowanceUsdc;
+        return this.getLpUsdcAllowance;
       }
 
       return null;
     },
     getAllowanceWei() {
       if (this.selectedToken === "DAI") {
-        return this.allowanceDaiWei;
+        return this.getWeb3.utils.toWei(this.getLpDaiAllowance, "ether");
       } else if (this.selectedToken === "USDC") {
-        return this.allowanceUsdcWei;
+        return this.getWeb3.utils.toWei(this.getLpUsdcAllowance, "mwei");
       }
 
       return null;
@@ -195,24 +195,19 @@ export default {
     this.$store.dispatch("dai/fetchContract");
     this.$store.dispatch("dai/fetchUserBalance");
     this.$store.dispatch("dai/storeAddress");
+    this.$store.dispatch("dai/fetchLpAllowance");
     this.$store.dispatch("usdc/fetchContract");
     this.$store.dispatch("usdc/fetchUserBalance");
     this.$store.dispatch("usdc/storeAddress");
+    this.$store.dispatch("usdc/fetchLpAllowance");
     this.$store.dispatch("liquidityPool/fetchUserBalance");
     this.$store.dispatch("optionsExchange/fetchLiquidityPoolBalance");
     this.$store.dispatch("liquidityPool/fetchApy");
     this.$store.dispatch("liquidityPool/storeAddress");
-
-    this.checkDaiAllowance();
-    this.checkUsdcAllowance();
   },
   data() {
     return {
       depositValue: null,
-      allowanceDaiWei: null,
-      allowanceDai: null,
-      allowanceUsdcWei: null,
-      allowanceUsdc: null,
       allowanceOption: "limited",
       selectedToken: "DAI"
     }
@@ -220,16 +215,6 @@ export default {
   methods: {
     changeStablecoin(token) {
       this.selectedToken = token;
-    },
-    async checkDaiAllowance() {
-      // check current allowance size
-      this.allowanceDaiWei = await this.getDaiContract.methods.allowance(this.getActiveAccount, this.getLiquidityPoolAddress).call();
-      this.allowanceDai = this.getWeb3.utils.fromWei(this.allowanceDaiWei, "ether");
-    },
-    async checkUsdcAllowance() {
-      // check current allowance size
-      this.allowanceUsdcWei = await this.getUsdcContract.methods.allowance(this.getActiveAccount, this.getLiquidityPoolAddress).call();
-      this.allowanceUsdc = this.getWeb3.utils.fromWei(this.allowanceUsdcWei, "mwei");
     },
     async depositIntoPool() {
       let component = this;
@@ -277,10 +262,10 @@ export default {
 
                 // refresh values
                 if (component.selectedToken === "DAI") {
-                  component.checkDaiAllowance();
+                  component.$store.dispatch("dai/fetchLpAllowance");
                   component.$store.dispatch("dai/fetchUserBalance"); // refresh the user's DAI balance
                 } else if (component.selectedToken === "USDC") {
-                  component.checkUsdcAllowance();
+                  component.$store.dispatch("usdc/fetchLpAllowance");
                   component.$store.dispatch("usdc/fetchUserBalance"); // refresh the user's USDC balance
                 }
               }
@@ -318,10 +303,10 @@ export default {
 
                 // refresh values
                 if (component.selectedToken === "DAI") {
-                  component.checkDaiAllowance();
+                  component.$store.dispatch("dai/fetchLpAllowance");
                   component.$store.dispatch("dai/fetchUserBalance");
                 } else if (component.selectedToken === "USDC") {
-                  component.checkUsdcAllowance();
+                  component.$store.dispatch("usdc/fetchLpAllowance");
                   component.$store.dispatch("usdc/fetchUserBalance");
                 }
                 

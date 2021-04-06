@@ -140,7 +140,7 @@
                   </div>
                   
                 </div>
-                <small class="ml-1">Max: $0.0 {{buyWith}} (allowance: $0.0).</small>
+                <small class="ml-1">Max: {{ Number(getUserStablecoinBalance).toFixed(2) }} {{buyWith}} (allowance: $0.0).</small>
               </div>
             </div>
 
@@ -178,6 +178,8 @@ export default {
   computed: {
     ...mapGetters("accounts", ["getActiveAccount", "getActiveBalanceEth", "getWeb3", "isUserConnected"]),
     ...mapGetters("liquidityPool", ["getLiquidityPoolContract", "getSymbolsListJson", "getDefaultMaturity", "getDefaultPair", "getDefaultType"]),
+    ...mapGetters("dai", ["getDaiAddress", "getUserDaiBalance", "getDaiContract"]),
+    ...mapGetters("usdc", ["getUsdcAddress", "getUserUsdcBalance", "getUsdcContract"]),
 
     getFilteredSymbols() {
       try {
@@ -205,6 +207,15 @@ export default {
       }
       return this.getDefaultType;
     },
+    getUserStablecoinBalance() {
+      if (this.buyWith === "DAI") {
+        return this.getUserDaiBalance;
+      } else if (this.buyWith === "USDC") {
+        return this.getUserUsdcBalance;
+      }
+
+      return null;
+    },
 
     isOptionSizeBiggerThanVolume() {
       if (Number(this.selectedOptionSize) > Number(this.selectedOptionVolume)) {
@@ -221,6 +232,12 @@ export default {
 
     this.$store.dispatch("liquidityPool/fetchContract");
     this.$store.dispatch("liquidityPool/fetchSymbolsList");
+    this.$store.dispatch("dai/fetchContract");
+    this.$store.dispatch("dai/fetchUserBalance");
+    this.$store.dispatch("dai/storeAddress");
+    this.$store.dispatch("usdc/fetchContract");
+    this.$store.dispatch("usdc/fetchUserBalance");
+    this.$store.dispatch("usdc/storeAddress");
 
     this.unsubscribe = this.$store.subscribe((mutation) => {
       if (mutation.type === 'liquidityPool/setSymbolsList') {
