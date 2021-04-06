@@ -8,14 +8,36 @@
 
     <div class="row">
 
-      <!-- Pool balance -->
+      <!-- Pool balance (user) -->
       <div class="col-xl-3 col-md-6 mb-4">
           <div class="card border-left-primary shadow h-100 py-2">
               <div class="card-body">
                   <div class="row no-gutters align-items-center">
                       <div class="col mr-2">
                           <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                              Pool balance
+                              Pool balance (your)
+                          </div>
+                        
+                          <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            ${{ Number(getLiquidityPoolUserBalance).toFixed(2) }}
+                          </div>
+                      </div>
+                      <div class="col-auto">
+                          <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+                      </div>
+                  </div>
+              </div>
+          </div>
+      </div>
+
+      <!-- Pool balance (total) -->
+      <div class="col-xl-3 col-md-6 mb-4">
+          <div class="card border-left-primary shadow h-100 py-2">
+              <div class="card-body">
+                  <div class="row no-gutters align-items-center">
+                      <div class="col mr-2">
+                          <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                              Pool balance (total)
                           </div>
                         
                           <div class="h5 mb-0 font-weight-bold text-gray-800">
@@ -122,7 +144,7 @@ export default {
     ...mapGetters("accounts", ["getChainName", "isUserConnected", "getActiveAccount", "getWeb3"]),
     ...mapGetters("accounts", ["getActiveAccount", "getActiveBalanceEth"]),
     ...mapGetters("optionsExchange", ["getLiquidityPoolBalance"]),
-    ...mapGetters("liquidityPool", ["getApy", "getLiquidityPoolContract", "getLiquidityPoolAddress"]),
+    ...mapGetters("liquidityPool", ["getApy", "getLiquidityPoolContract", "getLiquidityPoolAddress", "getLiquidityPoolUserBalance"]),
     ...mapGetters("dai", ["getDaiAddress", "getUserDaiBalance", "getDaiContract"]),
     ...mapGetters("usdc", ["getUsdcAddress", "getUserUsdcBalance", "getUsdcContract"]),
 
@@ -176,6 +198,7 @@ export default {
     this.$store.dispatch("usdc/fetchContract");
     this.$store.dispatch("usdc/fetchUserBalance");
     this.$store.dispatch("usdc/storeAddress");
+    this.$store.dispatch("liquidityPool/fetchUserBalance");
     this.$store.dispatch("optionsExchange/fetchLiquidityPoolBalance");
     this.$store.dispatch("liquidityPool/fetchApy");
     this.$store.dispatch("liquidityPool/storeAddress");
@@ -303,6 +326,7 @@ export default {
                 }
                 
                 component.$store.dispatch("optionsExchange/fetchLiquidityPoolBalance");
+                component.$store.dispatch("liquidityPool/fetchUserBalance");
                 component.depositValue = null;
               }
             });

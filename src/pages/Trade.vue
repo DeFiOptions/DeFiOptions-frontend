@@ -71,8 +71,8 @@
                     <td><strong>${{option.strike}}</strong></td>
                     <td>{{getSelectedMaturity}}</td>
                     <td>
-                      <button class="btn btn-outline-success btn-sm mr-2" @click="setModalData('Buy', option.symbol, option.strike)" data-toggle="modal" data-target="#optionsModal">Buy</button>
-                      <button class="btn btn-outline-danger btn-sm" @click="setModalData('Sell', option.symbol, option.strike)" data-toggle="modal" data-target="#optionsModal">Sell</button>
+                      <button class="btn btn-outline-success btn-sm mr-2 mb-1" @click="setModalData('Buy', option.symbol, option.strike)" data-toggle="modal" data-target="#optionsModal">Buy</button>
+                      <button class="btn btn-outline-danger btn-sm mb-1" @click="setModalData('Sell', option.symbol, option.strike)" data-toggle="modal" data-target="#optionsModal">Sell</button>
                     </td>
                 </tr>
 
@@ -125,7 +125,7 @@
               </div>
             </div>
 
-            <div class="form-group row">
+            <div class="form-group row" v-if="selectedAction === 'Buy'">
               <label for="optionBuyWith" class="col-sm-3 col-form-label font-weight-bold">Buy with</label>
               <div class="col-sm-9">
                 <div class="dropdown" id="optionBuyWith">
@@ -154,8 +154,8 @@
           </div>
 
           <div class="modal-footer">
-            <button v-if="selectedAction === 'Buy'" type="button" class="btn btn-success" :disabled="isOptionSizeBiggerThanVolume ? true : false">Buy option</button>
-            <button v-if="selectedAction === 'Sell'" type="button" class="btn btn-danger" :disabled="isOptionSizeBiggerThanVolume ? true : false">Sell option</button>
+            <button v-if="selectedAction === 'Buy'" type="button" class="btn btn-success" :disabled="isOptionSizeBiggerThanVolume ? true : false">Buy option (not working yet)</button>
+            <button v-if="selectedAction === 'Sell'" type="button" class="btn btn-danger" :disabled="isOptionSizeBiggerThanVolume ? true : false">Sell option (not working yet)</button>
             <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
           </div>
 
