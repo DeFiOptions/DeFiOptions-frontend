@@ -112,9 +112,9 @@
             <div class="form-group row">
               <label for="optionSize" class="col-sm-3 col-form-label font-weight-bold">Option size</label>
               <div class="col-sm-8">
-                <input type="text" class="form-control ml-1" :class="isOptionSizeBiggerThanVolume ? 'is-invalid' : ''" id="optionSize" v-model="selectedOptionSize">
-                <small v-if="isOptionSizeBiggerThanVolume" class="invalid-feedback ml-1">Option size must not be bigger than {{Math.floor(Number(selectedOptionVolume*1000))/1000}}!</small>
-                <small class="ml-1" v-if="!isOptionSizeBiggerThanVolume">Maximum option size: {{Math.floor(Number(selectedOptionVolume*1000))/1000}}.</small>
+                <input type="text" class="form-control ml-1" :class="isOptionSizeNotValid.status ? 'is-invalid' : ''" id="optionSize" v-model="selectedOptionSize">
+                <small v-if="isOptionSizeNotValid.status" class="invalid-feedback ml-1">{{ isOptionSizeNotValid.message }}</small>
+                <small v-if="!isOptionSizeNotValid.status" class="ml-1">Maximum option size: {{Math.floor(Number(selectedOptionVolume*1000))/1000}}.</small>
               </div>
             </div>
 
@@ -140,22 +140,22 @@
                   </div>
                   
                 </div>
-                <small class="ml-1">Max: {{ Number(getUserStablecoinBalance).toFixed(2) }} {{buyWith}} (allowance: $0.0).</small>
+                <small class="ml-1">Max: {{ Number(getUserStablecoinBalance).toFixed(2) }} {{buyWith}} (allowance: {{Number(getAllowance).toFixed(2)}} {{buyWith}}).</small>
               </div>
             </div>
 
             <div class="form-group row">
               <label for="optionTotal" class="col-sm-3 col-form-label font-weight-bold">TOTAL</label>
               <div class="col-sm-9">
-                <input type="text" readonly class="form-control-plaintext ml-1" id="optionTotal" :value="'$'+Number(selectedOptionSize*selectedOptionPrice).toFixed(2)">
+                <input type="text" readonly class="form-control-plaintext ml-1" id="optionTotal" :value="'$'+Number(getTotal).toFixed(2)">
               </div>
             </div>
 
           </div>
 
           <div class="modal-footer">
-            <button v-if="selectedAction === 'Buy'" type="button" class="btn btn-success" :disabled="isOptionSizeBiggerThanVolume ? true : false">Buy option (not working yet)</button>
-            <button v-if="selectedAction === 'Sell'" type="button" class="btn btn-danger" :disabled="isOptionSizeBiggerThanVolume ? true : false">Sell option (not working yet)</button>
+            <button v-if="selectedAction === 'Buy'" type="button" class="btn btn-success" :disabled="isOptionSizeNotValid.status ? true : false">Buy option (not working yet)</button>
+            <button v-if="selectedAction === 'Sell'" type="button" class="btn btn-danger" :disabled="isOptionSizeNotValid.status ? true : false">Sell option (not working yet)</button>
             <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
           </div>
 
@@ -178,9 +178,27 @@ export default {
   computed: {
     ...mapGetters("accounts", ["getActiveAccount", "getActiveBalanceEth", "getWeb3", "isUserConnected"]),
     ...mapGetters("liquidityPool", ["getLiquidityPoolContract", "getSymbolsListJson", "getDefaultMaturity", "getDefaultPair", "getDefaultType"]),
-    ...mapGetters("dai", ["getDaiAddress", "getUserDaiBalance", "getDaiContract"]),
-    ...mapGetters("usdc", ["getUsdcAddress", "getUserUsdcBalance", "getUsdcContract"]),
+    ...mapGetters("dai", ["getDaiAddress", "getUserDaiBalance", "getDaiContract", "getLpDaiAllowance"]),
+    ...mapGetters("usdc", ["getUsdcAddress", "getUserUsdcBalance", "getUsdcContract", "getLpUsdcAllowance"]),
 
+    getAllowance() {
+      if (this.buyWith === "DAI") {
+        return this.getLpDaiAllowance;
+      } else if (this.buyWith === "USDC") {
+        return this.getLpUsdcAllowance;
+      }
+
+      return null;
+    },
+    getAllowanceWei() {
+      if (this.buyWith === "DAI") {
+        return this.getWeb3.utils.toWei(this.getLpDaiAllowance, "ether");
+      } else if (this.buyWith === "USDC") {
+        return this.getWeb3.utils.toWei(this.getLpUsdcAllowance, "mwei");
+      }
+
+      return null;
+    },
     getFilteredSymbols() {
       try {
         return this.getSymbolsListJson[this.getSelectedPair][this.getSelectedMaturity][this.getSelectedType];
@@ -188,7 +206,6 @@ export default {
         return [];
       }
     },
-
     getSelectedMaturity() {
       if (this.selectedMaturity) {
         return this.selectedMaturity;
@@ -207,6 +224,18 @@ export default {
       }
       return this.getDefaultType;
     },
+    getStablecoinContract() {
+      if (this.buyWith === "DAI") {
+        return this.getDaiContract;
+      } else if (this.buyWith === "USDC") {
+        return this.getUsdcContract;
+      }
+
+      return null;
+    },
+    getTotal() {
+      return Number(this.selectedOptionSize) * Number(this.selectedOptionPrice);
+    },
     getUserStablecoinBalance() {
       if (this.buyWith === "DAI") {
         return this.getUserDaiBalance;
@@ -216,13 +245,25 @@ export default {
 
       return null;
     },
-
-    isOptionSizeBiggerThanVolume() {
+    isOptionSizeNotValid() { // validation for option size
+      // option size bigger than volume.
       if (Number(this.selectedOptionSize) > Number(this.selectedOptionVolume)) {
-        return true;
+        return {status: true, message: "Option size must not be bigger than " + (Math.floor(Number(this.selectedOptionVolume*1000))/1000) + "!"};
       }
-      return false;
+
+      // negative option size
+      if (Number(this.selectedOptionSize) < 0) {
+        return {status: true, message: "Option size must not be negative!"};
+      }
+
+      // total bigger than balance
+      if (this.getTotal > Number(this.getUserStablecoinBalance)) {
+        return {status: true, message: "Your " + this.buyWith + " balance is too low."};
+      }
+
+      return {status: false, message: "Valid option size"};
     }
+
   },
   created() {
     if (!this.getWeb3 || !this.isUserConnected) {
@@ -235,9 +276,11 @@ export default {
     this.$store.dispatch("dai/fetchContract");
     this.$store.dispatch("dai/fetchUserBalance");
     this.$store.dispatch("dai/storeAddress");
+    this.$store.dispatch("dai/fetchLpAllowance");
     this.$store.dispatch("usdc/fetchContract");
     this.$store.dispatch("usdc/fetchUserBalance");
     this.$store.dispatch("usdc/storeAddress");
+    this.$store.dispatch("usdc/fetchLpAllowance");
 
     this.unsubscribe = this.$store.subscribe((mutation) => {
       if (mutation.type === 'liquidityPool/setSymbolsList') {
