@@ -140,24 +140,49 @@
                   </div>
                   
                 </div>
-                <small class="ml-1">Max: {{ Number(getUserStablecoinBalance).toFixed(2) }} {{buyWith}} (allowance: {{Number(getAllowance).toFixed(2)}} {{buyWith}}).</small>
+                <small class="ml-1">Balance: {{ Number(getUserStablecoinBalance).toFixed(2) }} {{buyWith}} (allowance: {{Number(getAllowance).toFixed(2)}} {{buyWith}}).</small>
               </div>
             </div>
 
             <div class="form-group row">
               <label for="optionTotal" class="col-sm-3 col-form-label font-weight-bold">TOTAL</label>
               <div class="col-sm-9">
-                <input type="text" readonly class="form-control-plaintext ml-1" id="optionTotal" :value="'$'+Number(getTotal).toFixed(2)">
+                <input type="text" readonly class="form-control-plaintext ml-1 font-weight-bold" id="optionTotal" :value="'$'+Number(getTotal).toFixed(2)">
               </div>
+            </div>
+
+            <div class="form-group row" v-if="isTotalBiggerThanAllowance && selectedAction === 'Buy'">
+              <label for="optionAllowance" class="col-sm-3 col-form-label font-weight-bold">Allowance</label>
+
+              <div class="col-sm-9">
+                <div class="mb-3 mt-2" id="optionAllowance">
+                  <div class="form-check">
+                    <input class="form-check-input" v-model="allowanceChoice" type="radio" id="limitedApprovalChoice" value="limited" checked>
+                    <label class="form-check-label" for="limitedApprovalChoice">
+                      Approval for {{Number(getTotal).toFixed(2)}} {{buyWith}}.
+                    </label>
+                  </div>
+                  <div class="form-check">
+                    <input class="form-check-input" v-model="allowanceChoice" type="radio" id="unlimitedApprovalChoice" value="unlimited">
+                    <label class="form-check-label" for="unlimitedApprovalChoice">
+                      Unlimited approval (you won't need to do approval transactions anymore).
+                    </label>
+                  </div>
+                </div>
+                <small>(Two transactions are needed: 1. Approval, 2. Buy option)</small>
+              </div>
+
             </div>
 
           </div>
 
           <div class="modal-footer">
-            <button v-if="selectedAction === 'Buy'" type="button" class="btn btn-success" :disabled="isOptionSizeNotValid.status ? true : false">Buy option (not working yet)</button>
-            <button v-if="selectedAction === 'Sell'" type="button" class="btn btn-danger" :disabled="isOptionSizeNotValid.status ? true : false">Sell option (not working yet)</button>
+            <button v-if="selectedAction === 'Buy' && !isTotalBiggerThanAllowance" type="button" class="btn btn-success" :disabled="isOptionSizeNotValid.status ? true : false">Buy option</button>
+            <button v-if="selectedAction === 'Buy' && isTotalBiggerThanAllowance" type="button" class="btn btn-warning" :disabled="isOptionSizeNotValid.status ? true : false">Approve {{buyWith}}</button>
+            <button v-if="selectedAction === 'Sell'" type="button" class="btn btn-danger" :disabled="isOptionSizeNotValid.status ? true : false">Sell option</button>
             <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
           </div>
+          
 
         </div>
       </div>
@@ -251,17 +276,39 @@ export default {
         return {status: true, message: "Option size must not be bigger than " + (Math.floor(Number(this.selectedOptionVolume*1000))/1000) + "!"};
       }
 
+      // too many digits
+      if (String(this.selectedOptionSize).length > 14) {
+        return {status: true, message: "Please reduce the number of digits."};
+      }
+
       // negative option size
       if (Number(this.selectedOptionSize) < 0) {
         return {status: true, message: "Option size must not be negative!"};
       }
 
+      // negative option size
+      if (isNaN(this.selectedOptionSize)) {
+        return {status: true, message: "Please enter a number."};
+      }
+
+      // null option size
+      if (this.selectedOptionSize === null || Number(this.selectedOptionSize) === 0 || this.selectedOptionSize === undefined || this.selectedOptionSize === "") {
+        return {status: true, message: "Option size must not be empty or zero!"};
+      }
+
       // total bigger than balance
-      if (this.getTotal > Number(this.getUserStablecoinBalance)) {
+      if (this.selectedAction === "Buy" && this.getTotal > Number(this.getUserStablecoinBalance)) {
         return {status: true, message: "Your " + this.buyWith + " balance is too low."};
       }
 
       return {status: false, message: "Valid option size"};
+    },
+    isTotalBiggerThanAllowance() {
+      if (this.getTotal > Number(this.getAllowance)) {
+        return true;
+      }
+
+      return false;
     }
 
   },
@@ -298,6 +345,7 @@ export default {
   },
   data() {
     return {
+      allowanceChoice: "limited",
       buyWith: "DAI",
       maturities: null,
       pairs: null,
