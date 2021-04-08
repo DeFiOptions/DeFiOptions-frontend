@@ -177,9 +177,21 @@
           </div>
 
           <div class="modal-footer">
-            <button v-if="selectedAction === 'Buy' && !isTotalBiggerThanAllowance" type="button" class="btn btn-success" :disabled="isOptionSizeNotValid.status ? true : false">Buy option</button>
-            <button v-if="selectedAction === 'Buy' && isTotalBiggerThanAllowance" type="button" class="btn btn-warning" :disabled="isOptionSizeNotValid.status ? true : false">Approve {{buyWith}}</button>
-            <button v-if="selectedAction === 'Sell'" type="button" class="btn btn-danger" :disabled="isOptionSizeNotValid.status ? true : false">Sell option</button>
+            <button @click="approveStablecoin" v-if="selectedAction === 'Buy' && isTotalBiggerThanAllowance" type="button" class="btn btn-warning" :disabled="isOptionSizeNotValid.status ? true : false">
+              <span v-if="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+              Approve {{buyWith}}
+            </button>
+
+            <button v-if="selectedAction === 'Buy' && !isTotalBiggerThanAllowance" type="button" class="btn btn-success" :disabled="isOptionSizeNotValid.status ? true : false">
+              <span v-if="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+              Buy option
+            </button>
+
+            <button v-if="selectedAction === 'Sell'" type="button" class="btn btn-danger" :disabled="isOptionSizeNotValid.status ? true : false">
+              <span v-if="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+              Sell option
+            </button>
+            
             <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
           </div>
           
@@ -202,7 +214,7 @@ export default {
   },
   computed: {
     ...mapGetters("accounts", ["getActiveAccount", "getActiveBalanceEth", "getWeb3", "isUserConnected"]),
-    ...mapGetters("liquidityPool", ["getLiquidityPoolContract", "getSymbolsListJson", "getDefaultMaturity", "getDefaultPair", "getDefaultType"]),
+    ...mapGetters("liquidityPool", ["getLiquidityPoolContract", "getLiquidityPoolAddress", "getSymbolsListJson", "getDefaultMaturity", "getDefaultPair", "getDefaultType"]),
     ...mapGetters("dai", ["getDaiAddress", "getUserDaiBalance", "getDaiContract", "getLpDaiAllowance"]),
     ...mapGetters("usdc", ["getUsdcAddress", "getUserUsdcBalance", "getUsdcContract", "getLpUsdcAllowance"]),
 
@@ -328,6 +340,7 @@ export default {
     this.$store.dispatch("usdc/fetchUserBalance");
     this.$store.dispatch("usdc/storeAddress");
     this.$store.dispatch("usdc/fetchLpAllowance");
+    this.$store.dispatch("liquidityPool/storeAddress");
 
     this.unsubscribe = this.$store.subscribe((mutation) => {
       if (mutation.type === 'liquidityPool/setSymbolsList') {
@@ -347,6 +360,7 @@ export default {
     return {
       allowanceChoice: "limited",
       buyWith: "DAI",
+      loading: false,
       maturities: null,
       pairs: null,
       selectedAction: "Buy", // Buy or Sell
@@ -363,6 +377,65 @@ export default {
     }
   },
   methods: {
+    async approveStablecoin() {
+      let component = this;
+
+      let unit = "ether"; // DAI
+      if (component.buyWith === "USDC") {
+        unit = "mwei"; // USDC
+      }
+
+      let approvalValue = component.getWeb3.utils.toWei(String(component.getTotal), unit);
+      if (component.allowanceChoice === "unlimited") {
+        approvalValue = "1000000000000000000000000000000000"; // "unlimited" value
+      }
+
+      // call the approve method to increase the allowance
+      await component.getStablecoinContract.methods.approve(component.getLiquidityPoolAddress, approvalValue).send({
+        from: component.getActiveAccount
+      }, function(error, hash) {
+        component.loading = true;
+
+        // Approval tx error
+        if (error) {
+          component.$toast.error("The transaction has been rejected. Please try again.");
+          component.loading = false;
+        }
+
+        // Approval transaction sent
+        if (hash) {
+          // show a "tx submitted" toast
+          component.$toast.info("The Approval transaction has been submitted. Please wait for it to be confirmed.");
+
+          // listen for the Approval event
+          component.getStablecoinContract.once("Approval", {
+            filter: { owner: component.getActiveAccount }
+          }, function(error, event) {
+            component.loading = false;
+
+            // failed transaction
+            if (error) {
+              component.$toast.error("The Approval transaction has failed. Please try again, perhaps with a higher gas limit.");
+            }
+
+            // success
+            if (event) {
+              component.$toast.success("Approval was successful. Please make a deposit now.");
+
+              // refresh values
+              if (component.buyWith === "DAI") {
+                component.$store.dispatch("dai/fetchLpAllowance");
+                component.$store.dispatch("dai/fetchUserBalance"); // refresh the user's DAI balance
+              } else if (component.buyWith === "USDC") {
+                component.$store.dispatch("usdc/fetchLpAllowance");
+                component.$store.dispatch("usdc/fetchUserBalance"); // refresh the user's USDC balance
+              }
+            }
+          });
+        }
+
+      });
+    },
     changeBuyWith(stablecoin) {
       this.buyWith = stablecoin;
     },

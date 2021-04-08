@@ -45,9 +45,9 @@ const actions = {
     let contract = new web3.eth.Contract(ContractJson.abi, address);
     commit("setContract", contract);
   },
-  async fetchLpAllowance({ commit, state, rootState }) {
+  async fetchLpAllowance({ commit, dispatch, state, rootState }) {
     if (!state.contract) {
-      this.fetchContract();
+      dispatch("fetchContract");
     }
 
     let userAddress = rootState.accounts.activeAccount;
@@ -61,9 +61,9 @@ const actions = {
 
     commit("setLpAllowance", allowance);
   },
-  async fetchUserBalance({ commit, state, rootState }) {
+  async fetchUserBalance({ commit, dispatch, state, rootState }) {
     if (!state.contract) {
-      this.fetchContract();
+      dispatch("fetchContract");
     }
 
     let address = rootState.accounts.activeAccount;

@@ -114,8 +114,15 @@
                     </div>
 
                     <div class="mt-2">
-                      <button v-if="Number(getAllowance) < Number(depositValue)" class="btn btn-success btn-block">Approve {{selectedToken}}</button>
-                      <button v-if="Number(getAllowance) >= Number(depositValue)" :disabled="depositValue == null || Number(depositValue) == 0" class="btn btn-primary btn-block">Deposit {{depositValue}} {{selectedToken}}</button>
+                      <button v-if="Number(getAllowance) < Number(depositValue)" class="btn btn-success btn-block">
+                        <span v-if="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                        Approve {{selectedToken}}
+                      </button>
+
+                      <button v-if="Number(getAllowance) >= Number(depositValue)" :disabled="depositValue == null || Number(depositValue) == 0" class="btn btn-primary btn-block">
+                        <span v-if="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                        Deposit {{depositValue}} {{selectedToken}}
+                      </button>
                     </div>
                     
                     <span v-if="Number(getAllowance) < Number(depositValue)">
@@ -207,8 +214,9 @@ export default {
   },
   data() {
     return {
-      depositValue: null,
       allowanceOption: "limited",
+      depositValue: null,
+      loading: false,
       selectedToken: "DAI"
     }
   },
@@ -236,10 +244,12 @@ export default {
         await component.getStablecoinContract.methods.approve(component.getLiquidityPoolAddress, approvalValue).send({
           from: component.getActiveAccount
         }, function(error, hash) {
+          component.loading = true;
 
           // Approval tx error
           if (error) {
             component.$toast.error("The transaction has been rejected. Please try again.");
+            component.loading = false;
           }
 
           // Approval transaction sent
@@ -251,6 +261,8 @@ export default {
             component.getStablecoinContract.once("Approval", {
               filter: { owner: component.getActiveAccount }
             }, function(error, event) {
+              component.loading = false;
+
               // failed transaction
               if (error) {
                 component.$toast.error("The Approval transaction has failed. Please try again, perhaps with a higher gas limit.");
@@ -278,9 +290,12 @@ export default {
         await component.getLiquidityPoolContract.methods.depositTokens(component.getActiveAccount, component.getStablecoinContract._address, tokensWei).send({
           from: component.getActiveAccount
         }, function(error, hash) {
+          component.loading = true;
+
           // Deposit tx error
           if (error) {
             component.$toast.error("The transaction has been rejected. Please try again.");
+            component.loading = false;
           }
 
           // Deposit transaction sent
@@ -292,6 +307,8 @@ export default {
             component.getStablecoinContract.once("Transfer", {
               filter: { owner: component.getActiveAccount }
             }, function(error, event) {
+              component.loading = false;
+              
               // failed transaction
               if (error) {
                 component.$toast.error("The Deposit transaction has failed. Please try again, perhaps with a higher gas limit.");
