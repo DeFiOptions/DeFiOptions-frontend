@@ -182,7 +182,7 @@
               Approve {{buyWith}}
             </button>
 
-            <button v-if="selectedAction === 'Buy' && !isTotalBiggerThanAllowance" type="button" class="btn btn-success" :disabled="isOptionSizeNotValid.status ? true : false">
+            <button @click="buyOption" v-if="selectedAction === 'Buy' && !isTotalBiggerThanAllowance" type="button" class="btn btn-success" :disabled="isOptionSizeNotValid.status ? true : false">
               <span v-if="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
               Buy option
             </button>
@@ -434,6 +434,65 @@ export default {
           });
         }
 
+      });
+    },
+    async buyOption() {
+      let component = this;
+
+      let optionSizeWei = component.getWeb3.utils.toWei(String(component.selectedOptionSize), "ether");
+      let optionUnitPrice = component.getWeb3.utils.toWei(String(component.selectedOptionPrice), "ether");
+
+      await component.getLiquidityPoolContract.methods.buy(
+        component.selectedSymbol, // symbol
+        optionUnitPrice, // price per one option
+        optionSizeWei, // volume a.k.a. user's selected option size
+        component.getStablecoinContract._address, // selected stablecoin
+      ).send({
+        from: component.getActiveAccount
+      }, function(error, hash) {
+        component.loading = true;
+
+        // Deposit tx error
+        if (error) {
+          component.$toast.error("The transaction has been rejected. Please try again.");
+          component.loading = false;
+        }
+
+        // Deposit transaction sent
+        if (hash) {
+          // show a "tx submitted" toast
+          component.$toast.info("The Buy transaction has been submitted. Please wait for it to be confirmed.");
+
+          // listen for the Transfer event
+          component.getLiquidityPoolContract.once("Buy", {
+            filter: { from: component.getActiveAccount }
+          }, function(error, event) {
+            component.loading = false;
+            
+            // failed transaction
+            if (error) {
+              component.$toast.error("The Buy transaction has failed. Please try again, perhaps with a higher gas limit.");
+            }
+
+            // success
+            if (event) {
+              component.$toast.success("You have successfully bought an option.");
+
+              // refresh values
+              if (component.buyWith === "DAI") {
+                component.$store.dispatch("dai/fetchLpAllowance");
+                component.$store.dispatch("dai/fetchUserBalance");
+              } else if (component.buyWith === "USDC") {
+                component.$store.dispatch("usdc/fetchLpAllowance");
+                component.$store.dispatch("usdc/fetchUserBalance");
+              }
+              
+              component.$store.dispatch("optionsExchange/fetchLiquidityPoolBalance");
+              component.$store.dispatch("liquidityPool/fetchUserBalance");
+              component.selectedOptionSize = 1;
+            }
+          });
+        }
       });
     },
     changeBuyWith(stablecoin) {
