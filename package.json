@@ -11,6 +11,7 @@
     "@burner-wallet/burner-connect-provider": "^0.1.1",
     "authereum": "^0.1.0",
     "core-js": "^3.6.5",
+    "eth-permit": "^0.1.9",
     "vue": "^2.6.11",
     "vue-router": "^3.4.9",
     "vue-toastification": "^1.7.11",
