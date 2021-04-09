@@ -465,7 +465,7 @@ export default {
 
           // listen for the Transfer event
           component.getLiquidityPoolContract.once("Buy", {
-            filter: { from: component.getActiveAccount }
+            filter: { buyer: component.getActiveAccount }
           }, function(error, event) {
             component.loading = false;
             
