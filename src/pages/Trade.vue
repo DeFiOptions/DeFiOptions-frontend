@@ -6,7 +6,7 @@
     </div>
     <!-- END Page Heading -->
 
-    <!-- DataTales Example -->
+    <!-- Card -->
     <div class="card shadow mt-4">
 
       <div class="card-body">
@@ -336,6 +336,7 @@ export default {
       if (component.selectedToken === "USDC") {
         unit = "mwei"; // USDC
       }
+      
       let totalWei = component.getWeb3.utils.toWei(String(component.getTotal), unit);
 
       const result = await signERC2612Permit(
@@ -352,6 +353,7 @@ export default {
         optionUnitPrice, // price per one option
         optionSizeWei, // volume a.k.a. user's selected option size
         component.getStablecoinContract._address, // selected stablecoin
+        totalWei, // maxValue
         result.deadline,
         result.v,
         result.r,

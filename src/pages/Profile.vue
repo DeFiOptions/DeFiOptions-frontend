@@ -8,6 +8,7 @@
 
     <div class="row mt-3">
 
+      <!-- Card: Address -->
       <div class="col-xl-3 col-md-6 mb-4">
           <div class="card bg-primary text-white shadow h-100 py-2">
               <div class="card-body">
@@ -26,6 +27,7 @@
           </div>
       </div>
 
+      <!-- Card: ETH balance -->
       <div class="col-xl-3 col-md-6 mb-4">
           <div class="card bg-primary text-white shadow h-100 py-2">
               <div class="card-body">
@@ -47,6 +49,7 @@
           </div>
       </div>
 
+      <!-- Card: Exchange balance -->
       <div class="col-xl-3 col-md-6 mb-4">
           <div class="card bg-primary text-white shadow h-100 py-2">
               <div class="card-body">
@@ -68,6 +71,7 @@
           </div>
       </div>
 
+      <!-- Card: Credit tokens -->
       <div class="col-xl-3 col-md-6 mb-4">
           <div class="card bg-primary text-white shadow h-100 py-2">
               <div class="card-body">
@@ -89,6 +93,7 @@
           </div>
       </div>
 
+      <!-- Card: Pool tokens -->
       <div class="col-xl-3 col-md-6 mb-4">
           <div class="card bg-primary text-white shadow h-100 py-2">
               <div class="card-body">
@@ -110,6 +115,7 @@
           </div>
       </div>
 
+      <!-- Card: DAI balance -->
       <div class="col-xl-3 col-md-6 mb-4">
           <div class="card bg-primary text-white shadow h-100 py-2">
               <div class="card-body">
@@ -135,6 +141,7 @@
           </div>
       </div>
 
+      <!-- Card: USDC balance -->
       <div class="col-xl-3 col-md-6 mb-4">
           <div class="card bg-primary text-white shadow h-100 py-2">
               <div class="card-body">
@@ -156,6 +163,53 @@
           </div>
       </div>
 
+    </div>
+
+    <!-- Options table -->
+    <div class="row mb-4">
+      <div class="col-md-12">
+        <div class="card shadow mt-4">
+          <div class="card-body">
+            <h5 class="card-title">Your options</h5>
+
+            <!-- Table START -->
+            <div class="table-responsive">
+              <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Pair</th>
+                        <th>Type</th>
+                        <th>Strike</th>
+                        <th>Maturity</th>
+                        <th>Buy/Sell</th>
+                    </tr>
+                </thead>
+                
+                <tbody>
+
+                    <!--
+                    <tr v-for="(option, index) in getFilteredSymbols" v-bind:key="option.symbol">
+                        <td>{{index + 1}}</td>
+                        <td>{{getSelectedPair}}</td>
+                        <td>{{getSelectedType}}</td>
+                        <td><strong>${{option.strike}}</strong></td>
+                        <td>{{getSelectedMaturity}}</td>
+                        <td>
+                          <button class="btn btn-outline-success btn-sm mr-2 mb-1" @click="setModalData('Buy', option.symbol, option.strike)" data-toggle="modal" data-target="#optionsModal">Buy</button>
+                          <button class="btn btn-outline-danger btn-sm mb-1" @click="setModalData('Sell', option.symbol, option.strike)" data-toggle="modal" data-target="#optionsModal">Sell</button>
+                        </td>
+                    </tr>
+                    -->
+
+                </tbody>
+              </table>
+            </div>
+            <!-- Table END-->
+            
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Outer Row -->
