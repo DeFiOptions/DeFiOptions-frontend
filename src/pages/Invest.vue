@@ -200,59 +200,65 @@ export default {
       );
 
       // make a deposit
-      await component.getLiquidityPoolContract.methods.depositTokens(
-        component.getActiveAccount, 
-        component.getStablecoinContract._address, 
-        tokensWei,
-        result.deadline,
-        result.v,
-        result.r,
-        result.s
-      ).send({
-        from: component.getActiveAccount
-      }, function(error, hash) {
-        component.loading = true;
+      try {
+        await component.getLiquidityPoolContract.methods.depositTokens(
+          component.getActiveAccount, 
+          component.getStablecoinContract._address, 
+          tokensWei,
+          result.deadline,
+          result.v,
+          result.r,
+          result.s
+        ).send({
+          from: component.getActiveAccount
+        }, function(error, hash) {
+          component.loading = true;
 
-        // Deposit tx error
-        if (error) {
-          component.$toast.error("The transaction has been rejected. Please try again.");
-          component.loading = false;
-        }
-
-        // Deposit transaction sent
-        if (hash) {
-          // show a "tx submitted" toast
-          component.$toast.info("The Deposit transaction has been submitted. Please wait for it to be confirmed.");
-
-          // listen for the Transfer event
-          component.getStablecoinContract.once("Transfer", {
-            filter: { owner: component.getActiveAccount }
-          }, function(error, event) {
+          // Deposit tx error
+          if (error) {
+            component.$toast.error("The transaction has been rejected. Please try again.");
             component.loading = false;
-            
-            // failed transaction
-            if (error) {
-              component.$toast.error("The Deposit transaction has failed. Please try again, perhaps with a higher gas limit.");
-            }
+          }
 
-            // success
-            if (event) {
-              component.$toast.success("Your deposit was successfull.");
+          // Deposit transaction sent
+          if (hash) {
+            // show a "tx submitted" toast
+            component.$toast.info("The Deposit transaction has been submitted. Please wait for it to be confirmed.");
 
-              // refresh values
-              if (component.selectedToken === "DAI") {
-                component.$store.dispatch("dai/fetchUserBalance");
-              } else if (component.selectedToken === "USDC") {
-                component.$store.dispatch("usdc/fetchUserBalance");
-              }
+            // listen for the Transfer event
+            component.getStablecoinContract.once("Transfer", {
+              filter: { owner: component.getActiveAccount }
+            }, function(error, event) {
+              component.loading = false;
               
-              component.$store.dispatch("optionsExchange/fetchLiquidityPoolBalance");
-              component.$store.dispatch("liquidityPool/fetchUserBalance");
-              component.depositValue = null;
-            }
-          });
-        }
-      });
+              // failed transaction
+              if (error) {
+                component.$toast.error("The Deposit transaction has failed. Please try again, perhaps with a higher gas limit.");
+              }
+
+              // success
+              if (event) {
+                component.$toast.success("Your deposit was successfull.");
+
+                // refresh values
+                if (component.selectedToken === "DAI") {
+                  component.$store.dispatch("dai/fetchUserBalance");
+                } else if (component.selectedToken === "USDC") {
+                  component.$store.dispatch("usdc/fetchUserBalance");
+                }
+                
+                component.$store.dispatch("optionsExchange/fetchLiquidityPoolBalance");
+                component.$store.dispatch("liquidityPool/fetchUserBalance");
+                component.depositValue = null;
+              }
+            });
+          }
+        });
+      } catch (e) {
+          window.console.log("Error:", e);
+          component.$toast.error("The transaction has been reverted. Please try again or contact project admins.");
+          component.loading = false;
+      }
  
     }
   }

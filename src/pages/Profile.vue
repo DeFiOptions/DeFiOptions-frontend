@@ -166,7 +166,7 @@
     </div>
 
     <!-- Options table -->
-    <div class="row mb-4">
+    <div class="row mb-4" v-if="TBD">
       <div class="col-md-12">
         <div class="card shadow mt-4">
           <div class="card-body">

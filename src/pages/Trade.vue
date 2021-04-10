@@ -314,7 +314,7 @@ export default {
       selectedAction: "Buy", // Buy or Sell
       selectedMaturity: null,
       selectedOptionPrice: null,
-      selectedOptionSize: 1,
+      selectedOptionSize: 0.1,
       selectedOptionVolume: null, // max possible option size
       selectedPair: null,
       selectedStrike: null,
@@ -336,7 +336,7 @@ export default {
       if (component.selectedToken === "USDC") {
         unit = "mwei"; // USDC
       }
-      
+
       let totalWei = component.getWeb3.utils.toWei(String(component.getTotal), unit);
 
       const result = await signERC2612Permit(
@@ -348,61 +348,67 @@ export default {
       );
 
       // buy option transaction
-      await component.getLiquidityPoolContract.methods.buy(
-        component.selectedSymbol, // symbol
-        optionUnitPrice, // price per one option
-        optionSizeWei, // volume a.k.a. user's selected option size
-        component.getStablecoinContract._address, // selected stablecoin
-        totalWei, // maxValue
-        result.deadline,
-        result.v,
-        result.r,
-        result.s
-      ).send({
-        from: component.getActiveAccount
-      }, function(error, hash) {
-        component.loading = true;
+      try {
+        await component.getLiquidityPoolContract.methods.buy(
+          component.selectedSymbol, // symbol
+          optionUnitPrice, // price per one option
+          optionSizeWei, // volume a.k.a. user's selected option size
+          component.getStablecoinContract._address, // selected stablecoin
+          totalWei, // maxValue
+          result.deadline,
+          result.v,
+          result.r,
+          result.s
+        ).send({
+          from: component.getActiveAccount
+        }, function(error, hash) {
+          component.loading = true;
 
-        // Deposit tx error
-        if (error) {
-          component.$toast.error("The transaction has been rejected. Please try again.");
-          component.loading = false;
-        }
-
-        // Deposit transaction sent
-        if (hash) {
-          // show a "tx submitted" toast
-          component.$toast.info("The Buy transaction has been submitted. Please wait for it to be confirmed.");
-
-          // listen for the Transfer event
-          component.getLiquidityPoolContract.once("Buy", {
-            filter: { buyer: component.getActiveAccount }
-          }, function(error, event) {
+          // Deposit tx error
+          if (error) {
+            component.$toast.error("The transaction has been rejected. Please try again.");
             component.loading = false;
-            
-            // failed transaction
-            if (error) {
-              component.$toast.error("The Buy transaction has failed. Please try again, perhaps with a higher gas limit.");
-            }
+          }
 
-            // success
-            if (event) {
-              component.$toast.success("You have successfully bought an option.");
+          // Deposit transaction sent
+          if (hash) {
+            // show a "tx submitted" toast
+            component.$toast.info("The Buy transaction has been submitted. Please wait for it to be confirmed.");
 
-              // refresh values
-              if (component.buyWith === "DAI") {
-                component.$store.dispatch("dai/fetchUserBalance");
-              } else if (component.buyWith === "USDC") {
-                component.$store.dispatch("usdc/fetchUserBalance");
-              }
+            // listen for the Transfer event
+            component.getLiquidityPoolContract.once("Buy", {
+              filter: { buyer: component.getActiveAccount }
+            }, function(error, event) {
+              component.loading = false;
               
-              component.$store.dispatch("optionsExchange/fetchLiquidityPoolBalance");
-              component.$store.dispatch("liquidityPool/fetchUserBalance");
-              component.selectedOptionSize = 1;
-            }
-          });
-        }
-      });
+              // failed transaction
+              if (error) {
+                component.$toast.error("The Buy transaction has failed. Please try again, perhaps with a higher gas limit.");
+              }
+
+              // success
+              if (event) {
+                component.$toast.success("You have successfully bought an option.");
+
+                // refresh values
+                if (component.buyWith === "DAI") {
+                  component.$store.dispatch("dai/fetchUserBalance");
+                } else if (component.buyWith === "USDC") {
+                  component.$store.dispatch("usdc/fetchUserBalance");
+                }
+                
+                component.$store.dispatch("optionsExchange/fetchLiquidityPoolBalance");
+                component.$store.dispatch("liquidityPool/fetchUserBalance");
+                component.selectedOptionSize = 0.1;
+              }
+            });
+          }
+        });
+      } catch (e) {
+          window.console.log("Error:", e);
+          component.$toast.error("The transaction has been reverted. Please try again or contact project admins.");
+          component.loading = false;
+      }
     },
     changeBuyWith(stablecoin) {
       this.buyWith = stablecoin;
