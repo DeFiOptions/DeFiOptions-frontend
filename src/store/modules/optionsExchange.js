@@ -35,9 +35,9 @@ const actions = {
     let contract = new web3.eth.Contract(OptionsExchange.abi, address);
     commit("setContract", contract);
   },
-  async fetchExchangeUserBalance({ commit, state, rootState }) {
+  async fetchExchangeUserBalance({ commit, dispatch, state, rootState }) {
     if (!state.contract) {
-      this.fetchContract();
+      dispatch("fetchContract");
     }
 
     let activeAccount = rootState.accounts.activeAccount;
@@ -48,9 +48,9 @@ const actions = {
 
     commit("setUserExchangeBalance", balance);
   },
-  async fetchLiquidityPoolBalance({ commit, state, rootState }) {
+  async fetchLiquidityPoolBalance({ commit, dispatch, state, rootState }) {
     if (!state.contract) {
-      this.fetchContract();
+      dispatch("fetchContract");
     }
 
     let chainIdDec = parseInt(rootState.accounts.chainId);

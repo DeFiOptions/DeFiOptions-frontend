@@ -15,7 +15,7 @@
                   <div class="row no-gutters align-items-center">
                       <div class="col mr-2">
                           <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                              Pool balance (your)
+                              Your pool balance
                           </div>
                         
                           <div class="h5 mb-0 font-weight-bold text-gray-800">
@@ -37,7 +37,7 @@
                   <div class="row no-gutters align-items-center">
                       <div class="col mr-2">
                           <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                              Pool balance (total)
+                              Total pool balance
                           </div>
                         
                           <div class="h5 mb-0 font-weight-bold text-gray-800">
@@ -92,42 +92,19 @@
                     </div>
 
                     <small>
-                      Your {{selectedToken}} balance: {{ Number(getUserStablecoinBalance).toFixed(2) }} {{selectedToken}}
-                      (allowance: 
-                      <span v-if="getAllowance > 100000000000">unlimited)</span>
-                      <span v-if="getAllowance < 100000000000">{{Number(getAllowance).toFixed(2)}} {{selectedToken}})</span>
+                      Your {{selectedToken}} balance: {{ Number(getUserStablecoinBalance).toFixed(2) }} {{selectedToken}}.
                     </small>
 
-                    <div v-if="Number(getAllowance) < Number(depositValue)" class="mb-3 mt-2">
-                      <div class="form-check">
-                        <input class="form-check-input" v-model="allowanceOption" type="radio" id="limitedApprovalChoice" value="limited" checked>
-                        <label class="form-check-label" for="limitedApprovalChoice">
-                          Approval for {{depositValue}} {{selectedToken}}.
-                        </label>
-                      </div>
-                      <div class="form-check">
-                        <input class="form-check-input" v-model="allowanceOption" type="radio" id="unlimitedApprovalChoice" value="unlimited">
-                        <label class="form-check-label" for="unlimitedApprovalChoice">
-                          Unlimited approval (you won't need to do approval transactions anymore).
-                        </label>
-                      </div>
-                    </div>
-
                     <div class="mt-2">
-                      <button v-if="Number(getAllowance) < Number(depositValue)" class="btn btn-success btn-block">
-                        <span v-if="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                        Approve {{selectedToken}}
-                      </button>
-
-                      <button v-if="Number(getAllowance) >= Number(depositValue)" :disabled="depositValue == null || Number(depositValue) == 0" class="btn btn-primary btn-block">
+                      <button :disabled="depositValue == null || Number(depositValue) == 0" class="btn btn-primary btn-block">
                         <span v-if="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                         Deposit {{depositValue}} {{selectedToken}}
                       </button>
                     </div>
                     
-                    <span v-if="Number(getAllowance) < Number(depositValue)">
+                    <span>
                       <small>
-                        (Two transactions are needed: 1. Approval, 2. Deposit)
+                        (You will need to confirm two actions in MetaMask: Sign + Confirm transaction.)
                       </small>
                     </span>
                   </form>
@@ -141,6 +118,7 @@
 
 <script>
 import { mapGetters } from "vuex";
+import { signERC2612Permit } from 'eth-permit';
 
 export default {
   name: 'Invest',
@@ -152,27 +130,9 @@ export default {
     ...mapGetters("accounts", ["getActiveAccount", "getActiveBalanceEth"]),
     ...mapGetters("optionsExchange", ["getLiquidityPoolBalance"]),
     ...mapGetters("liquidityPool", ["getApy", "getLiquidityPoolContract", "getLiquidityPoolAddress", "getLiquidityPoolUserBalance"]),
-    ...mapGetters("dai", ["getDaiAddress", "getUserDaiBalance", "getDaiContract", "getLpDaiAllowance"]),
-    ...mapGetters("usdc", ["getUsdcAddress", "getUserUsdcBalance", "getUsdcContract", "getLpUsdcAllowance"]),
+    ...mapGetters("dai", ["getDaiAddress", "getUserDaiBalance", "getDaiContract"]),
+    ...mapGetters("usdc", ["getUsdcAddress", "getUserUsdcBalance", "getUsdcContract"]),
 
-    getAllowance() {
-      if (this.selectedToken === "DAI") {
-        return this.getLpDaiAllowance;
-      } else if (this.selectedToken === "USDC") {
-        return this.getLpUsdcAllowance;
-      }
-
-      return null;
-    },
-    getAllowanceWei() {
-      if (this.selectedToken === "DAI") {
-        return this.getWeb3.utils.toWei(this.getLpDaiAllowance, "ether");
-      } else if (this.selectedToken === "USDC") {
-        return this.getWeb3.utils.toWei(this.getLpUsdcAllowance, "mwei");
-      }
-
-      return null;
-    },
     getStablecoinContract() {
       if (this.selectedToken === "DAI") {
         return this.getDaiContract;
@@ -202,11 +162,9 @@ export default {
     this.$store.dispatch("dai/fetchContract");
     this.$store.dispatch("dai/fetchUserBalance");
     this.$store.dispatch("dai/storeAddress");
-    this.$store.dispatch("dai/fetchLpAllowance");
     this.$store.dispatch("usdc/fetchContract");
     this.$store.dispatch("usdc/fetchUserBalance");
     this.$store.dispatch("usdc/storeAddress");
-    this.$store.dispatch("usdc/fetchLpAllowance");
     this.$store.dispatch("liquidityPool/fetchUserBalance");
     this.$store.dispatch("optionsExchange/fetchLiquidityPoolBalance");
     this.$store.dispatch("liquidityPool/fetchApy");
@@ -214,7 +172,6 @@ export default {
   },
   data() {
     return {
-      allowanceOption: "limited",
       depositValue: null,
       loading: false,
       selectedToken: "DAI"
@@ -234,107 +191,69 @@ export default {
 
       let tokensWei = component.getWeb3.utils.toWei(component.depositValue, unit);
 
-      if (Number(component.getAllowanceWei) < Number(tokensWei)) {
-        let approvalValue = tokensWei;
-        if (component.allowanceOption === "unlimited") {
-          approvalValue = "1000000000000000000000000000000000"; // "unlimited" value
+      const result = await signERC2612Permit(
+        window.ethereum, 
+        component.getStablecoinContract._address, 
+        component.getActiveAccount, 
+        component.getLiquidityPoolAddress, 
+        tokensWei
+      );
+
+      // make a deposit
+      await component.getLiquidityPoolContract.methods.depositTokens(
+        component.getActiveAccount, 
+        component.getStablecoinContract._address, 
+        tokensWei,
+        result.deadline,
+        result.v,
+        result.r,
+        result.s
+      ).send({
+        from: component.getActiveAccount
+      }, function(error, hash) {
+        component.loading = true;
+
+        // Deposit tx error
+        if (error) {
+          component.$toast.error("The transaction has been rejected. Please try again.");
+          component.loading = false;
         }
 
-        // call the approve method to increase the allowance
-        await component.getStablecoinContract.methods.approve(component.getLiquidityPoolAddress, approvalValue).send({
-          from: component.getActiveAccount
-        }, function(error, hash) {
-          component.loading = true;
+        // Deposit transaction sent
+        if (hash) {
+          // show a "tx submitted" toast
+          component.$toast.info("The Deposit transaction has been submitted. Please wait for it to be confirmed.");
 
-          // Approval tx error
-          if (error) {
-            component.$toast.error("The transaction has been rejected. Please try again.");
+          // listen for the Transfer event
+          component.getStablecoinContract.once("Transfer", {
+            filter: { owner: component.getActiveAccount }
+          }, function(error, event) {
             component.loading = false;
-          }
+            
+            // failed transaction
+            if (error) {
+              component.$toast.error("The Deposit transaction has failed. Please try again, perhaps with a higher gas limit.");
+            }
 
-          // Approval transaction sent
-          if (hash) {
-            // show a "tx submitted" toast
-            component.$toast.info("The Approval transaction has been submitted. Please wait for it to be confirmed.");
+            // success
+            if (event) {
+              component.$toast.success("Your deposit was successfull.");
 
-            // listen for the Approval event
-            component.getStablecoinContract.once("Approval", {
-              filter: { owner: component.getActiveAccount }
-            }, function(error, event) {
-              component.loading = false;
-
-              // failed transaction
-              if (error) {
-                component.$toast.error("The Approval transaction has failed. Please try again, perhaps with a higher gas limit.");
+              // refresh values
+              if (component.selectedToken === "DAI") {
+                component.$store.dispatch("dai/fetchUserBalance");
+              } else if (component.selectedToken === "USDC") {
+                component.$store.dispatch("usdc/fetchUserBalance");
               }
-
-              // success
-              if (event) {
-                component.$toast.success("Approval was successful. Please make a deposit now.");
-
-                // refresh values
-                if (component.selectedToken === "DAI") {
-                  component.$store.dispatch("dai/fetchLpAllowance");
-                  component.$store.dispatch("dai/fetchUserBalance"); // refresh the user's DAI balance
-                } else if (component.selectedToken === "USDC") {
-                  component.$store.dispatch("usdc/fetchLpAllowance");
-                  component.$store.dispatch("usdc/fetchUserBalance"); // refresh the user's USDC balance
-                }
-              }
-            });
-          }
-        });
-
-      } else {
-        // make a deposit
-        await component.getLiquidityPoolContract.methods.depositTokens(component.getActiveAccount, component.getStablecoinContract._address, tokensWei).send({
-          from: component.getActiveAccount
-        }, function(error, hash) {
-          component.loading = true;
-
-          // Deposit tx error
-          if (error) {
-            component.$toast.error("The transaction has been rejected. Please try again.");
-            component.loading = false;
-          }
-
-          // Deposit transaction sent
-          if (hash) {
-            // show a "tx submitted" toast
-            component.$toast.info("The Deposit transaction has been submitted. Please wait for it to be confirmed.");
-
-            // listen for the Transfer event
-            component.getStablecoinContract.once("Transfer", {
-              filter: { owner: component.getActiveAccount }
-            }, function(error, event) {
-              component.loading = false;
               
-              // failed transaction
-              if (error) {
-                component.$toast.error("The Deposit transaction has failed. Please try again, perhaps with a higher gas limit.");
-              }
-
-              // success
-              if (event) {
-                component.$toast.success("Your deposit was successfull.");
-
-                // refresh values
-                if (component.selectedToken === "DAI") {
-                  component.$store.dispatch("dai/fetchLpAllowance");
-                  component.$store.dispatch("dai/fetchUserBalance");
-                } else if (component.selectedToken === "USDC") {
-                  component.$store.dispatch("usdc/fetchLpAllowance");
-                  component.$store.dispatch("usdc/fetchUserBalance");
-                }
-                
-                component.$store.dispatch("optionsExchange/fetchLiquidityPoolBalance");
-                component.$store.dispatch("liquidityPool/fetchUserBalance");
-                component.depositValue = null;
-              }
-            });
-          }
-        });
-      }
+              component.$store.dispatch("optionsExchange/fetchLiquidityPoolBalance");
+              component.$store.dispatch("liquidityPool/fetchUserBalance");
+              component.depositValue = null;
+            }
+          });
+        }
+      });
+ 
     }
   }
 }
