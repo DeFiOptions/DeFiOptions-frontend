@@ -5,8 +5,9 @@ const state = {
   abi: null,
   address: null,
   contract: null,
+  poolBalance: null,
   userBalance: null,
-  poolBalance: null
+  userOptions: null
 };
 
 const getters = {
@@ -24,6 +25,9 @@ const getters = {
   },
   getOptionsExchangeContract(state) {
     return state.contract;
+  },
+  getUserOptions(state) {
+    return state.userOptions;
   }
 };
 
@@ -62,6 +66,33 @@ const actions = {
 
     commit("setLiquidityPoolBalance", balance);
   },
+  async fetchUserOptions({ commit, dispatch, state, rootState }) {
+    if (!state.contract) {
+      dispatch("fetchContract");
+    }
+
+    let activeAccount = rootState.accounts.activeAccount;
+    let options = await state.contract.methods.getBook(activeAccount).call();
+
+    let web3 = rootState.accounts.web3;
+
+    let symbolsList = options.symbols.split("\n");
+
+    let optionsList = [];
+    let counter = 0;
+    for (let symbol of symbolsList) {
+      let holding = web3.utils.fromWei(options.holding[counter], "ether");
+      let written = web3.utils.fromWei(options.written[counter], "ether");
+      let intrinsicValue = web3.utils.fromWei(options.iv[counter], "ether");
+      
+      let optionObject = {symbol, holding, written, intrinsicValue}
+      optionsList.push(optionObject);
+
+      counter++;
+    }
+
+    commit("setUserOptions", optionsList);
+  },
   storeAbi({commit}) {
     commit("setAbi", OptionsExchange.abi);
   },
@@ -82,11 +113,14 @@ const mutations = {
   setContract(state, _contract) {
     state.contract = _contract;
   },
+  setLiquidityPoolBalance(state, balance) {
+    state.poolBalance = balance;
+  },
   setUserExchangeBalance(state, balance) {
     state.userBalance = balance;
   },
-  setLiquidityPoolBalance(state, balance) {
-    state.poolBalance = balance;
+  setUserOptions(state, options) {
+    state.userOptions = options;
   }
 };
 

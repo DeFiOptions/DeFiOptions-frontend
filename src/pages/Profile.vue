@@ -2,7 +2,7 @@
   <div>
     <!-- Page Heading -->
     <div class="d-sm-flex align-items-center justify-content-between">
-        <h1 class="h3 mb-0 text-gray-800">Your profile</h1>
+        <h1 class="h3 mb-0 text-gray-800">Portfolio</h1>
     </div>
     <!-- END Page Heading -->
 
@@ -166,7 +166,7 @@
     </div>
 
     <!-- Options table -->
-    <div class="row mb-4" v-if="TBD">
+    <div class="row mb-4" v-if="getUserOptions">
       <div class="col-md-12">
         <div class="card shadow mt-4">
           <div class="card-body">
@@ -178,29 +178,22 @@
                 <thead>
                     <tr>
                         <th>#</th>
-                        <th>Pair</th>
-                        <th>Type</th>
-                        <th>Strike</th>
-                        <th>Maturity</th>
-                        <th>Buy/Sell</th>
+                        <th>Symbol</th>
+                        <th>Holding</th>
+                        <th>Written</th>
+                        <th>Intrinsic value</th>
                     </tr>
                 </thead>
                 
                 <tbody>
 
-                    <!--
-                    <tr v-for="(option, index) in getFilteredSymbols" v-bind:key="option.symbol">
+                    <tr v-for="(option, index) in getUserOptions" v-bind:key="option.symbol">
                         <td>{{index + 1}}</td>
-                        <td>{{getSelectedPair}}</td>
-                        <td>{{getSelectedType}}</td>
-                        <td><strong>${{option.strike}}</strong></td>
-                        <td>{{getSelectedMaturity}}</td>
-                        <td>
-                          <button class="btn btn-outline-success btn-sm mr-2 mb-1" @click="setModalData('Buy', option.symbol, option.strike)" data-toggle="modal" data-target="#optionsModal">Buy</button>
-                          <button class="btn btn-outline-danger btn-sm mb-1" @click="setModalData('Sell', option.symbol, option.strike)" data-toggle="modal" data-target="#optionsModal">Sell</button>
-                        </td>
+                        <td>{{option.symbol}}</td>
+                        <td>{{option.holding}}</td>
+                        <td>{{option.written}}</td>
+                        <td>${{ Number(option.intrinsicValue).toFixed(2) }}</td>
                     </tr>
-                    -->
 
                 </tbody>
               </table>
@@ -281,7 +274,7 @@ export default {
   },
   computed: {
     ...mapGetters("accounts", ["getActiveAccount", "getActiveBalanceEth", "getWeb3", "isUserConnected"]),
-    ...mapGetters("optionsExchange", ["getExchangeUserBalance"]),
+    ...mapGetters("optionsExchange", ["getExchangeUserBalance", "getUserOptions"]),
     ...mapGetters("dai", ["getDaiContract", "getUserDaiBalance"]),
     ...mapGetters("usdc", ["getUsdcContract", "getUserUsdcBalance"]),
     ...mapGetters("creditToken", ["getCreditTokenUserBalance"]),
@@ -301,6 +294,7 @@ export default {
     this.$store.dispatch("dai/fetchUserBalance");
     this.$store.dispatch("usdc/fetchUserBalance");
     this.$store.dispatch("optionsExchange/fetchExchangeUserBalance");
+    this.$store.dispatch("optionsExchange/fetchUserOptions");
     this.$store.dispatch("creditToken/fetchUserBalance");
     this.$store.dispatch("accounts/fetchActiveBalance");
   },
