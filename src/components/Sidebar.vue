@@ -6,9 +6,9 @@
       <router-link to="/" style="text-decoration: none">
       <a class="sidebar-brand d-flex align-items-center justify-content-center" href="/">
           <div class="sidebar-brand-icon">
-              <i class="fas fa-landmark"></i>
+              <i class="icon-defioptions"></i>
           </div>
-          <div class="sidebar-brand-text mx-3">DeFiOptions</div>
+          <div class="sidebar-brand-text mx-3">DeFi Options</div>
       </a>
       </router-link>
 
