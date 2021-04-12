@@ -182,6 +182,7 @@
                         <th>Holding</th>
                         <th>Written</th>
                         <th>Intrinsic value</th>
+                        <th>Sell</th>
                     </tr>
                 </thead>
                 
@@ -193,6 +194,10 @@
                         <td>{{option.holding}}</td>
                         <td>{{option.written}}</td>
                         <td>${{ Number(option.intrinsicValue).toFixed(2) }}</td>
+                        <td>
+                          <button v-if="isOptionExpired(option)" class="btn btn-outline-danger btn-sm mb-1" @click="setModalData(option)" data-toggle="modal" data-target="#optionsModal">Sell</button>
+                          <button v-if="!isOptionExpired(option)" class="btn btn-outline-secondary btn-sm mb-1" disabled>Expired</button>
+                        </td>
                     </tr>
 
                 </tbody>
@@ -203,6 +208,66 @@
           </div>
         </div>
       </div>
+
+      <!-- Sell option Modal START-->
+      <div class="modal fade" id="optionsModal" tabindex="-1" aria-labelledby="optionsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+
+            <div class="modal-header">
+              <h5 class="modal-title" id="optionsModalLabel">Sell your option</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+
+            <div class="modal-body">
+
+              <div class="form-group row">
+                <label for="optionSymbol" class="col-sm-3 col-form-label font-weight-bold">Option</label>
+                <div class="col-sm-9">
+                  <input type="text" readonly class="form-control-plaintext ml-1" id="optionSymbol" :value="selectedOption.pair+' '+selectedOption.type+' at $'+selectedOption.strike+' ('+selectedOption.maturity+')'">
+                </div>
+              </div>
+
+              <div class="form-group row">
+                <label for="optionSize" class="col-sm-3 col-form-label font-weight-bold">Option size</label>
+                <div class="col-sm-8">
+                  <input type="text" class="form-control ml-1" :class="isOptionSizeNotValid.status ? 'is-invalid' : ''" id="optionSize" v-model="selectedOptionSize">
+                  <small v-if="isOptionSizeNotValid.status" class="invalid-feedback ml-1">{{ isOptionSizeNotValid.message }}</small>
+                  <small v-if="!isOptionSizeNotValid.status" class="ml-1">Maximum option size: {{Math.floor(Number(selectedOptionVolume*1000))/1000}}.</small>
+                </div>
+              </div>
+
+              <div class="form-group row">
+                <label for="optionPrice" class="col-sm-3 col-form-label font-weight-bold">Option price</label>
+                <div class="col-sm-9">
+                  <input type="text" readonly class="form-control-plaintext ml-1" id="optionPrice" :value="'$'+Number(selectedOptionPrice).toFixed(2)">
+                </div>
+              </div>
+
+              <div class="form-group row">
+                <label for="optionTotal" class="col-sm-3 col-form-label font-weight-bold">TOTAL</label>
+                <div class="col-sm-9">
+                  <input type="text" readonly class="form-control-plaintext ml-1 font-weight-bold" id="optionTotal" :value="'$'+Number(getTotal).toFixed(2)">
+                </div>
+              </div>
+
+            </div>
+
+            <div class="modal-footer">
+              <button type="button" class="btn btn-danger" :disabled="isOptionSizeNotValid.status ? true : false">
+                <span v-if="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                Sell option
+              </button>
+              
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+            
+          </div>
+        </div>
+      </div>
+      <!-- Sell option Modal END-->
     </div>
 
     <!-- Outer Row -->
@@ -269,16 +334,20 @@ import { mapGetters } from "vuex";
 
 export default {
   name: 'Profile',
-  components: {
-    
-  },
   computed: {
     ...mapGetters("accounts", ["getActiveAccount", "getActiveBalanceEth", "getWeb3", "isUserConnected"]),
     ...mapGetters("optionsExchange", ["getExchangeUserBalance", "getUserOptions"]),
     ...mapGetters("dai", ["getDaiContract", "getUserDaiBalance"]),
     ...mapGetters("usdc", ["getUsdcContract", "getUserUsdcBalance"]),
     ...mapGetters("creditToken", ["getCreditTokenUserBalance"]),
-    ...mapGetters("liquidityPool", ["getLiquidityPoolUserBalance"])
+    ...mapGetters("liquidityPool", ["getLiquidityPoolUserBalance", "getLiquidityPoolContract"]),
+
+    getTotal() {
+      return Number(this.selectedOptionSize) * Number(this.selectedOptionPrice);
+    },
+    isOptionSizeNotValid() {
+      return false;
+    }
   },
   created() {
     if (!this.getWeb3 || !this.isUserConnected) {
@@ -301,10 +370,29 @@ export default {
   data() {
     return {
       daiValue: null,
+      loading: false,
+      selectedOption: {},
+      selectedOptionPrice: null,
+      selectedOptionSize: 0.1, // the amount that user enters in the option modal
+      selectedOptionVolume: null, // max possible option size
       usdcValue: null
     }
   },
   methods: {
+    async addDaiToMetaMask() {
+      await window.ethereum.request({
+        method: 'wallet_watchAsset',
+        params: {
+          type: 'ERC20', // Initially only supports ERC20, but eventually more!
+          options: {
+            address: this.getDaiContract._address, // The address that the token is at.
+            symbol: "DAI", // A ticker symbol or shorthand, up to 5 chars.
+            decimals: 18, // The number of decimals in the token
+            image: "", // TODO: A string url of the token logo
+          },
+        },
+      });
+    },
     async getDai() {
       let component = this;
       let tokensWei = this.getWeb3.utils.toWei(this.daiValue, "ether");
@@ -390,19 +478,21 @@ export default {
         }
       });
     },
-    async addDaiToMetaMask() {
-      await window.ethereum.request({
-        method: 'wallet_watchAsset',
-        params: {
-          type: 'ERC20', // Initially only supports ERC20, but eventually more!
-          options: {
-            address: this.getDaiContract._address, // The address that the token is at.
-            symbol: "DAI", // A ticker symbol or shorthand, up to 5 chars.
-            decimals: 18, // The number of decimals in the token
-            image: "", // TODO: A string url of the token logo
-          },
-        },
-      });
+    isOptionExpired(option) {
+      return Math.floor(Date.now()/1000) < Number(option.timestamp);
+    },
+    async setModalData(option) {
+      this.selectedOption = option;
+
+      window.console.log(option.symbol);
+
+      let result = await this.getLiquidityPoolContract.methods.querySell(option.symbol).call();
+
+      if (result) {
+        this.selectedOptionPrice = this.getWeb3.utils.fromWei(String(result.price), "ether");
+        this.selectedOptionVolume = this.getWeb3.utils.fromWei(String(result.volume), "ether");
+      }
+      
     }
   }
 }

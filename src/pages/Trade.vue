@@ -314,7 +314,7 @@ export default {
       selectedAction: "Buy", // Buy or Sell
       selectedMaturity: null,
       selectedOptionPrice: null,
-      selectedOptionSize: 0.1,
+      selectedOptionSize: 0.1, // the amount that user enters in the option modal
       selectedOptionVolume: null, // max possible option size
       selectedPair: null,
       selectedStrike: null,
@@ -423,6 +423,9 @@ export default {
       this.selectedType = optionType;
     },
     async setModalData(action, symbol, strike) {
+      this.selectedOptionPrice = null;
+      this.selectedOptionVolume = null;
+
       this.selectedAction = action;
       this.selectedSymbol = symbol;
       this.selectedStrike = strike;
