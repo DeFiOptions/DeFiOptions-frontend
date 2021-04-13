@@ -72,7 +72,7 @@
                     <td>{{getSelectedMaturity}}</td>
                     <td>
                       <button class="btn btn-outline-success btn-sm mr-2 mb-1" @click="setModalData('Buy', option.symbol, option.strike)" data-toggle="modal" data-target="#optionsModal">Buy</button>
-                      <button class="btn btn-outline-danger btn-sm mb-1" @click="setModalData('Sell', option.symbol, option.strike)" data-toggle="modal" data-target="#optionsModal">Sell</button>
+                      <button class="btn btn-outline-danger btn-sm mb-1" @click="setModalData('Sell', option.symbol, option.strike)" data-toggle="modal" data-target="#optionsModal" disabled>Sell</button>
                     </td>
                 </tr>
 
@@ -256,7 +256,7 @@ export default {
         return {status: true, message: "Option size must not be negative!"};
       }
 
-      // negative option size
+      // not a number
       if (isNaN(this.selectedOptionSize)) {
         return {status: true, message: "Please enter a number."};
       }
@@ -397,8 +397,7 @@ export default {
                   component.$store.dispatch("usdc/fetchUserBalance");
                 }
                 
-                component.$store.dispatch("optionsExchange/fetchLiquidityPoolBalance");
-                component.$store.dispatch("liquidityPool/fetchUserBalance");
+                component.$store.dispatch("optionsExchange/fetchExchangeUserBalance");
                 component.selectedOptionSize = 0.1;
               }
             });

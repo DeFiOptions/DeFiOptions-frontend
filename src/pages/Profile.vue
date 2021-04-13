@@ -196,7 +196,7 @@
                         <td>${{ Number(option.intrinsicValue).toFixed(2) }}</td>
                         <td>
                           <button v-if="isOptionExpired(option)" class="btn btn-outline-danger btn-sm mb-1" @click="setModalData(option)" data-toggle="modal" data-target="#optionsModal">Sell</button>
-                          <button v-if="!isOptionExpired(option)" class="btn btn-outline-secondary btn-sm mb-1" disabled>Expired</button>
+                          <button v-if="!isOptionExpired(option)" class="btn btn-outline-secondary btn-sm mb-1" disabled>Redeem</button>
                         </td>
                     </tr>
 
@@ -235,7 +235,9 @@
                 <div class="col-sm-8">
                   <input type="text" class="form-control ml-1" :class="isOptionSizeNotValid.status ? 'is-invalid' : ''" id="optionSize" v-model="selectedOptionSize">
                   <small v-if="isOptionSizeNotValid.status" class="invalid-feedback ml-1">{{ isOptionSizeNotValid.message }}</small>
-                  <small v-if="!isOptionSizeNotValid.status" class="ml-1">Maximum option size: {{Math.floor(Number(selectedOptionVolume*1000))/1000}}.</small>
+                  <small v-if="!isOptionSizeNotValid.status" class="ml-1">
+                    Your amount: {{this.selectedOption.holding}} (Max possible size: {{Math.floor(Number(selectedOptionVolume*1000))/1000}}).
+                  </small>
                 </div>
               </div>
 
@@ -256,7 +258,7 @@
             </div>
 
             <div class="modal-footer">
-              <button type="button" class="btn btn-danger" :disabled="isOptionSizeNotValid.status ? true : false">
+              <button @click="sellOption" type="button" class="btn btn-danger" :disabled="isOptionSizeNotValid.status ? true : false">
                 <span v-if="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                 Sell option
               </button>
@@ -331,6 +333,7 @@
 
 <script>
 import { mapGetters } from "vuex";
+import { signERC2612Permit } from 'eth-permit';
 
 export default {
   name: 'Profile',
@@ -340,13 +343,43 @@ export default {
     ...mapGetters("dai", ["getDaiContract", "getUserDaiBalance"]),
     ...mapGetters("usdc", ["getUsdcContract", "getUserUsdcBalance"]),
     ...mapGetters("creditToken", ["getCreditTokenUserBalance"]),
-    ...mapGetters("liquidityPool", ["getLiquidityPoolUserBalance", "getLiquidityPoolContract"]),
+    ...mapGetters("liquidityPool", ["getLiquidityPoolUserBalance", "getLiquidityPoolContract", "getLiquidityPoolAddress"]),
 
     getTotal() {
       return Number(this.selectedOptionSize) * Number(this.selectedOptionPrice);
     },
-    isOptionSizeNotValid() {
-      return false;
+    isOptionSizeNotValid() { // validation for option size
+      // option size bigger than volume.
+      if (Number(this.selectedOptionSize) > Number(this.selectedOptionVolume)) {
+        return {status: true, message: "Option size must not be bigger than " + (Math.floor(Number(this.selectedOptionVolume*1000))/1000) + "!"};
+      }
+
+      // too many digits
+      if (String(this.selectedOptionSize).length > 14) {
+        return {status: true, message: "Please reduce the number of digits."};
+      }
+
+      // negative option size
+      if (Number(this.selectedOptionSize) < 0) {
+        return {status: true, message: "Option size must not be negative!"};
+      }
+
+      // not a number
+      if (isNaN(this.selectedOptionSize)) {
+        return {status: true, message: "Please enter a number."};
+      }
+
+      // null option size
+      if (this.selectedOptionSize === null || Number(this.selectedOptionSize) === 0 || this.selectedOptionSize === undefined || this.selectedOptionSize === "") {
+        return {status: true, message: "Option size must not be empty or zero!"};
+      }
+
+      // selected size bigger than holding
+      if (this.selectedOptionSize > Number(this.selectedOption.holding)) {
+        return {status: true, message: "Maximum size that you can sell: " + this.selectedOption.holding};
+      }
+
+      return {status: false, message: "Valid option size"};
     }
   },
   created() {
@@ -360,6 +393,7 @@ export default {
     this.$store.dispatch("usdc/fetchContract");
     this.$store.dispatch("creditToken/fetchContract");
     this.$store.dispatch("liquidityPool/fetchUserBalance");
+    this.$store.dispatch("liquidityPool/storeAddress");
     this.$store.dispatch("dai/fetchUserBalance");
     this.$store.dispatch("usdc/fetchUserBalance");
     this.$store.dispatch("optionsExchange/fetchExchangeUserBalance");
@@ -484,15 +518,84 @@ export default {
     async setModalData(option) {
       this.selectedOption = option;
 
-      window.console.log(option.symbol);
-
       let result = await this.getLiquidityPoolContract.methods.querySell(option.symbol).call();
 
       if (result) {
         this.selectedOptionPrice = this.getWeb3.utils.fromWei(String(result.price), "ether");
         this.selectedOptionVolume = this.getWeb3.utils.fromWei(String(result.volume), "ether");
+
+        // TEST - DELETE AFTER!
+        //window.console.log(this.selectedOptionPrice);
+        //this.selectedOptionPrice -= 1;
+        //window.console.log(this.selectedOptionPrice);
       }
-      
+    },
+    async sellOption() {
+      let component = this;
+
+      let optionSizeWei = component.getWeb3.utils.toWei(String(component.selectedOptionSize), "ether");
+      let optionUnitPrice = component.getWeb3.utils.toWei(String(component.selectedOptionPrice), "ether");
+
+      // allowance through permit()
+      const result = await signERC2612Permit(
+        window.ethereum, 
+        "0x...", // TODO: programmatically add option token address
+        component.getActiveAccount, 
+        component.getLiquidityPoolAddress, 
+        optionSizeWei // the amount of option tokens that user decided to sell
+      );
+
+      // sell option transaction
+      try {
+        await component.getLiquidityPoolContract.methods.sell(
+          component.selectedOption.symbol, // symbol
+          optionUnitPrice, // price per one option
+          optionSizeWei, // volume a.k.a. user's selected option size
+          result.deadline,
+          result.v,
+          result.r,
+          result.s
+        ).send({
+          from: component.getActiveAccount
+        }, function(error, hash) {
+          component.loading = true;
+
+          // Deposit tx error
+          if (error) {
+            component.$toast.error("The transaction has been rejected. Please try again.");
+            component.loading = false;
+          }
+
+          // Deposit transaction sent
+          if (hash) {
+            // show a "tx submitted" toast
+            component.$toast.info("The Sell transaction has been submitted. Please wait for it to be confirmed.");
+
+            // listen for the Transfer event
+            component.getLiquidityPoolContract.once("Sell", {
+              filter: { seller: component.getActiveAccount }
+            }, function(error, event) {
+              component.loading = false;
+              
+              // failed transaction
+              if (error) {
+                component.$toast.error("The Sell transaction has failed. Please try again, perhaps with a higher gas limit.");
+              }
+
+              // success
+              if (event) {
+                component.$toast.success("You have successfully sold an option.");
+                component.$store.dispatch("optionsExchange/fetchExchangeUserBalance");
+                component.selectedOptionSize = 0.1;
+              }
+            });
+          }
+        });
+      } catch (e) {
+          window.console.log("Error:", e);
+          component.$toast.error("The transaction has been reverted. Please try again or contact project admins.");
+          component.loading = false;
+      }
     }
   }
 }
