@@ -89,6 +89,7 @@ const actions = {
       let holding = web3.utils.fromWei(options.holding[counter], "ether");
       let written = web3.utils.fromWei(options.written[counter], "ether");
       let intrinsicValue = web3.utils.fromWei(options.iv[counter], "ether");
+      let address = options.tokens[counter];
 
       // type
       let type = "CALL";
@@ -103,7 +104,7 @@ const actions = {
         year: 'numeric' });
       
       // option object
-      let optionObject = {symbol, pair, type, maturity, strike, holding, written, intrinsicValue, timestamp}
+      let optionObject = {symbol, pair, type, maturity, strike, holding, written, intrinsicValue, timestamp, address}
       optionsList.push(optionObject);
 
       counter++;

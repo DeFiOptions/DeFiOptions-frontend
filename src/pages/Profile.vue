@@ -539,9 +539,9 @@ export default {
       // allowance through permit()
       const result = await signERC2612Permit(
         window.ethereum, 
-        "0x...", // TODO: programmatically add option token address
-        component.getActiveAccount, 
-        component.getLiquidityPoolAddress, 
+        component.selectedOption.address, // option token address
+        component.getActiveAccount, // option owner
+        component.getLiquidityPoolAddress, // spender
         optionSizeWei // the amount of option tokens that user decided to sell
       );
 
