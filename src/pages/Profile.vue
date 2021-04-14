@@ -524,14 +524,15 @@ export default {
         this.selectedOptionPrice = this.getWeb3.utils.fromWei(String(result.price), "ether");
         this.selectedOptionVolume = this.getWeb3.utils.fromWei(String(result.volume), "ether");
 
-        // TEST - DELETE AFTER!
-        //window.console.log(this.selectedOptionPrice);
-        //this.selectedOptionPrice -= 1;
-        //window.console.log(this.selectedOptionPrice);
+        // Reducing the query price to avoid precision errors in the smart contract (round down, 2 decimals)
+        this.selectedOptionPrice = Math.floor(Number(this.selectedOptionPrice*100))/100;
+        // alternative: subtract $0.01
       }
     },
     async sellOption() {
       let component = this;
+
+      this.setModalData(component.selectedOption); // fetch price again to avoid errors 
 
       let optionSizeWei = component.getWeb3.utils.toWei(String(component.selectedOptionSize), "ether");
       let optionUnitPrice = component.getWeb3.utils.toWei(String(component.selectedOptionPrice), "ether");
