@@ -88,11 +88,22 @@
                           <a class="dropdown-item" @click="changeStablecoin('USDC')" href="#">USDC</a>
                         </div>
                       </div>
-                      <input type="text" class="form-control" v-model="depositValue" placeholder="0.0">
+                      <input type="text" class="form-control" v-model="depositValue" :class="isDepositValueNotValid.status ? 'is-invalid' : ''" placeholder="0.0">
+                      <small v-if="isDepositValueNotValid.status" class="invalid-feedback ml-1">
+                        {{ isDepositValueNotValid.message }} 
+                        <span v-if="(Math.floor(Number(this.getUserStablecoinBalance*1000))/1000) > 0">
+                          Try <a href="#" @click="depositValue = String(Math.floor(Number(getUserStablecoinBalance*1000))/1000)">
+                            {{ Math.floor(Number(this.getUserStablecoinBalance*1000))/1000 }}
+                          </a> {{selectedToken}}.
+                        </span>
+                      </small>
                     </div>
 
-                    <small>
-                      Your {{selectedToken}} balance: {{ Number(getUserStablecoinBalance).toFixed(2) }} {{selectedToken}}.
+                    <small v-if="!isDepositValueNotValid.status">
+                      Your {{selectedToken}} balance: 
+                      <a href="#" @click="depositValue = String(Math.floor(Number(getUserStablecoinBalance*1000))/1000)">
+                        {{ Math.floor(Number(this.getUserStablecoinBalance*1000))/1000 }}
+                      </a> {{selectedToken}}.
                     </small>
 
                     <div class="mt-2">
@@ -133,6 +144,29 @@ export default {
     ...mapGetters("dai", ["getDaiAddress", "getUserDaiBalance", "getDaiContract"]),
     ...mapGetters("usdc", ["getUsdcAddress", "getUserUsdcBalance", "getUsdcContract"]),
 
+    isDepositValueNotValid() { // validation for deposit value
+      // too many digits
+      if (String(this.depositValue).length > 14) {
+        return {status: true, message: "Please reduce the number of digits."};
+      }
+
+      // negative number
+      if (Number(this.depositValue) < 0) {
+        return {status: true, message: "Deposit value must not be negative!"};
+      }
+
+      // not a number
+      if (isNaN(this.depositValue)) {
+        return {status: true, message: "Please enter a number."};
+      }
+
+      // deposit value than balance
+      if (Number(this.depositValue) > Number(this.getUserStablecoinBalance)) {
+        return {status: true, message: "Your " + this.selectedToken + " balance is too low."};
+      }
+
+      return {status: false, message: "Valid deposit value"};
+    },
     getStablecoinContract() {
       if (this.selectedToken === "DAI") {
         return this.getDaiContract;
@@ -172,7 +206,7 @@ export default {
   },
   data() {
     return {
-      depositValue: null,
+      depositValue: 1,
       loading: false,
       selectedToken: "DAI"
     }
