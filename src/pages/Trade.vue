@@ -112,8 +112,8 @@
               <label for="optionSize" class="col-sm-3 col-form-label font-weight-bold">Option size</label>
               <div class="col-sm-8">
                 <input type="text" class="form-control ml-1" :class="isOptionSizeNotValid.status ? 'is-invalid' : ''" id="optionSize" v-model="selectedOptionSize">
-                <small v-if="isOptionSizeNotValid.status" class="invalid-feedback ml-1">{{ isOptionSizeNotValid.message }}</small>
-                <small v-if="!isOptionSizeNotValid.status" class="ml-1">Maximum option size: {{Math.floor(Number(selectedOptionVolume*1000))/1000}}.</small>
+                <small v-if="isOptionSizeNotValid.status" class="invalid-feedback ml-1">{{ isOptionSizeNotValid.message }}. Try <a @click="selectedOptionSize = getMaxOptionSize" href="#">{{getMaxOptionSize}}</a>.</small>
+                <small v-if="!isOptionSizeNotValid.status" class="ml-1">Maximum option size: <a @click="selectedOptionSize = getMaxOptionSize" href="#">{{getMaxOptionSize}}</a>.</small>
               </div>
             </div>
 
@@ -151,8 +151,6 @@
             </div>
 
           </div>
-
-          
 
           <div class="modal-footer">
 
@@ -193,6 +191,19 @@ export default {
         return this.getSymbolsListJson[this.getSelectedPair][this.getSelectedMaturity][this.getSelectedType];
       } catch {
         return [];
+      }
+    },
+    getMaxOptionSize() {
+      // max option size that current user can buy
+      let availableOptionVolume = Math.floor(Number(this.selectedOptionVolume*1000))/1000;
+      let optionPrice = Number(this.selectedOptionPrice);
+      let maxTotal = availableOptionVolume * optionPrice;
+      let userBalance = Number(this.getUserStablecoinBalance);
+
+      if (maxTotal > Number(this.getUserStablecoinBalance)) {
+        return Math.floor(Number(userBalance / optionPrice * 1000))/1000;
+      } else {
+        return availableOptionVolume;
       }
     },
     getSelectedMaturity() {
@@ -416,6 +427,7 @@ export default {
       this.selectedType = optionType;
     },
     async setModalData(action, symbol, strike) {
+      this.selectedOptionSize = 0.1;
       this.selectedOptionPrice = null;
       this.selectedOptionVolume = null;
 
