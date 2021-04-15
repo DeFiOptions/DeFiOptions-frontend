@@ -329,7 +329,7 @@
             </div>
 
             <div class="modal-footer">
-              <button @click="redeemOption" type="button" class="btn btn-info" disabled>
+              <button @click="redeemOption" type="button" class="btn btn-info">
                 <span v-if="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                 Redeem option
               </button>
@@ -405,6 +405,7 @@
 <script>
 import { mapGetters } from "vuex";
 import { signERC2612Permit } from 'eth-permit';
+import OptionTokenContractJson from "../contracts/RedeemableToken.json";
 
 export default {
   name: 'Portfolio',
@@ -587,7 +588,56 @@ export default {
       return Math.floor(Date.now()/1000) > Number(option.timestamp);
     },
     async redeemOption() {
-      // TODO
+      let component = this;
+
+      // get option contract
+      let optionContract = new this.getWeb3.eth.Contract(OptionTokenContractJson.abi, this.selectedOption.address);
+
+      // redeem option transaction
+      try {
+        await optionContract.methods.redeem(
+          component.getActiveAccount
+        ).send({
+          from: component.getActiveAccount,
+          gas: Number(150000)
+        }, function(error, hash) {
+          component.loading = true;
+
+          // transaction error
+          if (error) {
+            component.$toast.error("The transaction has been rejected. Please try again.");
+            component.loading = false;
+          }
+
+          // transaction sent
+          if (hash) {
+            // show a "tx submitted" toast
+            component.$toast.info("The Redeem transaction has been submitted. Please wait for it to be confirmed.");
+
+            // listen for the event
+            optionContract.once("Transfer", {
+              filter: { owner: component.getActiveAccount }
+            }, function(error, event) {
+              component.loading = false;
+              
+              // failed transaction
+              if (error) {
+                component.$toast.error("The Redeem transaction has failed. Please try again, perhaps with a higher gas limit.");
+              }
+
+              // success
+              if (event) {
+                component.$toast.success("You have successfully redeemed your expired option.");
+                component.$store.dispatch("optionsExchange/fetchExchangeUserBalance");
+              }
+            });
+          }
+        });
+      } catch (e) {
+          window.console.log("Error:", e);
+          component.$toast.error("The transaction has been reverted. Please try again or contact project admins.");
+          component.loading = false;
+      }
     },
     async setRedeemModalData(option) {
       this.selectedOption = option;
@@ -641,18 +691,18 @@ export default {
         }, function(error, hash) {
           component.loading = true;
 
-          // Deposit tx error
+          // transaction error
           if (error) {
             component.$toast.error("The transaction has been rejected. Please try again.");
             component.loading = false;
           }
 
-          // Deposit transaction sent
+          // transaction sent
           if (hash) {
             // show a "tx submitted" toast
             component.$toast.info("The Sell transaction has been submitted. Please wait for it to be confirmed.");
 
-            // listen for the Transfer event
+            // listen for the event
             component.getLiquidityPoolContract.once("Sell", {
               filter: { seller: component.getActiveAccount }
             }, function(error, event) {
