@@ -167,6 +167,7 @@
 
     <!-- Options table -->
     <div class="row mb-4" v-if="getUserOptions">
+
       <div class="col-md-12">
         <div class="card shadow mt-4">
           <div class="card-body">
@@ -178,11 +179,12 @@
                 <thead>
                     <tr>
                         <th>#</th>
-                        <th>Symbol</th>
+                        <th>Option</th>
+                        <th>Expiration</th>
                         <th>Holding</th>
                         <th>Written</th>
                         <th>Intrinsic value</th>
-                        <th>Sell</th>
+                        <th>Sell/Redeem</th>
                     </tr>
                 </thead>
                 
@@ -190,13 +192,17 @@
 
                     <tr v-for="(option, index) in getUserOptions" v-bind:key="option.symbol">
                         <td>{{index + 1}}</td>
-                        <td>{{option.symbol}}</td>
+                        <td>
+                          {{option.pair}} ({{option.type}}) at ${{option.strike}}
+                          <span v-if="isOptionExpired(option)" class="badge badge-info">Expired</span>
+                        </td>
+                        <td>{{option.maturity}}</td>
                         <td>{{option.holding}}</td>
                         <td>{{option.written}}</td>
                         <td>${{ Number(option.intrinsicValue).toFixed(2) }}</td>
                         <td>
-                          <button v-if="isOptionExpired(option)" class="btn btn-outline-danger btn-sm mb-1" @click="setModalData(option)" data-toggle="modal" data-target="#optionsModal">Sell</button>
-                          <button v-if="!isOptionExpired(option)" class="btn btn-outline-secondary btn-sm mb-1" disabled>Redeem</button>
+                          <button v-if="!isOptionExpired(option)" class="btn btn-outline-danger btn-sm mb-1" @click="setSellModalData(option)" data-toggle="modal" data-target="#sellOptionModal">Sell</button>
+                          <button v-if="isOptionExpired(option)" class="btn btn-outline-info btn-sm mb-1" @click="setRedeemModalData(option)" data-toggle="modal" data-target="#redeemOptionModal">Redeem</button>
                         </td>
                     </tr>
 
@@ -210,12 +216,12 @@
       </div>
 
       <!-- Sell option Modal START-->
-      <div class="modal fade" id="optionsModal" tabindex="-1" aria-labelledby="optionsModalLabel" aria-hidden="true">
+      <div class="modal fade" id="sellOptionModal" tabindex="-1" aria-labelledby="sellOptionModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
           <div class="modal-content">
 
             <div class="modal-header">
-              <h5 class="modal-title" id="optionsModalLabel">Sell your option</h5>
+              <h5 class="modal-title" id="sellOptionModalLabel">Sell your option</h5>
               <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                 <span aria-hidden="true">&times;</span>
               </button>
@@ -270,6 +276,71 @@
         </div>
       </div>
       <!-- Sell option Modal END-->
+
+      <!-- Redeem option Modal START-->
+      <div class="modal fade" id="redeemOptionModal" tabindex="-1" aria-labelledby="redeemOptionModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+
+            <div class="modal-header">
+              <h5 class="modal-title" id="redeemOptionModalLabel">Redeem your option</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+
+            <div class="modal-body">
+
+              <div class="form-group row">
+                <label for="redeemOptionSymbol" class="col-sm-4 col-form-label font-weight-bold">Option</label>
+                <div class="col-sm-8">
+                  <input type="text" readonly class="form-control-plaintext ml-1" id="redeemOptionSymbol" :value="selectedOption.pair+' '+selectedOption.type+' at $'+selectedOption.strike">
+                </div>
+              </div>
+
+              <div class="form-group row">
+                <label for="redeemOptionExpired" class="col-sm-4 col-form-label font-weight-bold">Expired on</label>
+                <div class="col-sm-8">
+                  <input type="text" readonly class="form-control-plaintext ml-1" id="redeemOptionExpired" :value="selectedOption.maturity">
+                </div>
+              </div>
+
+              <div class="form-group row">
+                <label for="optionIv" class="col-sm-4 col-form-label font-weight-bold">Intrinsic value</label>
+                <div class="col-sm-8">
+                  <input type="text" readonly class="form-control-plaintext ml-1" id="optionIv" :value="'$'+Number(selectedOption.intrinsicValue).toFixed(2)+' for 1 option'">
+                </div>
+              </div>
+
+              <div class="form-group row">
+                <label for="redeemOptionHolding" class="col-sm-4 col-form-label font-weight-bold">Quantity</label>
+                <div class="col-sm-8">
+                  <input type="text" readonly class="form-control-plaintext ml-1" id="redeemOptionHolding" :value="Number(selectedOption.holding).toFixed(2)">
+                </div>
+              </div>
+
+              <div class="form-group row">
+                <label for="redeemOptionTotal" class="col-sm-4 col-form-label font-weight-bold">TOTAL</label>
+                <div class="col-sm-8">
+                  <input type="text" readonly class="form-control-plaintext ml-1 font-weight-bold" id="redeemOptionTotal" :value="'$'+Number(selectedOption.intrinsicValue * selectedOption.holding).toFixed(2)">
+                </div>
+              </div>
+
+            </div>
+
+            <div class="modal-footer">
+              <button @click="redeemOption" type="button" class="btn btn-info" disabled>
+                <span v-if="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                Redeem option
+              </button>
+              
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+            
+          </div>
+        </div>
+      </div>
+      <!-- Redeem option Modal END-->
     </div>
 
     <!-- Outer Row -->
@@ -513,9 +584,15 @@ export default {
       });
     },
     isOptionExpired(option) {
-      return Math.floor(Date.now()/1000) < Number(option.timestamp);
+      return Math.floor(Date.now()/1000) > Number(option.timestamp);
     },
-    async setModalData(option) {
+    async redeemOption() {
+      // TODO
+    },
+    async setRedeemModalData(option) {
+      this.selectedOption = option;
+    },
+    async setSellModalData(option) {
       this.selectedOption = option;
 
       let result = await this.getLiquidityPoolContract.methods.querySell(option.symbol).call();
@@ -531,7 +608,7 @@ export default {
     async sellOption() {
       let component = this;
 
-      this.setModalData(component.selectedOption); // fetch price again to avoid errors 
+      this.setSellModalData(component.selectedOption); // fetch price again to avoid errors 
 
       let optionSizeWei = component.getWeb3.utils.toWei(String(component.selectedOptionSize), "ether");
       let optionUnitPrice = component.getWeb3.utils.toWei(String(component.selectedOptionPrice), "ether");
