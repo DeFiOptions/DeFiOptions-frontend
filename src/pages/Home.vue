@@ -60,7 +60,7 @@
 
       <div class="col-md-4 mb-3 card-deck">
         <div class="card pt-4 pl-4 pr-4">
-          <router-link to="/profile">
+          <router-link to="/portfolio">
             <img src="@/assets/undraw_Data_re_80ws.svg" class="card-img-top" alt="Analyzing">
           </router-link>
 
@@ -71,8 +71,8 @@
               Track your performance and balances.
             </p>
 
-            <router-link to="/profile">
-              <a href="/profile" class="card-link">Go to Profile</a>
+            <router-link to="/portfolio">
+              <a href="/portfolio" class="card-link">Go to Portfolio</a>
             </router-link>
           </div>
         </div>

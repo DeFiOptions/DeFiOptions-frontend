@@ -19,7 +19,7 @@
       <router-link to="/" style="text-decoration: none">
         <li class="nav-item" :class="{active:this.$route.name === 'home'}">
             <a class="nav-link" href="/">
-                <i class="fas fa-fw fa-tachometer-alt"></i>
+                <i class="fas fa-fw fa-home"></i>
                 <span>Main page</span></a>
         </li>
       </router-link>
@@ -45,15 +45,15 @@
       </router-link>
       <!-- END Nav Item - Invest -->
 
-      <!-- Nav Item - Profile -->
-      <router-link to="/profile" style="text-decoration: none" v-if="isUserConnected">
-        <li class="nav-item" :class="{active:this.$route.name === 'profile'}">
-            <a class="nav-link" href="/profile">
+      <!-- Nav Item - Portfolio -->
+      <router-link to="/portfolio" style="text-decoration: none" v-if="isUserConnected">
+        <li class="nav-item" :class="{active:this.$route.name === 'portfolio'}">
+            <a class="nav-link" href="/portfolio">
                 <i class="fas fa-fw fa-user"></i>
-                <span>Profile</span></a>
+                <span>Portfolio</span></a>
         </li>
       </router-link>
-      <!-- END Nav Item - Profile -->
+      <!-- END Nav Item - Portfolio -->
 
       <!-- Divider -->
       <hr class="sidebar-divider d-none d-md-block">

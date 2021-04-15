@@ -2,7 +2,7 @@
   <div>
     <!-- Page Heading -->
     <div class="d-sm-flex align-items-center justify-content-between">
-        <h1 class="h3 mb-0 text-gray-800">Portfolio</h1>
+        <h1 class="h3 mb-0 text-gray-800">Your portfolio</h1>
     </div>
     <!-- END Page Heading -->
 
@@ -336,7 +336,7 @@ import { mapGetters } from "vuex";
 import { signERC2612Permit } from 'eth-permit';
 
 export default {
-  name: 'Profile',
+  name: 'Portfolio',
   computed: {
     ...mapGetters("accounts", ["getActiveAccount", "getActiveBalanceEth", "getWeb3", "isUserConnected"]),
     ...mapGetters("optionsExchange", ["getExchangeUserBalance", "getUserOptions"]),

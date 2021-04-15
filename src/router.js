@@ -1,7 +1,7 @@
 import Vue from "vue";
 import Router from "vue-router";
 import Home from "./pages/Home";
-import Profile from "./pages/Profile";
+import Portfolio from "./pages/Portfolio";
 import Invest from "./pages/Invest";
 import Trade from "./pages/Trade";
 
@@ -24,9 +24,9 @@ export default new Router({
             component: Home
         },
         {
-            path: "/profile",
-            name: "profile",
-            component: Profile
+            path: "/portfolio",
+            name: "portfolio",
+            component: Portfolio
         },
         {
             path: "/invest",
