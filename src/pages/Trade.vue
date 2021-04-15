@@ -2,7 +2,7 @@
   <div>
     <!-- Page Heading -->
     <div class="d-sm-flex align-items-center justify-content-between">
-        <h1 class="h3 mb-0 text-gray-800">Trade options</h1>
+        <h1 class="h3 mb-0 text-gray-800">Buy options</h1>
     </div>
     <!-- END Page Heading -->
 
@@ -58,7 +58,7 @@
                     <th>Type</th>
                     <th>Strike</th>
                     <th>Maturity</th>
-                    <th>Buy/Sell</th>
+                    <th>Buy option</th>
                 </tr>
             </thead>
             
@@ -72,7 +72,6 @@
                     <td>{{getSelectedMaturity}}</td>
                     <td>
                       <button class="btn btn-outline-success btn-sm mr-2 mb-1" @click="setModalData('Buy', option.symbol, option.strike)" data-toggle="modal" data-target="#optionsModal">Buy</button>
-                      <button class="btn btn-outline-danger btn-sm mb-1" @click="setModalData('Sell', option.symbol, option.strike)" data-toggle="modal" data-target="#optionsModal" disabled>Sell</button>
                     </td>
                 </tr>
 
@@ -88,7 +87,7 @@
       </div>
     </div>
 
-    <!-- Buy/Sell Modal START-->
+    <!-- Buy Modal START-->
     <div class="modal fade" id="optionsModal" tabindex="-1" aria-labelledby="optionsModalLabel" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -125,7 +124,7 @@
               </div>
             </div>
 
-            <div class="form-group row" v-if="selectedAction === 'Buy'">
+            <div class="form-group row">
               <label for="optionBuyWith" class="col-sm-3 col-form-label font-weight-bold">Buy with</label>
               <div class="col-sm-9">
                 <div class="dropdown" id="optionBuyWith">
@@ -157,14 +156,9 @@
 
           <div class="modal-footer">
 
-            <button @click="buyOption" v-if="selectedAction === 'Buy'" type="button" class="btn btn-success" :disabled="isOptionSizeNotValid.status ? true : false">
+            <button @click="buyOption" type="button" class="btn btn-success" :disabled="isOptionSizeNotValid.status ? true : false">
               <span v-if="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
               Buy option
-            </button>
-
-            <button v-if="selectedAction === 'Sell'" type="button" class="btn btn-danger" :disabled="isOptionSizeNotValid.status ? true : false">
-              <span v-if="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-              Sell option
             </button>
             
             <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
@@ -174,7 +168,7 @@
         </div>
       </div>
     </div>
-    <!-- Buy/Sell Modal END-->
+    <!-- Buy Modal END-->
 
   </div>
 </template>
@@ -311,7 +305,7 @@ export default {
       loading: false,
       maturities: null,
       pairs: null,
-      selectedAction: "Buy", // Buy or Sell
+      selectedAction: "Buy", // Buy or some other action (Write?)
       selectedMaturity: null,
       selectedOptionPrice: null,
       selectedOptionSize: 0.1, // the amount that user enters in the option modal
@@ -430,16 +424,13 @@ export default {
       this.selectedStrike = strike;
 
       // fetch option price and volume
-      let result;
-
-      if (action === "Buy") {
-        result = await this.getLiquidityPoolContract.methods.queryBuy(this.selectedSymbol).call();
-      } else {
-        result = await this.getLiquidityPoolContract.methods.querySell(this.selectedSymbol).call();
+      let result = await this.getLiquidityPoolContract.methods.queryBuy(this.selectedSymbol).call();
+      
+      if (result) {
+        this.selectedOptionPrice = this.getWeb3.utils.fromWei(result.price, "ether");
+        this.selectedOptionVolume = this.getWeb3.utils.fromWei(result.volume, "ether");
       }
       
-      this.selectedOptionPrice = this.getWeb3.utils.fromWei(result.price, "ether");
-      this.selectedOptionVolume = this.getWeb3.utils.fromWei(result.volume, "ether");
     }
   }
 }

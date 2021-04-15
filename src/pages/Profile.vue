@@ -293,7 +293,7 @@
                                 placeholder="Enter the amount of DAI to receive">
                         </div>
                         <button class="btn btn-primary btn-user btn-block">
-                            Gimme fake DAI! :)
+                            Get fake DAI
                         </button>
                     </form>
                 </div>
@@ -318,7 +318,7 @@
                                 placeholder="Enter the amount of USDC to receive">
                         </div>
                         <button class="btn btn-primary btn-user btn-block">
-                            Gimme fake USDC! :)
+                            Get fake USDC
                         </button>
                     </form>
                 </div>
