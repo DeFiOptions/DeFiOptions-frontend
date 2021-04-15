@@ -524,9 +524,8 @@ export default {
         this.selectedOptionPrice = this.getWeb3.utils.fromWei(String(result.price), "ether");
         this.selectedOptionVolume = this.getWeb3.utils.fromWei(String(result.volume), "ether");
 
-        // Reducing the query price to avoid precision errors in the smart contract (round down, 2 decimals)
-        this.selectedOptionPrice = Math.floor(Number(this.selectedOptionPrice*100))/100;
-        // alternative: subtract $0.01
+        // Reducing the query price to avoid precision errors in the smart contract (-0.01%)
+        this.selectedOptionPrice -= Number(this.selectedOptionPrice) * 0.0001;
       }
     },
     async sellOption() {
@@ -537,13 +536,16 @@ export default {
       let optionSizeWei = component.getWeb3.utils.toWei(String(component.selectedOptionSize), "ether");
       let optionUnitPrice = component.getWeb3.utils.toWei(String(component.selectedOptionPrice), "ether");
 
+      let sigDeadline = Math.floor(new Date().getTime()/1000) + (3600 * 1); // valid for 1 hour
+
       // allowance through permit()
       const result = await signERC2612Permit(
         window.ethereum, 
         component.selectedOption.address, // option token address
         component.getActiveAccount, // option owner
         component.getLiquidityPoolAddress, // spender
-        optionSizeWei // the amount of option tokens that user decided to sell
+        optionSizeWei, // value: the amount of option tokens that user decided to sell
+        sigDeadline // deadline/expiry for the signature
       );
 
       // sell option transaction
@@ -557,7 +559,8 @@ export default {
           result.r,
           result.s
         ).send({
-          from: component.getActiveAccount
+          from: component.getActiveAccount,
+          gas: Number(400000)
         }, function(error, hash) {
           component.loading = true;
 
