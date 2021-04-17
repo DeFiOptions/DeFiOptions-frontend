@@ -108,16 +108,17 @@
               </div>
             </div>
 
-            <div class="form-group row" v-if="!availableVolumeTooSmall">
+            <div class="form-group row" v-if="!tooLowVolume">
               <label for="optionSize" class="col-sm-3 col-form-label font-weight-bold">Option size</label>
               <div class="col-sm-8">
-                <input type="text" class="form-control ml-1" :class="isOptionSizeNotValid.status ? 'is-invalid' : ''" id="optionSize" v-model="selectedOptionSize">
+                <span v-if="loadingVolume" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                <input v-if="!loadingVolume" type="text" class="form-control ml-1" :class="isOptionSizeNotValid.status ? 'is-invalid' : ''" id="optionSize" v-model="selectedOptionSize">
                 <small v-if="isOptionSizeNotValid.status" class="invalid-feedback ml-1">{{ isOptionSizeNotValid.message }}. Try <a @click="selectedOptionSize = getMaxOptionSize" href="#">{{getMaxOptionSize}}</a>.</small>
                 <small v-if="!isOptionSizeNotValid.status" class="ml-1">Maximum option size: <a @click="selectedOptionSize = getMaxOptionSize" href="#">{{getMaxOptionSize}}</a>.</small>
               </div>
             </div>
 
-            <div class="form-group row" v-if="availableVolumeTooSmall">
+            <div class="form-group row" v-if="tooLowVolume">
               <label for="optionSizeTooSmall" class="col-sm-3 col-form-label font-weight-bold">Option size</label>
               <div class="col-sm-9">
                 <input type="text" readonly class="form-control-plaintext ml-1 text-danger" id="optionSizeTooSmall" value="Option purchase not possible (low volume).">
@@ -193,14 +194,6 @@ export default {
     ...mapGetters("dai", ["getDaiAddress", "getUserDaiBalance", "getDaiContract"]),
     ...mapGetters("usdc", ["getUsdcAddress", "getUserUsdcBalance", "getUsdcContract"]),
 
-    availableVolumeTooSmall() {
-      // check if the amount of available options (volume) is too low (less than 0.001)
-      if (this.selectedOptionVolume < 0.001) {
-        return true;
-      } else {
-        return false;
-      }
-    },
     getFilteredSymbols() {
       try {
         return this.getSymbolsListJson[this.getSelectedPair][this.getSelectedMaturity][this.getSelectedType];
@@ -329,6 +322,7 @@ export default {
     return {
       buyWith: "DAI",
       loading: false,
+      loadingVolume: false,
       maturities: null,
       pairs: null,
       selectedAction: "Buy", // Buy or some other action (Write?)
@@ -341,7 +335,8 @@ export default {
       selectedSymbol: null,
       selectedType: null,
       showModal: false,
-      typeNames: null // PUT, CALL
+      typeNames: null, // PUT, CALL
+      tooLowVolume: false
     }
   },
   methods: {
@@ -419,6 +414,7 @@ export default {
                 
                 component.$store.dispatch("optionsExchange/fetchExchangeUserBalance");
                 component.selectedOptionSize = 0.1;
+                component.setModalData('Buy', component.selectedSymbol, component.selectedStrike);
               }
             });
           }
@@ -442,6 +438,7 @@ export default {
       this.selectedType = optionType;
     },
     async setModalData(action, symbol, strike) {
+      this.loadingVolume = true;
       this.selectedOptionSize = 0.1;
       this.selectedOptionPrice = null;
       this.selectedOptionVolume = null;
@@ -457,7 +454,11 @@ export default {
         this.selectedOptionPrice = this.getWeb3.utils.fromWei(result.price, "ether");
         this.selectedOptionVolume = this.getWeb3.utils.fromWei(result.volume, "ether");
 
-        window.console.log("selectedOptionVolume:", this.selectedOptionVolume);
+        this.loadingVolume = false;
+
+        if (this.selectedOptionVolume < 0.001) {
+          this.tooLowVolume = true;
+        }
       }
       
     }
