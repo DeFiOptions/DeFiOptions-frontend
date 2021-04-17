@@ -108,12 +108,19 @@
               </div>
             </div>
 
-            <div class="form-group row">
+            <div class="form-group row" v-if="!availableVolumeTooSmall">
               <label for="optionSize" class="col-sm-3 col-form-label font-weight-bold">Option size</label>
               <div class="col-sm-8">
                 <input type="text" class="form-control ml-1" :class="isOptionSizeNotValid.status ? 'is-invalid' : ''" id="optionSize" v-model="selectedOptionSize">
                 <small v-if="isOptionSizeNotValid.status" class="invalid-feedback ml-1">{{ isOptionSizeNotValid.message }}. Try <a @click="selectedOptionSize = getMaxOptionSize" href="#">{{getMaxOptionSize}}</a>.</small>
                 <small v-if="!isOptionSizeNotValid.status" class="ml-1">Maximum option size: <a @click="selectedOptionSize = getMaxOptionSize" href="#">{{getMaxOptionSize}}</a>.</small>
+              </div>
+            </div>
+
+            <div class="form-group row" v-if="availableVolumeTooSmall">
+              <label for="optionSizeTooSmall" class="col-sm-3 col-form-label font-weight-bold">Option size</label>
+              <div class="col-sm-9">
+                <input type="text" readonly class="form-control-plaintext ml-1 text-danger" id="optionSizeTooSmall" value="Option purchase not possible (low volume).">
               </div>
             </div>
 
@@ -186,6 +193,14 @@ export default {
     ...mapGetters("dai", ["getDaiAddress", "getUserDaiBalance", "getDaiContract"]),
     ...mapGetters("usdc", ["getUsdcAddress", "getUserUsdcBalance", "getUsdcContract"]),
 
+    availableVolumeTooSmall() {
+      // check if the amount of available options (volume) is too low (less than 0.001)
+      if (this.selectedOptionVolume < 0.001) {
+        return true;
+      } else {
+        return false;
+      }
+    },
     getFilteredSymbols() {
       try {
         return this.getSymbolsListJson[this.getSelectedPair][this.getSelectedMaturity][this.getSelectedType];
@@ -441,6 +456,8 @@ export default {
       if (result) {
         this.selectedOptionPrice = this.getWeb3.utils.fromWei(result.price, "ether");
         this.selectedOptionVolume = this.getWeb3.utils.fromWei(result.volume, "ether");
+
+        window.console.log("selectedOptionVolume:", this.selectedOptionVolume);
       }
       
     }

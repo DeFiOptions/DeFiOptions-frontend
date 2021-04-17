@@ -629,6 +629,7 @@ export default {
               if (event) {
                 component.$toast.success("You have successfully redeemed your expired option.");
                 component.$store.dispatch("optionsExchange/fetchExchangeUserBalance");
+                component.$store.dispatch("optionsExchange/fetchUserOptions");
               }
             });
           }
@@ -717,6 +718,7 @@ export default {
               if (event) {
                 component.$toast.success("You have successfully sold an option.");
                 component.$store.dispatch("optionsExchange/fetchExchangeUserBalance");
+                component.$store.dispatch("optionsExchange/fetchUserOptions");
                 component.selectedOptionSize = 0.1;
               }
             });
