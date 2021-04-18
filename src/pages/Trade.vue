@@ -113,6 +113,7 @@
               <div class="col-sm-8">
                 <span v-if="loadingVolume" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                 <input v-if="!loadingVolume" type="text" class="form-control ml-1" :class="isOptionSizeNotValid.status ? 'is-invalid' : ''" id="optionSize" v-model="selectedOptionSize">
+                
                 <small v-if="isOptionSizeNotValid.status" class="invalid-feedback ml-1">{{ isOptionSizeNotValid.message }}. Try <a @click="selectedOptionSize = getMaxOptionSize" href="#">{{getMaxOptionSize}}</a>.</small>
                 <small v-if="!isOptionSizeNotValid.status" class="ml-1">Maximum option size: <a @click="selectedOptionSize = getMaxOptionSize" href="#">{{getMaxOptionSize}}</a>.</small>
               </div>

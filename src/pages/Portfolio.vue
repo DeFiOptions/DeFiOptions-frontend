@@ -239,11 +239,17 @@
               <div class="form-group row">
                 <label for="optionSize" class="col-sm-3 col-form-label font-weight-bold">Option size</label>
                 <div class="col-sm-8">
-                  <input type="text" class="form-control ml-1" :class="isOptionSizeNotValid.status ? 'is-invalid' : ''" id="optionSize" v-model="selectedOptionSize">
+                  <span v-if="loadingVolume" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                  <input v-if="!loadingVolume" type="text" class="form-control ml-1" :class="isOptionSizeNotValid.status ? 'is-invalid' : ''" id="optionSize" v-model="selectedOptionSize">
+                  
                   <small v-if="isOptionSizeNotValid.status" class="invalid-feedback ml-1">{{ isOptionSizeNotValid.message }}</small>
-                  <small v-if="!isOptionSizeNotValid.status" class="ml-1">
-                    Your amount: {{this.selectedOption.holding}} (Max possible size: {{Math.floor(Number(selectedOptionVolume*1000))/1000}}).
+                  <small class="ml-1">
+                    Maximum option size to sell: <a @click="selectedOptionSize = getMaxOptionSize" href="#">{{getMaxOptionSize}}</a>
+                    <span v-if="Number(this.selectedOption.holding) > Number(getMaxOptionSize)"> 
+                      (Your total holding is bigger: {{this.selectedOption.holding}})
+                    </span>.
                   </small>
+
                 </div>
               </div>
 
@@ -420,10 +426,21 @@ export default {
     getTotal() {
       return Number(this.selectedOptionSize) * Number(this.selectedOptionPrice);
     },
+    getMaxOptionSize() {
+      // max option size that current user can sell
+      let availableOptionVolume = Math.floor(Number(this.selectedOptionVolume*1000))/1000;
+      let userOptionBalance = Number(this.selectedOption.holding);
+
+      if (userOptionBalance > availableOptionVolume) {
+        return availableOptionVolume;
+      } else {
+        return userOptionBalance;
+      }
+    },
     isOptionSizeNotValid() { // validation for option size
       // option size bigger than volume.
-      if (Number(this.selectedOptionSize) > Number(this.selectedOptionVolume)) {
-        return {status: true, message: "Option size must not be bigger than " + (Math.floor(Number(this.selectedOptionVolume*1000))/1000) + "!"};
+      if (Number(this.selectedOptionSize) > Number(this.getMaxOptionSize)) {
+        return {status: true, message: "Option size too big!"};
       }
 
       // too many digits
@@ -444,11 +461,6 @@ export default {
       // null option size
       if (this.selectedOptionSize === null || Number(this.selectedOptionSize) === 0 || this.selectedOptionSize === undefined || this.selectedOptionSize === "") {
         return {status: true, message: "Option size must not be empty or zero!"};
-      }
-
-      // selected size bigger than holding
-      if (this.selectedOptionSize > Number(this.selectedOption.holding)) {
-        return {status: true, message: "Maximum size that you can sell: " + this.selectedOption.holding};
       }
 
       return {status: false, message: "Valid option size"};
@@ -477,6 +489,7 @@ export default {
     return {
       daiValue: null,
       loading: false,
+      loadingVolume: false,
       selectedOption: {},
       selectedOptionPrice: null,
       selectedOptionSize: 0.1, // the amount that user enters in the option modal
@@ -644,6 +657,7 @@ export default {
       this.selectedOption = option;
     },
     async setSellModalData(option) {
+      this.loadingVolume = true;
       this.selectedOption = option;
 
       let result = await this.getLiquidityPoolContract.methods.querySell(option.symbol).call();
@@ -651,6 +665,9 @@ export default {
       if (result) {
         this.selectedOptionPrice = this.getWeb3.utils.fromWei(String(result.price), "ether");
         this.selectedOptionVolume = this.getWeb3.utils.fromWei(String(result.volume), "ether");
+
+        this.loadingVolume = false;
+        this.selectedOptionSize = this.getMaxOptionSize;
 
         // Reducing the query price to avoid precision errors in the smart contract (-0.01%)
         this.selectedOptionPrice -= Number(this.selectedOptionPrice) * 0.0001;
@@ -687,8 +704,7 @@ export default {
           result.r,
           result.s
         ).send({
-          from: component.getActiveAccount,
-          gas: Number(400000)
+          from: component.getActiveAccount
         }, function(error, hash) {
           component.loading = true;
 
