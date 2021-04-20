@@ -191,6 +191,7 @@ export default {
   },
   computed: {
     ...mapGetters("accounts", ["getActiveAccount", "getActiveBalanceEth", "getWeb3", "isUserConnected"]),
+    ...mapGetters("optionsExchange", ["getOptionsExchangeAddress", "getExchangeUserBalance"]),
     ...mapGetters("liquidityPool", ["getLiquidityPoolContract", "getLiquidityPoolAddress", "getSymbolsListJson", "getDefaultMaturity", "getDefaultPair", "getDefaultType"]),
     ...mapGetters("dai", ["getDaiAddress", "getUserDaiBalance", "getDaiContract"]),
     ...mapGetters("usdc", ["getUsdcAddress", "getUserUsdcBalance", "getUsdcContract"]),
@@ -233,12 +234,14 @@ export default {
       }
       return this.getDefaultType;
     },
-    getStablecoinContract() {
+    getStablecoinAddress() {
       if (this.buyWith === "DAI") {
-        return this.getDaiContract;
+        return this.getDaiAddress;
       } else if (this.buyWith === "USDC") {
-        return this.getUsdcContract;
-      }
+        return this.getUsdcAddress;
+      } else if (this.buyWith === "Exchange Balance") {
+        return this.getOptionsExchangeAddress;
+      } 
 
       return null;
     },
@@ -250,6 +253,8 @@ export default {
         return this.getUserDaiBalance;
       } else if (this.buyWith === "USDC") {
         return this.getUserUsdcBalance;
+      } else if (this.buyWith === "Exchange Balance") {
+        return this.getExchangeUserBalance;
       }
 
       return null;
@@ -295,15 +300,18 @@ export default {
       this.$router.push({ name: 'home'});
     }
 
+    this.$store.dispatch("optionsExchange/fetchContract");
+    this.$store.dispatch("optionsExchange/storeAddress");
+    this.$store.dispatch("optionsExchange/fetchExchangeUserBalance");
     this.$store.dispatch("liquidityPool/fetchContract");
     this.$store.dispatch("liquidityPool/fetchSymbolsList");
+    this.$store.dispatch("liquidityPool/storeAddress");
     this.$store.dispatch("dai/fetchContract");
     this.$store.dispatch("dai/fetchUserBalance");
     this.$store.dispatch("dai/storeAddress");
     this.$store.dispatch("usdc/fetchContract");
     this.$store.dispatch("usdc/fetchUserBalance");
     this.$store.dispatch("usdc/storeAddress");
-    this.$store.dispatch("liquidityPool/storeAddress");
 
     this.unsubscribe = this.$store.subscribe((mutation) => {
       if (mutation.type === 'liquidityPool/setSymbolsList') {
@@ -353,15 +361,22 @@ export default {
         unit = "mwei"; // USDC
       }
 
+      window.console.log("Selected stablecoin: " + component.buyWith);
+      window.console.log("Amount in big unit: " + component.getTotal);
+
       let totalWei = component.getWeb3.utils.toWei(String(component.getTotal), unit);
+
+      window.console.log("Amount in small unit: " + totalWei);
 
       const result = await signERC2612Permit(
         window.ethereum, 
-        component.getStablecoinContract._address, 
+        component.getStablecoinAddress, 
         component.getActiveAccount, 
         component.getLiquidityPoolAddress, 
         totalWei
       );
+
+      window.console.log("Permit result: " + result);
 
       // buy option transaction
       try {
@@ -369,7 +384,7 @@ export default {
           component.selectedSymbol, // symbol
           optionUnitPrice, // price per one option
           optionSizeWei, // volume a.k.a. user's selected option size
-          component.getStablecoinContract._address, // selected stablecoin
+          component.getStablecoinAddress, // selected stablecoin
           totalWei, // maxValue
           result.deadline,
           result.v,
@@ -411,9 +426,10 @@ export default {
                   component.$store.dispatch("dai/fetchUserBalance");
                 } else if (component.buyWith === "USDC") {
                   component.$store.dispatch("usdc/fetchUserBalance");
+                } else if (component.buyWith === "Exchange Balance") {
+                  component.$store.dispatch("optionsExchange/fetchExchangeUserBalance");
                 }
                 
-                component.$store.dispatch("optionsExchange/fetchExchangeUserBalance");
                 component.selectedOptionSize = 0.1;
                 component.setModalData('Buy', component.selectedSymbol, component.selectedStrike);
               }
