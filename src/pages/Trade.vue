@@ -354,29 +354,29 @@ export default {
 
       let optionSizeWei = component.getWeb3.utils.toWei(String(component.selectedOptionSize), "ether");
       let optionUnitPrice = component.getWeb3.utils.toWei(String(component.selectedOptionPrice), "ether");
-
-      // allowance through permit()
+      
+      // define max value (and unit)
       let unit = "ether"; // DAI
-      if (component.selectedToken === "USDC") {
+      if (component.buyWith === "USDC") {
         unit = "mwei"; // USDC
       }
 
-      window.console.log("Selected stablecoin: " + component.buyWith);
-      window.console.log("Amount in big unit: " + component.getTotal);
+      let maxValue = component.getWeb3.utils.toWei(String(component.getTotal.toFixed(4)), unit); // round to 4 decimals
 
-      let totalWei = component.getWeb3.utils.toWei(String(component.getTotal), unit);
-
-      window.console.log("Amount in small unit: " + totalWei);
-
-      const result = await signERC2612Permit(
-        window.ethereum, 
-        component.getStablecoinAddress, 
-        component.getActiveAccount, 
-        component.getLiquidityPoolAddress, 
-        totalWei
-      );
-
-      window.console.log("Permit result: " + result);
+      let result;
+      if (component.buyWith === "Exchange Balance") {
+        // no permit() needed for Exchange Balance, so values are set to 0.
+        result = {deadline: 0, v: 0, r: "0x0", s: "0x0"}
+      } else {
+        // allowance through permit()
+        result = await signERC2612Permit(
+          window.ethereum, 
+          component.getStablecoinAddress, 
+          component.getActiveAccount, 
+          component.getLiquidityPoolAddress, 
+          maxValue
+        );
+      }
 
       // buy option transaction
       try {
@@ -385,7 +385,7 @@ export default {
           optionUnitPrice, // price per one option
           optionSizeWei, // volume a.k.a. user's selected option size
           component.getStablecoinAddress, // selected stablecoin
-          totalWei, // maxValue
+          maxValue, // maxValue
           result.deadline,
           result.v,
           result.r,
