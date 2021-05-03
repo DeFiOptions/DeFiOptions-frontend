@@ -145,7 +145,7 @@ const mutations = {
       state.defaultMaturity = maturityHumanReadable;
       
       // strike price
-      let strikePriceBigUnit = Math.round(web3.utils.fromWei(Number(itemList[2]).toString(16), "ether"));
+      let strikePriceBigUnit = Math.round(web3.utils.fromWei(Number(itemList[2]).toString(16), "ether")*100)/100;
 
       // populate symbolsArray
       if (pair in symbolsArray) {
