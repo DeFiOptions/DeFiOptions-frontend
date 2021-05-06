@@ -349,10 +349,40 @@
       <!-- Redeem option Modal END-->
     </div>
 
-    <!-- Outer Row -->
+    <!-- Withdraw balance -->
     <div class="row justify-content-center mb-4">
 
-      <div class="col-md-6">
+      <div class="col-lg-6">
+          <div class="card o-hidden border-0 shadow-lg mt-2">
+              <div class="card-body p-0">
+                  <div class="p-5">
+                    <div class="text-center">
+                        <h2 class="h4 text-gray-900 mb-2">Withdraw balance</h2>
+                        <p class="mb-4">
+                          Withdraw your stablecoin balance (except the amount allocated as collateral for written options).
+                        </p>
+                    </div>
+
+                    <form @submit.prevent="withdrawBalance">
+                        <div class="form-group">
+                            <input type="text" v-model="withdrawValue" class="form-control form-control-user"
+                                placeholder="Enter the amount to withdraw">
+                        </div>
+                        <button class="btn btn-primary btn-user btn-block">
+                            Withdraw balance
+                        </button>
+                    </form>
+                </div>
+              </div>
+          </div>
+      </div>
+
+    </div>
+
+    <!-- Mint fake stablecoins -->
+    <div class="row justify-content-center mb-4">
+
+      <div class="col-lg-6">
           <div class="card o-hidden border-0 shadow-lg mt-2">
               <div class="card-body p-0">
                   <div class="p-5">
@@ -378,7 +408,7 @@
           </div>
       </div>
 
-      <div class="col-md-6">
+      <div class="col-lg-6">
           <div class="card o-hidden border-0 shadow-lg mt-2">
               <div class="card-body p-0">
                   <div class="p-5">
@@ -417,7 +447,7 @@ export default {
   name: 'Portfolio',
   computed: {
     ...mapGetters("accounts", ["getActiveAccount", "getActiveBalanceEth", "getWeb3", "isUserConnected"]),
-    ...mapGetters("optionsExchange", ["getExchangeUserBalance", "getUserOptions"]),
+    ...mapGetters("optionsExchange", ["getExchangeUserBalance", "getOptionsExchangeContract", "getUserOptions"]),
     ...mapGetters("dai", ["getDaiContract", "getUserDaiBalance"]),
     ...mapGetters("usdc", ["getUsdcContract", "getUserUsdcBalance"]),
     ...mapGetters("creditToken", ["getCreditTokenUserBalance"]),
@@ -494,7 +524,8 @@ export default {
       selectedOptionPrice: null,
       selectedOptionSize: 0.1, // the amount that user enters in the option modal
       selectedOptionVolume: null, // max possible option size
-      usdcValue: null
+      usdcValue: null,
+      withdrawValue: null
     }
   },
   methods: {
@@ -745,6 +776,51 @@ export default {
           component.$toast.error("The transaction has been reverted. Please try again or contact project admins.");
           component.loading = false;
       }
+    },
+    async withdrawBalance() {
+      let component = this;
+      let tokensWei = this.getWeb3.utils.toWei(this.withdrawValue, "ether");
+
+      await this.getOptionsExchangeContract.methods.withdrawTokens(tokensWei).send({
+        from: this.getActiveAccount
+      }, function(error, hash) {
+        if (error) {
+          component.$toast.error("The transaction has been rejected. Please try again.", {
+              timeout: 5000
+          });
+        }
+
+        if (hash) {
+          // show a "tx submitted" toast
+          component.$toast.info("The transaction has been submitted. Please wait for it to be confirmed.");
+
+          // listen for the Transfer event
+          // TODO: change the event name
+          component.getOptionsExchangeContract.once("Transfer", {
+            filter: { owner: component.getActiveAccount }
+          }, function(error, event) {
+            // failed transaction
+            
+            if (error) {
+              component.$toast.error("The withdrawal transaction has failed. Please try again, perhaps with a higher gas limit.");
+            }
+
+            // success
+            if (event) {
+              component.$toast.success("You have successfully withdrew your stablecoin balance!");
+
+              // Refresh values
+              component.$store.dispatch("dai/fetchUserBalance"); // refresh the user's dai balance
+              component.$store.dispatch("usdc/fetchUserBalance"); // refresh the user's usdc balance
+              component.$store.dispatch("creditToken/fetchUserBalance"); // refresh the user's credit token balance
+              component.withdrawValue = null;
+            }
+
+            // Refresh the exchange balance no matter if the tx was successful or not
+            component.$store.dispatch("optionsExchange/fetchExchangeUserBalance");
+          });
+        }
+      });
     }
   }
 }
