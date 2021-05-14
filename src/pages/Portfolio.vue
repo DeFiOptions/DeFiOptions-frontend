@@ -781,7 +781,7 @@ export default {
       let component = this;
       let tokensWei = this.getWeb3.utils.toWei(this.withdrawValue, "ether");
 
-      const receipt = await this.getOptionsExchangeContract.methods.withdrawTokens(tokensWei).send({
+      await this.getOptionsExchangeContract.methods.withdrawTokens(tokensWei).send({
         from: this.getActiveAccount
       }, function(error, hash) {
         if (error) {
