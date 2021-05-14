@@ -781,7 +781,7 @@ export default {
       let component = this;
       let tokensWei = this.getWeb3.utils.toWei(this.withdrawValue, "ether");
 
-      await this.getOptionsExchangeContract.methods.withdrawTokens(tokensWei).send({
+      const receipt = await this.getOptionsExchangeContract.methods.withdrawTokens(tokensWei).send({
         from: this.getActiveAccount
       }, function(error, hash) {
         if (error) {
@@ -794,9 +794,8 @@ export default {
           // show a "tx submitted" toast
           component.$toast.info("The transaction has been submitted. Please wait for it to be confirmed.");
 
-          // listen for the Transfer event
-          // TODO: change the event name
-          component.getOptionsExchangeContract.once("Transfer", {
+          // listen for the WithdrawTokens event
+          component.getOptionsExchangeContract.once("WithdrawTokens", {
             filter: { owner: component.getActiveAccount }
           }, function(error, event) {
             // failed transaction
@@ -807,7 +806,7 @@ export default {
 
             // success
             if (event) {
-              component.$toast.success("You have successfully withdrew your stablecoin balance!");
+              component.$toast.success("You have successfully withdrew your exchange balance (or were credited with Credit Tokens).");
 
               // Refresh values
               component.$store.dispatch("dai/fetchUserBalance"); // refresh the user's dai balance
