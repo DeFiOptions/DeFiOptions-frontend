@@ -67,7 +67,9 @@ const actions = {
     }
 
     let web3 = rootState.accounts.web3;
-    let symbolsRaw = await state.contract.methods.listSymbols().call();
+
+    const operation = { BUY: "1" }
+    let symbolsRaw = await state.contract.methods.listSymbols(operation.BUY).call();
 
     commit("setSymbolsList", {web3, symbolsRaw});
   },

@@ -79,35 +79,38 @@ const actions = {
     let symbolsList = options.symbols.split("\n");
 
     let optionsList = [];
-    let counter = 0;
-    for (let symbol of symbolsList) {
-      let itemList = symbol.split("-");
-      let pair = itemList[0];
-      let timestamp = itemList[3];
-      let strike = Math.round(web3.utils.fromWei(Number(itemList[2]).toString(16), "ether"));
-
-      let holding = web3.utils.fromWei(options.holding[counter], "ether");
-      let written = web3.utils.fromWei(options.written[counter], "ether");
-      let intrinsicValue = web3.utils.fromWei(options.iv[counter], "ether");
-      let address = options.tokens[counter];
-
-      // type
-      let type = "CALL";
-      if (itemList[1] === "EP") {
-        type = "PUT";
-      }
-
-      // maturity
-      let maturity = new Date(Number(itemList[3])*1e3).toLocaleDateString('en-GB', { 
-        day: 'numeric', 
-        month: 'long', 
-        year: 'numeric' });
+    if (symbolsList[0] !== "") { // if the list is not empty  
+      let counter = 0;
       
-      // option object
-      let optionObject = {symbol, pair, type, maturity, strike, holding, written, intrinsicValue, timestamp, address}
-      optionsList.push(optionObject);
+      for (let symbol of symbolsList) {
+        let itemList = symbol.split("-");
+        let pair = itemList[0];
+        let timestamp = itemList[3];
+        let strike = Math.round(web3.utils.fromWei(Number(itemList[2]).toString(16), "ether"));
 
-      counter++;
+        let holding = web3.utils.fromWei(options.holding[counter], "ether");
+        let written = web3.utils.fromWei(options.written[counter], "ether");
+        let intrinsicValue = web3.utils.fromWei(options.iv[counter], "ether");
+        let address = options.tokens[counter];
+
+        // type
+        let type = "CALL";
+        if (itemList[1] === "EP") {
+          type = "PUT";
+        }
+
+        // maturity
+        let maturity = new Date(Number(itemList[3])*1e3).toLocaleDateString('en-GB', { 
+          day: 'numeric', 
+          month: 'long', 
+          year: 'numeric' });
+        
+        // option object
+        let optionObject = {symbol, pair, type, maturity, strike, holding, written, intrinsicValue, timestamp, address}
+        optionsList.push(optionObject);
+
+        counter++;
+      }
     }
 
     commit("setUserOptions", optionsList);
