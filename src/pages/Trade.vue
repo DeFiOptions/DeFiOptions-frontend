@@ -198,7 +198,8 @@ export default {
 
     getFilteredSymbols() {
       try {
-        return this.getSymbolsListJson[this.getSelectedPair][this.getSelectedMaturity][this.getSelectedType];
+        const filteredList = this.getSymbolsListJson[this.getSelectedPair][this.getSelectedMaturity][this.getSelectedType];
+        return filteredList.sort((a, b) => a.strike - b.strike);
       } catch {
         return [];
       }
