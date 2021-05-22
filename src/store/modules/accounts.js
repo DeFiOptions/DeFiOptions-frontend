@@ -12,7 +12,8 @@ const state = {
   web3: null,
   isConnected: false,
   providerW3m: null, // this is "provider" from Web3Modal
-  web3Modal: null
+  web3Modal: null,
+  supportedChains: ["Kovan Testnet", "Polygon PoS Chain"]
 };
 
 const getters = {
@@ -35,6 +36,9 @@ const getters = {
   getChainName(state) {
     return state.chainName;
   },
+  getSupportedChains(state) {
+    return state.supportedChains;
+  },
   getWeb3(state) {
     if (state.web3) {
       return state.web3;
@@ -44,6 +48,9 @@ const getters = {
   },
   getWeb3Modal(state) {
     return state.web3Modal;
+  },
+  isCurrentChainSupported(state) {
+    return state.supportedChains.includes(state.chainName);
   },
   isUserConnected(state) {
     return state.isConnected;
@@ -171,19 +178,43 @@ const mutations = {
 
     switch(chainId) {
       case "0x1":
-        state.chainName = "Mainnet";
+        state.chainName = "Ethereum Mainnet";
+        break;
+      case "0x1A4":
+        state.chainName = "Optimism Testnet";
+        break;
+      case "0x1E":
+        state.chainName = "RSK Mainnet";
         break;
       case "0x2a":
-        state.chainName = "Kovan";
+        state.chainName = "Kovan Testnet";
         break;
       case "0x3":
-        state.chainName = "Ropsten";
+        state.chainName = "Ropsten Testnet";
         break;
       case "0x4":
-        state.chainName = "Rinkeby";
+        state.chainName = "Rinkeby Testnet";
         break;
       case "0x5":
-        state.chainName = "Goerli";
+        state.chainName = "Goerli Testnet";
+        break;
+      case "0x38":
+        state.chainName = "BSC Mainnet";
+        break;
+      case "0x64":
+        state.chainName = "xDai Chain";
+        break;
+      case "0x80":
+        state.chainName = "Huobi Chain";
+        break;
+      case "0x89":
+        state.chainName = "Polygon PoS Chain";
+        break;
+      case "0xA86A":
+        state.chainName = "Avalanche Mainnet";
+        break;
+      case "0xA869":
+        state.chainName = "Avalanche Testnet";
         break;
       case "0x539": // 1337 (often used on localhost)
       case "0x1691": // 5777 (default in Ganache)

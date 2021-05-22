@@ -63,13 +63,15 @@
           <button class="rounded-circle border-0" id="sidebarToggle" @click="toggleSidebar"></button>
       </div>
 
-      <!-- Divider -->
-      <hr class="sidebar-divider d-none d-md-block" v-if="showChainAlert">
-
       <!-- Sidebar Message -->
-      <div class="sidebar-card" v-if="showChainAlert">
+      <div class="sidebar-card" :class="{'bg-danger': !isCurrentChainSupported}">
           <p class="text-center mb-2">
-            <span v-if="getChainName">Your currently selected chain is <strong>{{getChainName}}</strong> (testnet).</span>
+            <span v-if="getChainName">Your currently selected chain is <strong>{{getChainName}}</strong>.</span>
+
+            <span v-if="!isCurrentChainSupported"> 
+              This chain is <strong>not supported</strong> by DeFiOptions! 
+              Please switch to one of the supported chains: {{getSupportedChainsString}}.
+            </span>
 
             <span v-if="!getChainName">
               Please <a href="#" @click="connectWeb3Modal">connect</a> with MetaMask
@@ -88,16 +90,11 @@ import { mapGetters, mapActions } from "vuex";
 export default {
   name: "Sidebar",
   computed: {
-    ...mapGetters("accounts", ["getChainName", "isUserConnected", "getWeb3Modal"]),
+    ...mapGetters("accounts", ["getChainName", "isUserConnected", "getWeb3Modal", "isCurrentChainSupported", "getSupportedChains"]),
     ...mapGetters("sidebar", ["getCollapsedStatus"]),
 
-    showChainAlert() {
-      switch (this.getChainName) {
-        case "Mainnet":
-          return false;
-        default:
-          return true;
-      }
+    getSupportedChainsString() {
+      return String(this.getSupportedChains).replace("[", "").replace("]", "").replace(",", ", ");
     }
   },
   created() {
