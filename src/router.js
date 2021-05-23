@@ -13,11 +13,7 @@ export default new Router({
     // More info here: https://router.vuejs.org/guide/essentials/history-mode.html#example-server-configurations
     mode: "hash",
     routes: [
-        {
-            path: "/",
-            name: "home",
-            component: Home
-        },
+      
         {
             path: "/DeFiOptions-frontend", // this is needed because of GH Pages
             name: "ghpages",
@@ -37,6 +33,11 @@ export default new Router({
             path: "/trade",
             name: "trade",
             component: Trade
+        },
+        {
+            path: "/",
+            name: "home",
+            component: Home
         }
     ],
     linkActiveClass: "active"
