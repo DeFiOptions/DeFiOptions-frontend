@@ -364,24 +364,27 @@ export default {
 
       let maxValue = component.getWeb3.utils.toWei(String(component.getTotal.toFixed(4)), unit); // round to 4 decimals
 
-      let result;
+      let buyObj;
+
       if (component.buyWith === "Exchange Balance") {
-        // no permit() needed for Exchange Balance, so values are set to 0.
-        result = {deadline: 0, v: 0, r: "0x0", s: "0x0"}
+        // buy with exchange balance (no permit needed)
+        buyObj = component.getLiquidityPoolContract.methods.buy(
+          component.selectedSymbol, // symbol
+          optionUnitPrice, // price per one option
+          optionSizeWei, // volume a.k.a. user's selected option size
+          component.getStablecoinAddress, // selected stablecoin
+        )
       } else {
-        // allowance through permit()
-        result = await signERC2612Permit(
+        // buy with DAI or USDC - allowance through permit()
+        let result = await signERC2612Permit(
           window.ethereum, 
           component.getStablecoinAddress, 
           component.getActiveAccount, 
           component.getLiquidityPoolAddress, 
           maxValue
         );
-      }
 
-      // buy option transaction
-      try {
-        await component.getLiquidityPoolContract.methods.buy(
+        buyObj = component.getLiquidityPoolContract.methods.buy(
           component.selectedSymbol, // symbol
           optionUnitPrice, // price per one option
           optionSizeWei, // volume a.k.a. user's selected option size
@@ -391,7 +394,12 @@ export default {
           result.v,
           result.r,
           result.s
-        ).send({
+        )
+      }
+
+      // buy option transaction
+      try {
+        await buyObj.send({
           from: component.getActiveAccount
         }, function(error, hash) {
           component.loading = true;
