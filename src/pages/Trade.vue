@@ -326,6 +326,7 @@ export default {
         this.typeNames = Object.keys(this.getSymbolsListJson[this.selectedPair][this.selectedMaturity]);
         this.selectedType = this.typeNames[0];
 
+        
         if (this.getLastSelectedTradePair) {
           // persistent storage for a user that's switching between pages
           this.selectedPair = this.getLastSelectedTradePair;
@@ -340,6 +341,9 @@ export default {
           // persistent storage for a user that's switching between pages
           this.selectedType = this.getLastSelectedTradeType;
         }
+
+        let symbol = this.getSymbolsListJson[this.selectedPair][this.selectedMaturity][this.selectedType][0].symbol;
+        this.$store.dispatch("optionsExchange/fetchUnderlyingPrice", {symbol});
       }
     });
   },
@@ -472,6 +476,10 @@ export default {
     changePair(pair) {
       this.selectedPair = pair;
       this.$store.commit("accounts/setLastSelectedTradePair", pair);
+
+      // fetch new underlying price
+      let symbol = this.getSymbolsListJson[this.selectedPair][this.selectedMaturity][this.selectedType][0].symbol;
+      this.$store.dispatch("optionsExchange/fetchUnderlyingPrice", {symbol});
     },
     changeMaturity(maturity) {
       this.selectedMaturity = maturity;
