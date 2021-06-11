@@ -13,7 +13,10 @@ const state = {
   isConnected: false,
   providerW3m: null, // this is "provider" from Web3Modal
   web3Modal: null,
-  supportedChains: ["Kovan Testnet", "Polygon PoS Chain"]
+  supportedChains: ["Kovan Testnet", "Polygon PoS Chain"],
+  lastSelectedTradePair: null,
+  lastSelectedTradeMaturity: null,
+  lastSelectedTradeType: null
 };
 
 const getters = {
@@ -35,6 +38,15 @@ const getters = {
   },
   getChainName(state) {
     return state.chainName;
+  },
+  getLastSelectedTradePair(state) {
+    return state.lastSelectedTradePair;
+  },
+  getLastSelectedTradeMaturity(state) {
+    return state.lastSelectedTradeMaturity;
+  },
+  getLastSelectedTradeType(state) {
+    return state.lastSelectedTradeType;
   },
   getSupportedChains(state) {
     return state.supportedChains;
@@ -222,6 +234,19 @@ const mutations = {
         state.chainName = "Localhost";
         break;
     }
+  },
+
+  setLastSelectedTradePair(state, pair) {
+    window.console.log("setLastSelectedTradePair called: " + pair);
+    state.lastSelectedTradePair = pair;
+  },
+
+  setLastSelectedTradeMaturity(state, maturity) {
+    state.lastSelectedTradeMaturity = maturity;
+  },
+
+  setLastSelectedTradeType(state, type) {
+    state.lastSelectedTradeType = type;
   },
 
   async setWeb3Provider(state, providerW3m) {

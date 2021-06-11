@@ -190,7 +190,7 @@ export default {
     this.unsubscribe();
   },
   computed: {
-    ...mapGetters("accounts", ["getActiveAccount", "getActiveBalanceEth", "getWeb3", "isUserConnected"]),
+    ...mapGetters("accounts", ["getActiveAccount", "getActiveBalanceEth", "getWeb3", "isUserConnected", "getLastSelectedTradePair", "getLastSelectedTradeMaturity", "getLastSelectedTradeType"]),
     ...mapGetters("optionsExchange", ["getOptionsExchangeAddress", "getExchangeUserBalance"]),
     ...mapGetters("liquidityPool", ["getLiquidityPoolContract", "getLiquidityPoolAddress", "getSymbolsListJson", "getDefaultMaturity", "getDefaultPair", "getDefaultType"]),
     ...mapGetters("dai", ["getDaiAddress", "getUserDaiBalance", "getDaiContract"]),
@@ -325,6 +325,21 @@ export default {
 
         this.typeNames = Object.keys(this.getSymbolsListJson[this.selectedPair][this.selectedMaturity]);
         this.selectedType = this.typeNames[0];
+
+        if (this.getLastSelectedTradePair) {
+          // persistent storage for a user that's switching between pages
+          this.selectedPair = this.getLastSelectedTradePair;
+        }
+
+        if (this.getLastSelectedTradeMaturity) {
+          // persistent storage for a user that's switching between pages
+          this.selectedMaturity = this.getLastSelectedTradeMaturity;
+        }
+
+        if (this.getLastSelectedTradeType) {
+          // persistent storage for a user that's switching between pages
+          this.selectedType = this.getLastSelectedTradeType;
+        }
       }
     });
   },
@@ -456,12 +471,15 @@ export default {
     },
     changePair(pair) {
       this.selectedPair = pair;
+      this.$store.commit("accounts/setLastSelectedTradePair", pair);
     },
     changeMaturity(maturity) {
       this.selectedMaturity = maturity;
+      this.$store.commit("accounts/setLastSelectedTradeMaturity", maturity);
     },
     changeOptionType(optionType) {
       this.selectedType = optionType;
+      this.$store.commit("accounts/setLastSelectedTradeType", optionType);
     },
     async setModalData(action, symbol, strike) {
       this.loadingVolume = true;
