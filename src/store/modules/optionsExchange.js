@@ -71,21 +71,22 @@ const actions = {
 
     commit("setLiquidityPoolBalance", balance);
   },
-  async fetchUnderlyingPrice({ commit, dispatch, state }, data) {
+  async fetchUnderlyingPrice({ commit, dispatch, state, rootState }, data) {
     // underlying price for the currently selected pair/symbol
     if (!state.contract) {
       dispatch("fetchContract");
     }
-
-    window.console.log("symbol: " + data.symbol);
-
-    window.console.log("underlyingPrice: ");
     
-    let underlyingPrice = await state.contract.methods.getUnderlyingPrice(String(data.symbol)).call();
-    
-    window.console.log(underlyingPrice);
+    try {
+      let underlyingPrice = await state.contract.methods.getUnderlyingPrice(String(data.symbol)).call();
+      
+      let web3 = rootState.accounts.web3;
 
-    commit("setUnderlyingPrice", underlyingPrice);
+      let underlyingPriceBig = Math.round(web3.utils.fromWei(Number(underlyingPrice).toString(16), "ether")*100)/100;
+      commit("setUnderlyingPrice", underlyingPriceBig);
+    } catch {
+      commit("setUnderlyingPrice", "N/A");
+    }
   },
   async fetchUserOptions({ commit, dispatch, state, rootState }) {
     if (!state.contract) {
