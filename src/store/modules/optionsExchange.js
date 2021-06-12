@@ -7,7 +7,8 @@ const state = {
   contract: null,
   poolBalance: null,
   userBalance: null,
-  userOptions: null
+  userOptions: null,
+  underlyingPrice: null
 };
 
 const getters = {
@@ -25,6 +26,10 @@ const getters = {
   },
   getOptionsExchangeContract(state) {
     return state.contract;
+  },
+  getUnderlyingPrice(state) {
+    // underlying price for the currently selected pair/symbol
+    return state.underlyingPrice;
   },
   getUserOptions(state) {
     return state.userOptions;
@@ -65,6 +70,23 @@ const actions = {
     let balance = web3.utils.fromWei(balanceWei, "ether");
 
     commit("setLiquidityPoolBalance", balance);
+  },
+  async fetchUnderlyingPrice({ commit, dispatch, state, rootState }, data) {
+    // underlying price for the currently selected pair/symbol
+    if (!state.contract) {
+      dispatch("fetchContract");
+    }
+    
+    try {
+      let underlyingPrice = await state.contract.methods.getUnderlyingPrice(String(data.symbol)).call();
+      
+      let web3 = rootState.accounts.web3;
+
+      let underlyingPriceBig = Math.round(web3.utils.fromWei(Number(underlyingPrice).toString(16), "ether")*100)/100;
+      commit("setUnderlyingPrice", underlyingPriceBig);
+    } catch {
+      commit("setUnderlyingPrice", "N/A");
+    }
   },
   async fetchUserOptions({ commit, dispatch, state, rootState }) {
     if (!state.contract) {
@@ -140,6 +162,9 @@ const mutations = {
   },
   setUserExchangeBalance(state, balance) {
     state.userBalance = balance;
+  },
+  setUnderlyingPrice(state, underlyingPrice) {
+    state.underlyingPrice = underlyingPrice;
   },
   setUserOptions(state, options) {
     state.userOptions = options;

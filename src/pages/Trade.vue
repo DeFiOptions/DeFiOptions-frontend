@@ -12,36 +12,47 @@
       <div class="card-body">
 
         <!-- Dropdowns START -->
-        <div class="form-inline">
+        <div class="form-inline justify-content-between">
 
-          <!-- Pair dropdown -->
-          <div class="btn-group mb-3 mr-3">
-            <button type="button" class="btn btn-light dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-              {{getSelectedPair}}
-            </button>
-            <div class="dropdown-menu">
-              <a class="dropdown-item" href="#" @click="changePair(pair)" v-for="pair in pairs" v-bind:key="pair">{{pair}}</a>
+          <div>
+            <!-- Pair dropdown -->
+            <div class="btn-group mb-3 mr-3">
+              <button type="button" class="btn btn-light dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                {{getSelectedPair}}
+              </button>
+              <div class="dropdown-menu">
+                <a class="dropdown-item" href="#" @click="changePair(pair)" v-for="pair in pairs" v-bind:key="pair">{{pair}}</a>
+              </div>
+            </div>
+
+            <!-- Maturity dropdown -->
+            <div class="btn-group mb-3 mr-3">
+              <button type="button" class="btn btn-light dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                {{getSelectedMaturity}}
+              </button>
+              <div class="dropdown-menu">
+                <a class="dropdown-item" href="#" @click="changeMaturity(maturity)" v-for="maturity in maturities" v-bind:key="maturity">{{maturity}}</a>
+              </div>
+            </div>
+
+            <!-- Type dropdown -->
+            <div class="btn-group mb-3">
+              <button type="button" class="btn btn-light dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                {{getSelectedType}}
+              </button>
+              <div class="dropdown-menu">
+                <a class="dropdown-item" href="#" @click="changeOptionType('CALL')">CALL</a>
+                <a class="dropdown-item" href="#" @click="changeOptionType('PUT')">PUT</a>
+              </div>
             </div>
           </div>
 
-          <!-- Maturity dropdown -->
-          <div class="btn-group mb-3 mr-3">
-            <button type="button" class="btn btn-light dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-              {{getSelectedMaturity}}
-            </button>
-            <div class="dropdown-menu">
-              <a class="dropdown-item" href="#" @click="changeMaturity(maturity)" v-for="maturity in maturities" v-bind:key="maturity">{{maturity}}</a>
-            </div>
-          </div>
-
-          <!-- Type dropdown -->
-          <div class="btn-group mb-3">
-            <button type="button" class="btn btn-light dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-              {{getSelectedType}}
-            </button>
-            <div class="dropdown-menu">
-              <a class="dropdown-item" href="#" @click="changeOptionType('CALL')">CALL</a>
-              <a class="dropdown-item" href="#" @click="changeOptionType('PUT')">PUT</a>
+          <div>
+            <!-- Underlying price -->
+            <div class="btn-group mb-3">
+              <button type="button" class="btn btn-light" disabled>
+                {{getSelectedPair}}: ${{getUnderlyingPrice}}
+              </button>
             </div>
           </div>
 
@@ -191,7 +202,7 @@ export default {
   },
   computed: {
     ...mapGetters("accounts", ["getActiveAccount", "getActiveBalanceEth", "getWeb3", "isUserConnected", "getLastSelectedTradePair", "getLastSelectedTradeMaturity", "getLastSelectedTradeType"]),
-    ...mapGetters("optionsExchange", ["getOptionsExchangeAddress", "getExchangeUserBalance"]),
+    ...mapGetters("optionsExchange", ["getOptionsExchangeAddress", "getExchangeUserBalance", "getUnderlyingPrice"]),
     ...mapGetters("liquidityPool", ["getLiquidityPoolContract", "getLiquidityPoolAddress", "getSymbolsListJson", "getDefaultMaturity", "getDefaultPair", "getDefaultType"]),
     ...mapGetters("dai", ["getDaiAddress", "getUserDaiBalance", "getDaiContract"]),
     ...mapGetters("usdc", ["getUsdcAddress", "getUserUsdcBalance", "getUsdcContract"]),
@@ -326,6 +337,7 @@ export default {
         this.typeNames = Object.keys(this.getSymbolsListJson[this.selectedPair][this.selectedMaturity]);
         this.selectedType = this.typeNames[0];
 
+        
         if (this.getLastSelectedTradePair) {
           // persistent storage for a user that's switching between pages
           this.selectedPair = this.getLastSelectedTradePair;
@@ -340,6 +352,9 @@ export default {
           // persistent storage for a user that's switching between pages
           this.selectedType = this.getLastSelectedTradeType;
         }
+
+        let symbol = this.getSymbolsListJson[this.selectedPair][this.selectedMaturity][this.selectedType][0].symbol;
+        this.$store.dispatch("optionsExchange/fetchUnderlyingPrice", {symbol});
       }
     });
   },
@@ -472,6 +487,10 @@ export default {
     changePair(pair) {
       this.selectedPair = pair;
       this.$store.commit("accounts/setLastSelectedTradePair", pair);
+
+      // fetch new underlying price
+      let symbol = this.getSymbolsListJson[this.selectedPair][this.selectedMaturity][this.selectedType][0].symbol;
+      this.$store.dispatch("optionsExchange/fetchUnderlyingPrice", {symbol});
     },
     changeMaturity(maturity) {
       this.selectedMaturity = maturity;
