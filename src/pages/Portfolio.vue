@@ -153,6 +153,10 @@
                         
                           <div class="h5 mb-0 font-weight-bold">
                             ${{ Number(getUserUsdcBalance).toFixed(2) }}
+
+                            <button class="btn btn-primary btn-sm" @click="addUsdcToMetaMask" data-toggle="tooltip" data-placement="bottom" title="Add to MetaMask">
+                              <i class="fas fa-plus-circle"></i>
+                            </button>
                           </div>
                       </div>
                       <div class="col-auto">
@@ -199,7 +203,7 @@
                         <td>{{option.maturity}}</td>
                         <td>{{option.holding}}</td>
                         <td>{{option.written}}</td>
-                        <td>${{ Number(option.intrinsicValue).toFixed(2) }}</td>
+                        <td>${{ (Number(option.intrinsicValue)*Number(option.holding)).toFixed(2) }}</td>
                         <td>
                           <button v-if="!isOptionExpired(option)" class="btn btn-outline-danger btn-sm mb-1" @click="setSellModalData(option)" data-toggle="modal" data-target="#sellOptionModal">Sell</button>
                           <button v-if="isOptionExpired(option)" class="btn btn-outline-info btn-sm mb-1" @click="setRedeemModalData(option)" data-toggle="modal" data-target="#redeemOptionModal">Redeem</button>
@@ -538,6 +542,20 @@ export default {
             address: this.getDaiContract._address, // The address that the token is at.
             symbol: "DAI", // A ticker symbol or shorthand, up to 5 chars.
             decimals: 18, // The number of decimals in the token
+            image: "", // TODO: A string url of the token logo
+          },
+        },
+      });
+    },
+    async addUsdcToMetaMask() {
+      await window.ethereum.request({
+        method: 'wallet_watchAsset',
+        params: {
+          type: 'ERC20', // Initially only supports ERC20, but eventually more!
+          options: {
+            address: this.getUsdcContract._address, // The address that the token is at.
+            symbol: "USDC", // A ticker symbol or shorthand, up to 5 chars.
+            decimals: 6, // The number of decimals in the token
             image: "", // TODO: A string url of the token logo
           },
         },
