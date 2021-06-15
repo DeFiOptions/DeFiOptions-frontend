@@ -69,6 +69,7 @@
                     <th>Type</th>
                     <th>Strike</th>
                     <th>Maturity</th>
+                    <th>Option price</th>
                     <th>Buy option</th>
                 </tr>
             </thead>
@@ -81,6 +82,9 @@
                     <td>{{getSelectedType}}</td>
                     <td><strong>${{option.strike}}</strong></td>
                     <td>{{getSelectedMaturity}}</td>
+                    <td>
+                      <OptionPrice :symbol="option.symbol" :contract="getLiquidityPoolContract" :web3="getWeb3" />
+                    </td>
                     <td>
                       <button class="btn btn-outline-success btn-sm mr-2 mb-1" @click="setModalData('Buy', option.symbol, option.strike)" data-toggle="modal" data-target="#optionsModal">Buy</button>
                     </td>
@@ -194,11 +198,15 @@
 <script>
 import { mapGetters } from "vuex";
 import { signERC2612Permit } from 'eth-permit';
+import OptionPrice from '../components/OptionPrice.vue';
 
 export default {
   name: 'Trade',
   beforeDestroy() {
     this.unsubscribe();
+  },
+  components: {
+    OptionPrice
   },
   computed: {
     ...mapGetters("accounts", ["getActiveAccount", "getActiveBalanceEth", "getWeb3", "isUserConnected", "getLastSelectedTradePair", "getLastSelectedTradeMaturity", "getLastSelectedTradeType"]),
