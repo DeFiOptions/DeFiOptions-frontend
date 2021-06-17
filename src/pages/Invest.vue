@@ -19,7 +19,7 @@
                           </div>
                         
                           <div class="h5 mb-0 font-weight-bold text-gray-800">
-                            ${{ Number(getLiquidityPoolUserBalance).toFixed(2) }}
+                            ${{ Number(getUserPoolUsdValue).toFixed(2) }}
                           </div>
                       </div>
                       <div class="col-auto">
@@ -133,14 +133,11 @@ import { signERC2612Permit } from 'eth-permit';
 
 export default {
   name: 'Invest',
-  components: {
-    
-  },
   computed: {
     ...mapGetters("accounts", ["getChainName", "isUserConnected", "getActiveAccount", "getWeb3"]),
     ...mapGetters("accounts", ["getActiveAccount", "getActiveBalanceEth"]),
     ...mapGetters("optionsExchange", ["getLiquidityPoolBalance"]),
-    ...mapGetters("liquidityPool", ["getApy", "getLiquidityPoolContract", "getLiquidityPoolAddress", "getLiquidityPoolUserBalance"]),
+    ...mapGetters("liquidityPool", ["getApy", "getLiquidityPoolContract", "getLiquidityPoolAddress", "getLiquidityPoolUserBalance", "getUserPoolUsdValue"]),
     ...mapGetters("dai", ["getDaiAddress", "getUserDaiBalance", "getDaiContract"]),
     ...mapGetters("usdc", ["getUsdcAddress", "getUserUsdcBalance", "getUsdcContract"]),
 
@@ -203,6 +200,7 @@ export default {
     this.$store.dispatch("optionsExchange/fetchLiquidityPoolBalance");
     this.$store.dispatch("liquidityPool/fetchApy");
     this.$store.dispatch("liquidityPool/storeAddress");
+    this.$store.dispatch("liquidityPool/fetchUserPoolUsdValue");
   },
   data() {
     return {

@@ -10,7 +10,8 @@ const state = {
   defaultPair: null,
   defaultType: null,
   defaultMaturity: null,
-  userBalance: null
+  userBalance: null,
+  userPoolUsdValue: null // USD value of the pool balance
 };
 
 const getters = {
@@ -40,6 +41,9 @@ const getters = {
   },
   getLiquidityPoolUserBalance(state) {
     return state.userBalance;
+  },
+  getUserPoolUsdValue(state) {
+    return state.userPoolUsdValue;
   }
 };
 
@@ -86,6 +90,19 @@ const actions = {
 
     commit("setUserLiquidityPoolBalance", balance);
   },
+  async fetchUserPoolUsdValue({ commit, dispatch, rootState }) {
+    if (!state.contract) {
+      dispatch("fetchContract");
+    }
+
+    let activeAccount = rootState.accounts.activeAccount;
+    let balanceWei = await state.contract.methods.valueOf(activeAccount).call();
+
+    let web3 = rootState.accounts.web3;
+    let value = web3.utils.fromWei(balanceWei, "ether");
+
+    commit("setUserPoolUsdValue", value);
+  },
   storeAbi({commit}) {
     commit("setAbi", LiquidityPool.abi);
   },
@@ -120,6 +137,9 @@ const mutations = {
   },
   setUserLiquidityPoolBalance(state, balance) {
     state.userBalance = balance;
+  },
+  setUserPoolUsdValue(state, value) {
+    state.userPoolUsdValue = value;
   },
   setSymbolsList(state, {web3, symbolsRaw}) {
     let symbolsLines = symbolsRaw.split("\n");
