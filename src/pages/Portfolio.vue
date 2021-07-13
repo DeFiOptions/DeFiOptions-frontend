@@ -665,6 +665,9 @@ export default {
         }, function(error, hash) {
           component.loading = true;
 
+          // hide the modal
+          window.$("#redeemOptionModal").modal('hide');
+
           // transaction error
           if (error) {
             component.$toast.error("The transaction has been rejected. Please try again.");
