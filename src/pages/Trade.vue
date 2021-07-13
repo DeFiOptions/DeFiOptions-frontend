@@ -442,6 +442,9 @@ export default {
         }, function(error, hash) {
           component.loading = true;
 
+          // close the modal after tx is sent
+          window.$("#optionsModal").modal('hide');
+
           // Deposit tx error
           if (error) {
             component.$toast.error("The transaction has been rejected. Please try again.");

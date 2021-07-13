@@ -760,6 +760,9 @@ export default {
         }, function(error, hash) {
           component.loading = true;
 
+          // close the modal after tx is sent
+          window.$("#sellOptionModal").modal('hide');
+
           // transaction error
           if (error) {
             component.$toast.error("The transaction has been rejected. Please try again.");
