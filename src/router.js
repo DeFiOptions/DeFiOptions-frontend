@@ -19,7 +19,7 @@ export default new Router({
             component: Home
         },
         {
-            path: "/DeFiOptions-frontend", // this is needed because of GH Pages
+            path: "/", // this is needed because of GH Pages
             name: "ghpages",
             component: Home
         },
