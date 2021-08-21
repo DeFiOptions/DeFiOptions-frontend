@@ -1,12 +1,12 @@
 {
   "OptionsExchange": {
-    "42":"0x3da6a3ed1d13623d299273e49fa3a0a0ccead6e3"
+    "42":"0xd23f05275b95a6bba81b55698d59df92569279d6"
   },
   "CreditToken": {
-    "42":"0xe6db9d13848c795d6bd6c667a06708237fda4ce8"
+    "42":"0xcef16b2522adea82c5ac600b6f7d4dc00413b986"
   },
   "LinearLiquidityPool": {
-    "42":"0xd14dda7ddb47069f213ee12d779f276225b7ba68"
+    "42":"0x71868a1082a7534da35695aafc866ff951e66438"
   },
   "Dai": {
     "42":"0xB51E93aA4B4B411A36De9343128299B483DBA133"
