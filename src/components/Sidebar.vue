@@ -90,7 +90,7 @@ import { mapGetters, mapActions } from "vuex";
 export default {
   name: "Sidebar",
   computed: {
-    ...mapGetters("accounts", ["getChainName", "isUserConnected", "getWeb3Modal", "isCurrentChainSupported", "getSupportedChains"]),
+    ...mapGetters("accounts", ["getActiveAccount", "getChainName", "isUserConnected", "getWeb3Modal", "isCurrentChainSupported", "getSupportedChains"]),
     ...mapGetters("sidebar", ["getCollapsedStatus"]),
 
     getSupportedChainsString() {

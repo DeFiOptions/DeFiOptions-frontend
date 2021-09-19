@@ -1,5 +1,16 @@
 <template>
   <div>
+
+    <div class="section-big row">
+      <div class="col-md-3">
+        <h3>Account balance</h3>
+      </div>
+
+      <div class="col-md-9">
+        <h3>Withdraw</h3>
+      </div>
+    </div>
+
     <!-- Page Heading -->
     <div class="d-sm-flex align-items-center justify-content-between">
         <h1 class="h3 mb-0 text-gray-800">Your portfolio</h1>

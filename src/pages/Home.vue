@@ -21,7 +21,7 @@
       <div class="col-md-4 mb-3">
         <div class="card pt-4 pl-4 pr-4">
           <router-link to="/trade">
-            <img src="@/assets/undraw_Stock_prices_re_js33.svg" class="card-img-top" alt="Trading">
+            <img src="#" class="card-img-top" alt="Trading">
           </router-link>
 
           <div class="card-body text-center">
@@ -41,7 +41,7 @@
       <div class="col-md-4 mb-3 card-deck">
         <div class="card pt-4 pl-4 pr-4">
           <router-link to="/invest">
-            <img src="@/assets/undraw_Invest_re_8jl5.svg" class="card-img-top" alt="Investing">
+            <img src="#" class="card-img-top" alt="Investing">
           </router-link>
 
           <div class="card-body text-center">
@@ -61,7 +61,7 @@
       <div class="col-md-4 mb-3 card-deck">
         <div class="card pt-4 pl-4 pr-4">
           <router-link to="/portfolio">
-            <img src="@/assets/undraw_Data_re_80ws.svg" class="card-img-top" alt="Analyzing">
+            <img src="#" class="card-img-top" alt="Analyzing">
           </router-link>
 
           <div class="card-body text-center">

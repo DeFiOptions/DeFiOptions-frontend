@@ -1,23 +1,76 @@
 <template>
+  <nav class="navbar navbar-expand-lg navbar-dark primary-color">
+    <div class="container-fluid">
+
+      <a class="navbar-brand primary-color" href="#">
+        <img src="@/assets/logo.svg" alt="" width="30" height="24">
+      </a>
+
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0 text-uppercase">
+
+            <!-- Nav Item - Trade -->
+            <router-link to="/trade" style="text-decoration: none" v-if="isUserConnected">
+              <li class="nav-item">
+                  <a class="nav-link" :class="{active:this.$route.name === 'trade'}" href="/trade">Trade</a>
+              </li>
+            </router-link>
+            <!-- END Nav Item - Trade -->
+
+            <!-- Nav Item - Portfolio -->
+            <router-link to="/portfolio" style="text-decoration: none" v-if="isUserConnected">
+              <li class="nav-item">
+                  <a class="nav-link" :class="{active:this.$route.name === 'portfolio'}" href="/portfolio">Portfolio</a>
+              </li>
+            </router-link>
+            <!-- END Nav Item - Portfolio -->
+
+            <!-- Nav Item - Liquidity pool -->
+            <router-link to="/invest" style="text-decoration: none" v-if="isUserConnected">
+              <li class="nav-item">
+                  <a class="nav-link" :class="{active:this.$route.name === 'invest'}" href="/invest">Liquidity pool</a>
+              </li>
+            </router-link>
+            <!-- END Nav Item - Liquidity pool -->
+
+            <li class="nav-item" v-if="isUserConnected">
+              <a class="nav-link" href="#">Governance</a>
+            </li>
+          </ul>
+
+        <div class="d-flex">
+          <button class="btn btn-outline-success text-uppercase" v-if="!isUserConnected" @click="connectWeb3Modal">Connect wallet</button>
+          <button class="btn btn-outline-success" v-if="isUserConnected" @click="disconnectWeb3Modal">{{getActiveAccount.substring(0, 6)}}...{{ getActiveAccount.substring(38, 42)}}</button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+
+  <!--
   <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
 
-      <!-- Sidebar Toggle (Topbar) -->
+      
       <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3" @click="toggleSidebar">
           <i class="fa fa-bars"></i>
       </button>
 
-      <!-- Topbar Navbar -->
+      
       <ul class="navbar-nav ml-auto">
 
-          <!-- Nav Item - Connect Wallet -->
+          
           <li class="nav-item">
             <a class="nav-link text-muted" href="#" v-if="!isUserConnected" @click="connectWeb3Modal">Connect your wallet</a>
             <a class="nav-link text-muted" href="#" v-if="isUserConnected" @click="disconnectWeb3Modal">Disconnect {{getActiveAccount.substring(0, 6)}}...{{ getActiveAccount.substring(38, 42)}}</a>
           </li>
-          <!-- End of Nav Item - Connect Wallet -->
       </ul>
 
   </nav>
+  -->
 </template>
 
 <script>
@@ -26,8 +79,12 @@ import { mapGetters, mapActions } from "vuex";
 export default {
   name: "Navbar",
   computed: {
-    ...mapGetters("accounts", ["getActiveAccount", "isUserConnected", "getWeb3Modal"]),
+    ...mapGetters("accounts", ["getActiveAccount", "getChainName", "isUserConnected", "getWeb3Modal", "isCurrentChainSupported", "getSupportedChains"]),
     ...mapGetters("sidebar", ["getCollapsedStatus"]),
+
+    getSupportedChainsString() {
+      return String(this.getSupportedChains).replace("[", "").replace("]", "").replace(",", ", ");
+    }
   },
   created() {
     this.$store.dispatch("accounts/initWeb3Modal");
@@ -35,18 +92,6 @@ export default {
   },
   methods: {
     ...mapActions("accounts", ["connectWeb3Modal", "disconnectWeb3Modal"]),
-    
-    toggleSidebar() {
-      const el = document.body;
-
-      if (this.getCollapsedStatus === true) {
-        this.$store.dispatch("sidebar/sidebarCollapsedFalse");
-        el.classList.remove("sidebar-toggled");
-      } else {
-        this.$store.dispatch("sidebar/sidebarCollapsedTrue");
-        el.classList.add("sidebar-toggled");
-      }
-    }
   }
 }
 </script>
