@@ -1,7 +1,16 @@
 <template>
   <div>
 
-    <AccountBalance :exchangeBalance="Number(getExchangeUserBalance).toFixed(2)" />
+    <AccountBalance 
+      :exchangeBalance="Number(getExchangeUserBalance)" 
+      :creditTokens="Number(getCreditTokenUserBalance).toFixed(2)" 
+    />
+
+    <br />
+    <br />
+    <br />
+    <br />
+    <br />
 
     <!-- Page Heading -->
     <div class="d-sm-flex align-items-center justify-content-between">
@@ -449,7 +458,7 @@
 import { mapGetters } from "vuex";
 import { signERC2612Permit } from 'eth-permit';
 import OptionTokenContractJson from "../contracts/RedeemableToken.json";
-import AccountBalance from '../components/AccountBalance.vue';
+import AccountBalance from '../components/portfolio/AccountBalance.vue';
 
 export default {
   name: 'Portfolio',

@@ -1,9 +1,18 @@
+a {
+  color: #5AFFB0;
+  text-decoration: none;
+}
+
+a:hover {
+  color: #48cc8c;
+  text-decoration: none;
+}
+
 body {
   margin: 0;
   font-family: 'Rubik', sans-serif;
   background: linear-gradient(180deg, #00072D 0%, #000520 100%);
 }
-
 
 h1 {
   color: #5AFFB0;
@@ -44,7 +53,6 @@ h3 {
   border-color: #5AFFB0;
   color: #00072D;
 }
-
 
 .navbar {
   min-height: 40px;
