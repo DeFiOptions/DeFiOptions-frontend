@@ -43,34 +43,15 @@
           </ul>
 
         <div class="d-flex">
+          <button class="btn btn-success mx-2" v-if="isUserConnected && getChainName">{{ getChainName }}</button>
+          <button class="btn btn-danger mx-2" v-if="isUserConnected && !getChainName">Wrong network</button>
+
           <button class="btn btn-outline-success text-uppercase" v-if="!isUserConnected" @click="connectWeb3Modal">Connect wallet</button>
           <button class="btn btn-outline-success" v-if="isUserConnected" @click="disconnectWeb3Modal">{{getActiveAccount.substring(0, 6)}}...{{ getActiveAccount.substring(38, 42)}}</button>
         </div>
       </div>
     </div>
   </nav>
-
-
-  <!--
-  <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
-
-      
-      <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3" @click="toggleSidebar">
-          <i class="fa fa-bars"></i>
-      </button>
-
-      
-      <ul class="navbar-nav ml-auto">
-
-          
-          <li class="nav-item">
-            <a class="nav-link text-muted" href="#" v-if="!isUserConnected" @click="connectWeb3Modal">Connect your wallet</a>
-            <a class="nav-link text-muted" href="#" v-if="isUserConnected" @click="disconnectWeb3Modal">Disconnect {{getActiveAccount.substring(0, 6)}}...{{ getActiveAccount.substring(38, 42)}}</a>
-          </li>
-      </ul>
-
-  </nav>
-  -->
 </template>
 
 <script>
@@ -80,7 +61,6 @@ export default {
   name: "Navbar",
   computed: {
     ...mapGetters("accounts", ["getActiveAccount", "getChainName", "isUserConnected", "getWeb3Modal", "isCurrentChainSupported", "getSupportedChains"]),
-    ...mapGetters("sidebar", ["getCollapsedStatus"]),
 
     getSupportedChainsString() {
       return String(this.getSupportedChains).replace("[", "").replace("]", "").replace(",", ", ");

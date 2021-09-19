@@ -1,15 +1,7 @@
 <template>
   <div>
 
-    <div class="section-big row">
-      <div class="col-md-3">
-        <h3>Account balance</h3>
-      </div>
-
-      <div class="col-md-9">
-        <h3>Withdraw</h3>
-      </div>
-    </div>
+    <AccountBalance :exchangeBalance="Number(getExchangeUserBalance).toFixed(2)" />
 
     <!-- Page Heading -->
     <div class="d-sm-flex align-items-center justify-content-between">
@@ -457,9 +449,13 @@
 import { mapGetters } from "vuex";
 import { signERC2612Permit } from 'eth-permit';
 import OptionTokenContractJson from "../contracts/RedeemableToken.json";
+import AccountBalance from '../components/AccountBalance.vue';
 
 export default {
   name: 'Portfolio',
+  components: {
+    AccountBalance
+  },
   computed: {
     ...mapGetters("accounts", ["getActiveAccount", "getActiveBalanceEth", "getWeb3", "isUserConnected"]),
     ...mapGetters("optionsExchange", ["getExchangeUserBalance", "getOptionsExchangeContract", "getUserOptions"]),
