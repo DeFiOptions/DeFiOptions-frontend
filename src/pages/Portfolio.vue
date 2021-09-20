@@ -6,180 +6,14 @@
       :creditTokens="Number(getCreditTokenUserBalance).toFixed(2)" 
     />
 
+    <MyOptions :getUserOptions="getUserOptions" />
+
     <br />
     <br />
     <br />
     <br />
     <br />
 
-    <!-- Page Heading -->
-    <div class="d-sm-flex align-items-center justify-content-between">
-        <h1 class="h3 mb-0 text-gray-800">Your portfolio</h1>
-    </div>
-    <!-- END Page Heading -->
-
-    <div class="row mt-3">
-
-      <!-- Card: Address -->
-      <div class="col-xl-3 col-md-6 mb-4">
-          <div class="card bg-primary text-white shadow h-100 py-2">
-              <div class="card-body">
-                  <div class="row no-gutters align-items-center">
-                      <div class="col mr-2">
-                          <div class="text-xs font-weight-bold text-uppercase mb-1">
-                              Address
-                          </div>
-                        
-                          <div class="h5 mb-0 font-weight-bold">
-                            {{getActiveAccount.substring(0, 7)}}...{{ getActiveAccount.substring(35, 42) }}
-                          </div>
-                      </div>
-                  </div>
-              </div>
-          </div>
-      </div>
-
-      <!-- Card: ETH balance -->
-      <div class="col-xl-3 col-md-6 mb-4">
-          <div class="card bg-primary text-white shadow h-100 py-2">
-              <div class="card-body">
-                  <div class="row no-gutters align-items-center">
-                      <div class="col mr-2">
-                          <div class="text-xs font-weight-bold text-uppercase mb-1">
-                              ETH
-                          </div>
-                        
-                          <div class="h5 mb-0 font-weight-bold">
-                            {{ Number(getActiveBalanceEth).toFixed(2) }} ETH
-                          </div>
-                      </div>
-                      <div class="col-auto">
-                          <i class="fab fa-ethereum fa-2x text-gray-300"></i>
-                      </div>
-                  </div>
-              </div>
-          </div>
-      </div>
-
-      <!-- Card: Exchange balance -->
-      <div class="col-xl-3 col-md-6 mb-4">
-          <div class="card bg-primary text-white shadow h-100 py-2">
-              <div class="card-body">
-                  <div class="row no-gutters align-items-center">
-                      <div class="col mr-2">
-                          <div class="text-xs font-weight-bold text-uppercase mb-1">
-                              Exchange Balance
-                          </div>
-                        
-                          <div class="h5 mb-0 font-weight-bold">
-                            ${{ Number(getExchangeUserBalance).toFixed(2) }}<br>
-                          </div>
-                      </div>
-                      <div class="col-auto">
-                          <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
-                      </div>
-                  </div>
-              </div>
-          </div>
-      </div>
-
-      <!-- Card: Credit tokens -->
-      <div class="col-xl-3 col-md-6 mb-4">
-          <div class="card bg-primary text-white shadow h-100 py-2">
-              <div class="card-body">
-                  <div class="row no-gutters align-items-center">
-                      <div class="col mr-2">
-                          <div class="text-xs font-weight-bold text-uppercase mb-1">
-                              Credit Tokens
-                          </div>
-                        
-                          <div class="h5 mb-0 font-weight-bold">
-                            ${{ Number(getCreditTokenUserBalance).toFixed(2) }}
-                          </div>
-                      </div>
-                      <div class="col-auto">
-                          <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
-                      </div>
-                  </div>
-              </div>
-          </div>
-      </div>
-
-      <!-- Card: Pool tokens -->
-      <div class="col-xl-3 col-md-6 mb-4">
-          <div class="card bg-primary text-white shadow h-100 py-2">
-              <div class="card-body">
-                  <div class="row no-gutters align-items-center">
-                      <div class="col mr-2">
-                          <div class="text-xs font-weight-bold text-uppercase mb-1">
-                              Pool Tokens
-                          </div>
-                        
-                          <div class="h5 mb-0 font-weight-bold">
-                            ${{ Number(getLiquidityPoolUserBalance).toFixed(2) }}
-                          </div>
-                      </div>
-                      <div class="col-auto">
-                          <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
-                      </div>
-                  </div>
-              </div>
-          </div>
-      </div>
-
-      <!-- Card: DAI balance -->
-      <div class="col-xl-3 col-md-6 mb-4">
-          <div class="card bg-primary text-white shadow h-100 py-2">
-              <div class="card-body">
-                  <div class="row no-gutters align-items-center">
-                      <div class="col mr-2">
-                          <div class="text-xs font-weight-bold text-uppercase mb-1">
-                              Dai
-                          </div>
-                        
-                          <div class="h5 mb-0 font-weight-bold">
-                            ${{ Number(getUserDaiBalance).toFixed(2) }}
-
-                            <button class="btn btn-primary btn-sm" @click="addDaiToMetaMask" data-toggle="tooltip" data-placement="bottom" title="Add to MetaMask">
-                              <i class="fas fa-plus-circle"></i>
-                            </button>
-                          </div>
-                      </div>
-                      <div class="col-auto">
-                          <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
-                      </div>
-                  </div>
-              </div>
-          </div>
-      </div>
-
-      <!-- Card: USDC balance -->
-      <div class="col-xl-3 col-md-6 mb-4">
-          <div class="card bg-primary text-white shadow h-100 py-2">
-              <div class="card-body">
-                  <div class="row no-gutters align-items-center">
-                      <div class="col mr-2">
-                          <div class="text-xs font-weight-bold text-uppercase mb-1">
-                              USDC
-                          </div>
-                        
-                          <div class="h5 mb-0 font-weight-bold">
-                            ${{ Number(getUserUsdcBalance).toFixed(2) }}
-
-                            <button class="btn btn-primary btn-sm" @click="addUsdcToMetaMask" data-toggle="tooltip" data-placement="bottom" title="Add to MetaMask">
-                              <i class="fas fa-plus-circle"></i>
-                            </button>
-                          </div>
-                      </div>
-                      <div class="col-auto">
-                          <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
-                      </div>
-                  </div>
-              </div>
-          </div>
-      </div>
-
-    </div>
 
     <!-- Options table -->
     <div class="row mb-4" v-if="getUserOptions">
@@ -365,36 +199,6 @@
       <!-- Redeem option Modal END-->
     </div>
 
-    <!-- Withdraw balance -->
-    <div class="row justify-content-center mb-4">
-
-      <div class="col-lg-6">
-          <div class="card o-hidden border-0 shadow-lg mt-2">
-              <div class="card-body p-0">
-                  <div class="p-5">
-                    <div class="text-center">
-                        <h2 class="h4 text-gray-900 mb-2">Withdraw balance</h2>
-                        <p class="mb-4">
-                          Withdraw your stablecoin balance (except the amount allocated as collateral for written options).
-                        </p>
-                    </div>
-
-                    <form @submit.prevent="withdrawBalance">
-                        <div class="form-group">
-                            <input type="text" v-model="withdrawValue" class="form-control form-control-user"
-                                placeholder="Enter the amount to withdraw">
-                        </div>
-                        <button class="btn btn-primary btn-user btn-block">
-                            Withdraw balance
-                        </button>
-                    </form>
-                </div>
-              </div>
-          </div>
-      </div>
-
-    </div>
-
     <!-- Mint fake stablecoins -->
     <div class="row justify-content-center mb-4">
 
@@ -459,11 +263,13 @@ import { mapGetters } from "vuex";
 import { signERC2612Permit } from 'eth-permit';
 import OptionTokenContractJson from "../contracts/RedeemableToken.json";
 import AccountBalance from '../components/portfolio/AccountBalance.vue';
+import MyOptions from '../components/portfolio/MyOptions.vue';
 
 export default {
   name: 'Portfolio',
   components: {
-    AccountBalance
+    AccountBalance,
+    MyOptions
   },
   computed: {
     ...mapGetters("accounts", ["getActiveAccount", "getActiveBalanceEth", "getWeb3", "isUserConnected"]),
