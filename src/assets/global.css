@@ -25,19 +25,36 @@ h3 {
   text-transform: uppercase;
 }
 
-.btn-success {
+.btn-danger, .btn-danger:disabled, .btn-danger:focus, .btn-danger:visited {
+  padding-left: 50px;
+  padding-right: 50px;
+  color: #00072D;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.btn-danger:hover {
+  background-color: #00072D;
+  border-color: #dc3545;
+  color: #dc3545;
+  text-transform: uppercase;
+}
+
+.btn-success, .btn-success:focus, .btn-success:visited {
   background-color: #5AFFB0;
   border-color: #5AFFB0;
   padding-left: 50px;
   padding-right: 50px;
   color: #00072D;
   font-weight: 500;
+  text-transform: uppercase;
 }
 
 .btn-success:hover {
   background-color: #00072D;
   border-color: #5AFFB0;
   color: #5AFFB0;
+  text-transform: uppercase;
 }
 
 .btn-outline-success {
@@ -46,12 +63,14 @@ h3 {
   padding-left: 50px;
   padding-right: 50px;
   font-weight: 500;
+  text-transform: uppercase;
 }
 
 .btn-outline-success:hover {
   background-color: #5AFFB0;
   border-color: #5AFFB0;
   color: #00072D;
+  text-transform: uppercase;
 }
 
 .navbar {
