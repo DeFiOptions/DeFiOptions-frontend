@@ -40,7 +40,7 @@ h3 {
   text-transform: uppercase;
 }
 
-.btn-success, .btn-success:focus, .btn-success:visited {
+.btn-success, .btn-success:focus, .btn-success:visited, .btn-success:disabled {
   background-color: #5AFFB0;
   border-color: #5AFFB0;
   padding-left: 50px;
