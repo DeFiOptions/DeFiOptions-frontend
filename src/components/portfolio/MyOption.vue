@@ -55,6 +55,7 @@
 
       <div>
         <button @click="sellOption" class="btn btn-success form-control" :disabled="isOptionSizeNotValid.status">
+          <span v-if="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
           Sell for ${{getTotal.toFixed(2)}}
         </button>
         <div></div>
@@ -69,6 +70,7 @@
 
 <script>
 import { mapGetters } from "vuex";
+import { signERC2612Permit } from 'eth-permit';
 import MyOptionDataItem from './MyOptionDataItem.vue';
 import OptionTokenContractJson from "../../contracts/RedeemableToken.json";
 
@@ -200,7 +202,76 @@ export default {
     },
 
     async sellOption() {
-      console.log("SELL OPTION");
+      let component = this;
+
+      this.setSellData(component.option); // fetch price again to avoid errors 
+
+      let optionSizeWei = component.getWeb3.utils.toWei(String(component.selectedOptionSize), "ether");
+      let optionUnitPrice = component.getWeb3.utils.toWei(String(component.selectedOptionPrice), "ether");
+
+      let sigDeadline = Math.floor(new Date().getTime()/1000) + (3600 * 1); // valid for 1 hour
+
+      // allowance through permit()
+      const result = await signERC2612Permit(
+        window.ethereum, 
+        component.option.address, // option token address
+        component.getActiveAccount, // option owner
+        component.getLiquidityPoolAddress, // spender
+        optionSizeWei, // value: the amount of option tokens that user decided to sell
+        sigDeadline // deadline/expiry for the signature
+      );
+
+      // sell option transaction
+      try {
+        await component.getLiquidityPoolContract.methods.sell(
+          component.option.symbol, // symbol
+          optionUnitPrice, // price per one option
+          optionSizeWei, // volume a.k.a. user's selected option size
+          result.deadline,
+          result.v,
+          result.r,
+          result.s
+        ).send({
+          from: component.getActiveAccount
+        }, function(error, hash) {
+          component.loading = true;
+
+          // transaction error
+          if (error) {
+            component.$toast.error("The transaction has been rejected. Please try again.");
+            component.loading = false;
+          }
+
+          // transaction sent
+          if (hash) {
+            // show a "tx submitted" toast
+            component.$toast.info("The Sell transaction has been submitted. Please wait for it to be confirmed.");
+
+            // listen for the event
+            component.getLiquidityPoolContract.once("Sell", {
+              filter: { seller: component.getActiveAccount }
+            }, function(error, event) {
+              component.loading = false;
+              
+              // failed transaction
+              if (error) {
+                component.$toast.error("The Sell transaction has failed. Please try again, perhaps with a higher gas limit.");
+              }
+
+              // success
+              if (event) {
+                component.$toast.success("You have successfully sold an option.");
+                component.$store.dispatch("optionsExchange/fetchExchangeUserBalance");
+                component.$store.dispatch("optionsExchange/fetchUserOptions");
+              }
+            });
+          }
+        });
+      } catch (e) {
+          window.console.log("Error:", e);
+          component.$toast.error("The transaction has been reverted. Please try again or contact project admins.");
+          component.loading = false;
+      }
     },
 
     async setSellData() {
@@ -210,7 +281,9 @@ export default {
         this.selectedOptionPrice = this.getWeb3.utils.fromWei(String(result.price), "ether");
         this.selectedOptionVolume = this.getWeb3.utils.fromWei(String(result.volume), "ether");
 
-        this.selectedOptionSize = this.getMaxOptionSize;
+        if (!this.selectedOptionSize) {
+          this.selectedOptionSize = this.getMaxOptionSize;
+        }
 
         // Reducing the query price to avoid precision errors in the smart contract (-0.01%)
         this.selectedOptionPrice -= Number(this.selectedOptionPrice) * 0.0001;
