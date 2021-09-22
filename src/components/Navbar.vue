@@ -2,9 +2,11 @@
   <nav class="navbar navbar-expand-lg navbar-dark primary-color">
     <div class="container-fluid">
 
-      <a class="navbar-brand primary-color" href="#">
-        <img src="@/assets/logo.svg" alt="" width="30" height="24">
-      </a>
+      <router-link to="/" style="text-decoration: none">
+        <a class="navbar-brand primary-color" href="/">
+          <img src="@/assets/logo.svg" alt="" width="30" height="24">
+        </a>
+      </router-link>
 
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>

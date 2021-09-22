@@ -1,84 +1,100 @@
 <template>
   <div>
-    <!-- Page Heading -->
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1>Welcome to DeFiOptions</h1>
+
+    <!-- Hero -->
+    <section class="text-center hero">
+
+      <div class="row">
+        <div class="col-md-6 offset-md-3">
+          <h1 class="hero-title">Decentralized Options Exchange</h1>
+        </div>
+      </div>
+
+      <div class="d-flex flex-row justify-content-center text-white">
+        <div class="hero-line-left"></div>
+        <div>on</div>
+        <img src="@/assets/polygon-logo-inverted.svg" class="polygon-logo" />
+        <div class="hero-line-right"></div>
+      </div>
+      
+      <div class="d-flex flex-wrap flex-row justify-content-center text-uppercase hero-buttons" v-if="isUserConnected">
+        <router-link to="/trade" style="text-decoration: none">
+          <a class="btn btn-success m-1" href="/trade">Trade</a>
+        </router-link>
+
+        <router-link to="/invest" style="text-decoration: none">
+          <a class="btn btn-outline-success m-1" href="/invest">Liquidity Pool</a>
+        </router-link>
+
+        <router-link to="/portfolio" style="text-decoration: none">
+          <a class="btn btn-success m-1" href="/portfolio">Portfolio</a>
+        </router-link>
+      </div> 
+
+    </section>
+    <!-- END Hero -->
+
+    <!-- If user not connected -->
+    <div v-if="!isUserConnected" class="text-center">
+      <h2 class="text-center text-white mb-5">Please connect your crypto wallet.</h2>
+
+      <button type="button" class="btn btn-success mb-5" @click="connectWeb3Modal">Connect wallet</button>
     </div>
-    <!-- END Page Heading -->
+    <!-- END If user not connected -->
 
-    <h4 class="mb-4 text-gray-600">Open, permissionless, cash-settled options trading.</h4>
+    <!-- Footer -->
+    <footer class="text-center mt-5">
 
-    <p v-if="!isUserConnected">
-      <strong>Please connect your Ethereum wallet.</strong>
-
-      <br>
-
-      <button type="button" class="btn btn-success mt-3" @click="connectWeb3Modal">Connect wallet</button>
-    </p>
-
-    <div class="row" v-if="isUserConnected">
-
-      <div class="col-md-4 mb-3">
-        <div class="card pt-4 pl-4 pr-4">
-          <router-link to="/trade">
-            <img src="#" class="card-img-top" alt="Trading">
-          </router-link>
-
-          <div class="card-body text-center">
-            <h3>TRADE</h3>
-
-            <p class="card-text">
-              Trade cash-settled ETH and BTC options (CALL/PUT).
-            </p>
-
-            <router-link to="/trade">
-              <a href="/trade" class="card-link">Go to Trading</a>
-            </router-link>
-          </div>
+      <div class="row mb-5">
+        <div class="col-md-6 offset-md-3">
+          <h3 class="section-title">
+            Join us
+          </h3>
         </div>
       </div>
 
-      <div class="col-md-4 mb-3 card-deck">
-        <div class="card pt-4 pl-4 pr-4">
-          <router-link to="/invest">
-            <img src="#" class="card-img-top" alt="Investing">
-          </router-link>
+      <ul class="nav justify-content-center pb-3 mb-3">
 
-          <div class="card-body text-center">
-            <h3>INVEST</h3>
+        <li class="nav-item">
+          <a href="https://discord.gg/WCeKgHNz3z" target="_blank" class="btn btn-social">
+            <i class="fab fa-discord"></i>
+          </a>
+        </li>
 
-            <p class="card-text">
-              Invest in the liquidity pool and become an option writer.
-            </p>
+        <li class="nav-item ml-40-px">
+          <a href="https://twitter.com/DeFiOptionsDAO" target="_blank" class="btn btn-social">
+            <i class="fab fa-twitter"></i>
+          </a>
+        </li>
 
-            <router-link to="/invest">
-              <a href="/invest" class="card-link">Go to Investing</a>
-            </router-link>
-          </div>
-        </div>
-      </div>
+        <li class="nav-item ml-40-px">
+          <a href="https://www.reddit.com/r/DeFiOptionsDAO/" target="_blank" class="btn btn-social">
+            <i class="fab fa-reddit"></i>
+          </a>
+        </li>
 
-      <div class="col-md-4 mb-3 card-deck">
-        <div class="card pt-4 pl-4 pr-4">
-          <router-link to="/portfolio">
-            <img src="#" class="card-img-top" alt="Analyzing">
-          </router-link>
+      </ul>
 
-          <div class="card-body text-center">
-            <h3>ANALYZE</h3>
+      <ul class="nav justify-content-center pb-3 mb-5">
 
-            <p class="card-text">
-              Track your performance and balances.
-            </p>
+        <li class="nav-item">
+          <a href="https://github.com/DeFiOptions" target="_blank" class="btn btn-social">
+            <i class="fab fa-github"></i>
+          </a>
+        </li>
 
-            <router-link to="/portfolio">
-              <a href="/portfolio" class="card-link">Go to Portfolio</a>
-            </router-link>
-          </div>
-        </div>
-      </div>
+        <li class="nav-item ml-40-px">
+          <a href="https://t.me/DeFiOptionsDiscussions" target="_blank" class="btn btn-social">
+            <i class="fab fa-telegram"></i>
+          </a>
+        </li>
 
-    </div>
+      </ul>
+
+    </footer>
+    <!-- END Footer -->
+
+
   </div>
 </template>
 
@@ -99,3 +115,76 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+.btn-social:hover {
+  background-color: #00072D;
+  border-color: #5AFFB0;
+  color: #5AFFB0;
+}
+
+.btn-social {
+  width: 80px;
+  height: 80px;
+  line-height: 80px;
+  text-align: center;
+  padding: 0;
+  border-radius: 50%;
+  font-size: 1.3rem;
+  background-color: #5AFFB0;
+  border-color: #5AFFB0;
+  color: #00072D;
+}
+
+.hero {
+  margin-top: 120px;
+  margin-bottom: 120px;
+}
+
+.hero-buttons {
+  margin-top: 70px;
+}
+
+.hero-line-left {
+  width: 190px;
+  height: 1px;
+  background: linear-gradient(270deg, #7951DD 0%, rgba(32, 164, 221, 0) 100%);
+  margin-top: 11px;
+  margin-right: 16px;
+}
+
+.hero-line-right {
+  width: 190px;
+  height: 1px;
+  background: linear-gradient(270deg, #7951DD 0%, rgba(32, 164, 221, 0) 100%);
+  margin-top: 11px;
+  transform: rotate(180deg);
+  margin-left: 16px;
+}
+
+.hero-title {
+  font-weight: 400;
+  font-size: 60px;
+  color: #FFFFFF;
+}
+
+.ml-40-px {
+  margin-left: 40px;
+}
+
+.nav-item {
+  color: #5AFFB0;
+  font-weight: 500;
+}
+
+.polygon-logo {
+  height: 26px;
+  margin-left: 16px;
+}
+
+.section-title {
+  font-weight: 400;
+  font-size: 32px;
+  color: #FFFFFF;
+}
+</style>
