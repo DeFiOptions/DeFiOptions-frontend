@@ -187,4 +187,22 @@ export default {
   font-size: 32px;
   color: #FFFFFF;
 }
+
+/* iPhone 8 */
+@media screen and (max-width: 375px) {
+  .hero-title {
+    font-size: 50px;
+  }
+}
+
+/* iPhone SE */
+@media screen and (max-width: 320px) {
+  .hero-title {
+    font-size: 45px;
+  }
+
+  .ml-40-px {
+    margin-left: 30px;
+  }
+}
 </style>

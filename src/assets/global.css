@@ -40,6 +40,37 @@ h3 {
   text-transform: uppercase;
 }
 
+.btn-outline-primary {
+  border: 2px solid #105685;
+  border-radius: 4px;
+  color: white;
+}
+
+.btn-outline-primary:hover, .btn-outline-primary:focus, .btn-outline-primary-active {
+  background-color: #105685;
+  border: 2px solid #105685;
+}
+
+.btn-primary, .btn-primary:disabled {
+  background-color: #105685;
+  border: 2px solid #105685;
+  border-radius: 4px;
+  color: white;
+}
+
+.btn-primary:hover, .btn-primary:focus, .btn-primary-active {
+  border: 2px solid #105685;
+  background-color: transparent;
+}
+
+.btn-xl {
+  padding: 14px 50px;
+}
+
+.btn-md {
+  padding: 8px 24px;
+}
+
 .btn-success, .btn-success:focus, .btn-success:visited, .btn-success:disabled {
   background-color: #5AFFB0;
   border-color: #5AFFB0;

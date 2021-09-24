@@ -5,6 +5,7 @@
       <router-link to="/" style="text-decoration: none">
         <a class="navbar-brand primary-color" href="/">
           <img src="@/assets/logo.svg" alt="" width="30" height="24">
+          DeFi Options
         </a>
       </router-link>
 
@@ -44,12 +45,12 @@
             </li>
           </ul>
 
-        <div class="d-flex">
-          <button class="btn btn-success mx-2" v-if="isUserConnected && getChainName">{{ getChainName }}</button>
-          <button class="btn btn-danger mx-2" v-if="isUserConnected && !getChainName">Wrong network</button>
+        <div class="d-flex flex-wrap">
+          <button class="btn btn-success mx-1 mb-2" v-if="isUserConnected && getChainName">{{ getChainName }}</button>
+          <button class="btn btn-danger mx-1 mb-2" v-if="isUserConnected && !getChainName">Wrong network</button>
 
-          <button class="btn btn-outline-success text-uppercase" v-if="!isUserConnected" @click="connectWeb3Modal">Connect wallet</button>
-          <button class="btn btn-outline-success" v-if="isUserConnected" @click="disconnectWeb3Modal">{{getActiveAccount.substring(0, 6)}}...{{ getActiveAccount.substring(38, 42)}}</button>
+          <button class="btn btn-outline-success mx-1 mb-2 text-uppercase" v-if="!isUserConnected" @click="connectWeb3Modal">Connect wallet</button>
+          <button class="btn btn-outline-success mx-1 mb-2" v-if="isUserConnected" @click="disconnectWeb3Modal">{{getActiveAccount.substring(0, 6)}}...{{ getActiveAccount.substring(38, 42)}}</button>
         </div>
       </div>
     </div>

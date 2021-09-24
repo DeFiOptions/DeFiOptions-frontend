@@ -1,10 +1,60 @@
 <template>
   <div>
-    <!-- Page Heading -->
-    <div class="d-sm-flex align-items-center justify-content-between">
-        <h1 class="h3 mb-0 text-gray-800">Buy options</h1>
+    <div class="section-big row mt-4 mx-3">
+      <div class="col-md-3 mb-4">
+        <h3>Markets</h3>
+
+        <div v-for="pair in pairs" v-bind:key="pair">
+          <button @click="changePair(pair)" class="btn btn-outline-primary btn-xl mt-2" :class="{'btn-outline-primary-active':pair === selectedPair}">
+            {{pair}}
+          </button>
+        </div>
+      </div>
+
+      <div class="col-md-9">
+        <div class="d-flex flex-wrap justify-content-between">
+          <div class="mb-4">
+            <h3>Type</h3>
+
+            <div class="btn-group mt-2" role="group" aria-label="Basic example">
+              <button @click="changeOptionType('CALL')" type="button" class="btn btn-outline-primary btn-md" :class="{'btn-outline-primary-active':'CALL' === selectedType}">CALL</button>
+              <button @click="changeOptionType('PUT')" type="button" class="btn btn-outline-primary btn-md" :class="{'btn-outline-primary-active':'PUT' === selectedType}">PUT</button>
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <h3>Current price</h3>
+
+            <button class="btn btn-primary mt-2 btn-md">
+              ${{getUnderlyingPrice}}
+            </button>
+          </div>
+
+          <div class="mb-4">
+            <h3>Maturity</h3>
+
+            <div class="btn-group mt-2">
+              <button type="button" class="btn btn-primary btn-md dropdown-toggle text-uppercase" data-bs-toggle="dropdown" aria-expanded="false">
+                {{getSelectedMaturity}}
+              </button>
+              <ul class="dropdown-menu">
+                <li>
+                  <a class="dropdown-item text-uppercase" href="#" @click="changeMaturity(maturity)" v-for="maturity in maturities" v-bind:key="maturity">{{maturity}}</a>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <OptionsList />
+      </div>
     </div>
-    <!-- END Page Heading -->
+
+    <br />
+    <br />
+    <br />
+    <br />
+    <br />
 
     <!-- Card -->
     <div class="card shadow mt-4">
@@ -199,6 +249,7 @@
 import { mapGetters } from "vuex";
 import { signERC2612Permit } from 'eth-permit';
 import OptionPrice from '../components/OptionPrice.vue';
+import OptionsList from '../components/trade/OptionsList.vue';
 
 export default {
   name: 'Trade',
@@ -206,7 +257,8 @@ export default {
     this.unsubscribe();
   },
   components: {
-    OptionPrice
+    OptionPrice,
+    OptionsList
   },
   computed: {
     ...mapGetters("accounts", ["getActiveAccount", "getActiveBalanceEth", "getWeb3", "isUserConnected", "getLastSelectedTradePair", "getLastSelectedTradeMaturity", "getLastSelectedTradeType"]),
