@@ -46,7 +46,7 @@
           </div>
         </div>
 
-        <OptionsList />
+        <OptionsList :symbols="getFilteredSymbols" />
       </div>
     </div>
 
@@ -133,7 +133,7 @@
                     <td><strong>${{option.strike}}</strong></td>
                     <td>{{getSelectedMaturity}}</td>
                     <td>
-                      <OptionPrice :symbol="option.symbol" :contract="getLiquidityPoolContract" :web3="getWeb3" />
+                      
                     </td>
                     <td>
                       <button class="btn btn-outline-success btn-sm mr-2 mb-1" @click="setModalData('Buy', option.symbol, option.strike)" data-toggle="modal" data-target="#optionsModal">Buy</button>
@@ -248,7 +248,6 @@
 <script>
 import { mapGetters } from "vuex";
 import { signERC2612Permit } from 'eth-permit';
-import OptionPrice from '../components/OptionPrice.vue';
 import OptionsList from '../components/trade/OptionsList.vue';
 
 export default {
@@ -257,7 +256,6 @@ export default {
     this.unsubscribe();
   },
   components: {
-    OptionPrice,
     OptionsList
   },
   computed: {

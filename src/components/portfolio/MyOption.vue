@@ -6,10 +6,10 @@
 
     <!-- Option data -->
     <div class="d-flex justify-content-center">
-      <MyOptionDataItem class="data-item" title="Option" :data="option.pair+' · ' + option.type" :divider="true" />
-      <MyOptionDataItem class="data-item" title="Option size" :data="option.holding" :divider="true" />
-      <MyOptionDataItem class="data-item" title="Expiration" :data="option.maturity" :divider="true" />
-      <MyOptionDataItem class="data-item" title="Intrinsic value" :green="true" :data="'$'+intrinsicValue" />
+      <OptionDataItem class="data-item" title="Option" :data="option.pair+' · ' + option.type" :divider="true" />
+      <OptionDataItem class="data-item" title="Option size" :data="option.holding" :divider="true" />
+      <OptionDataItem class="data-item" title="Expiration" :data="option.maturity" :divider="true" />
+      <OptionDataItem class="data-item" title="Intrinsic value" :green="true" :data="'$'+intrinsicValue" />
     </div>
 
     <!-- Action button -->
@@ -71,7 +71,7 @@
 <script>
 import { mapGetters } from "vuex";
 import { signERC2612Permit } from 'eth-permit';
-import MyOptionDataItem from './MyOptionDataItem.vue';
+import OptionDataItem from '../OptionDataItem.vue';
 import OptionTokenContractJson from "../../contracts/RedeemableToken.json";
 
 export default {
@@ -88,7 +88,7 @@ export default {
   },
 
   components: { 
-    MyOptionDataItem 
+    OptionDataItem 
   },
 
   computed: {
