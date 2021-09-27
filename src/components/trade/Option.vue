@@ -8,7 +8,7 @@
     <div class="d-flex justify-content-center">
       <OptionDataItem class="data-item" title="Strike" :data="'$' + option.strike" :divider="true" />
       <OptionDataItem class="data-item" title="Break even" data="???" :divider="true" />
-      <OptionDataItem class="data-item" title="Price" :green="true" :data="optionPrice" />
+      <OptionDataItem class="data-item" title="Price" :green="true" :data="optionPriceFormatted" />
     </div>
 
     <!-- Action button -->
@@ -69,7 +69,8 @@ export default {
     return {
       buyWith: "DAI",
       loading: false,
-      optionPrice: "loading",
+      optionPrice: null,
+      optionPriceFormatted: "loading",
       selectedOptionSize: 0.1,
       selectedOptionVolume: null,
       showForm: false,
@@ -99,14 +100,6 @@ export default {
         return Math.floor(Number(userBalance / optionPrice * 1000))/1000;
       } else {
         return availableOptionVolume;
-      }
-    },
-
-    getFormattedOptionPrice() {
-      if (this.optionPrice == "loading") {
-        return this.optionPrice;
-      } else {
-        return "$" + Number(this.optionPrice).toFixed(2);
       }
     },
 
@@ -285,22 +278,23 @@ export default {
       let result = await this.getLiquidityPoolContract.methods.queryBuy(this.option.symbol).call();
       
       if (result) {
-        const rPrice = this.getWeb3.utils.fromWei(result.price, "ether");
-        this.optionPrice = "$" + Number(rPrice).toFixed(2);
+        this.optionPrice = this.getWeb3.utils.fromWei(result.price, "ether");
+        this.optionPriceFormatted = "$" + Number(this.optionPrice).toFixed(2);
       }
     },
 
     async setFormData() {
       this.selectedOptionSize = 0.1;
-      this.optionPrice = "loading";
+      this.optionPrice = null;
+      this.optionPriceFormatted = "loading";
       this.selectedOptionVolume = null;
 
       // fetch option price and volume
       let result = await this.getLiquidityPoolContract.methods.queryBuy(this.option.symbol).call();
       
       if (result) {
-        const rPrice = this.getWeb3.utils.fromWei(result.price, "ether");
-        this.optionPrice = "$" + Number(rPrice).toFixed(2);
+        this.optionPrice = this.getWeb3.utils.fromWei(result.price, "ether");
+        this.optionPriceFormatted = "$" + Number(this.optionPrice).toFixed(2);
         this.selectedOptionVolume = this.getWeb3.utils.fromWei(result.volume, "ether");
 
         if (this.selectedOptionVolume < 0.001) {
