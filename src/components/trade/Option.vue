@@ -5,22 +5,27 @@
   <div class="d-flex justify-content-between">
 
     <!-- Option data -->
-    <div class="d-flex justify-content-center">
+    <div class="d-flex d-wrap justify-content-center">
       <OptionDataItem class="data-item" title="Strike" :data="'$' + option.strike" :divider="true" />
-      <OptionDataItem class="data-item" title="Break even" data="???" :divider="true" />
+      <OptionDataItem class="data-item" title="Break even" :data="getBreakEvenPrice" :divider="true" />
       <OptionDataItem class="data-item" title="Price" :green="true" :data="optionPriceFormatted" />
     </div>
 
     <!-- Action button -->
     <div>
-      <button @click="toggleForm" class="btn btn-success">
+      <button @click="toggleForm" class="btn btn-success" v-if="!showForm">
         Buy
         <i class="fas fa-chevron-down"></i>
+        <i class="fas fa-chevron-up" v-if="showForm"></i>
+      </button>
+
+      <button @click="toggleForm" class="btn btn-success" v-if="showForm">
+        Close
+        <i class="fas fa-chevron-up"></i>
       </button>
 
       <span></span>
     </div>
-
   </div>
 
   <!-- Buy option form -->
@@ -30,27 +35,44 @@
     <div class="d-flex">
       <div>
         <input type="text" v-model="selectedOptionSize" class="form-control show-input" placeholder="0.0" aria-describedby="show-text">
-        <div id="show-text" class="form-text" v-if="!isOptionSizeNotValid.status">
+        <div class="show-text form-text" v-if="!isOptionSizeNotValid.status">
           Maximum option size to buy: <span class="max-buy" @click="selectedOptionSize = getMaxOptionSize">{{getMaxOptionSize}}</span>
           <span v-if="Number(this.option.holding) > Number(getMaxOptionSize)"> 
             (Your total holding is bigger: {{this.option.holding}})
           </span>.
         </div>
 
-        <div v-if="isOptionSizeNotValid.status" id="show-text" class="form-text" >{{ isOptionSizeNotValid.message }}</div>
+        <div v-if="isOptionSizeNotValid.status" class="show-text form-text" >{{ isOptionSizeNotValid.message }}</div>
       </div>
 
       <div>
-        <button @click="buyOption" class="btn btn-success form-control" :disabled="isOptionSizeNotValid.status">
-          <span v-if="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-          Buy for ${{getTotal.toFixed(2)}}
-        </button>
-        <div></div>
+        <div class="btn-group" aria-describedby="button-text">
+          <button type="button" class="btn btn-success dropdown-toggle text-uppercase" data-bs-toggle="dropdown" aria-expanded="false">
+            {{buyWith}}
+          </button>
+          <ul class="dropdown-menu">
+            <li>
+              <a class="dropdown-item text-uppercase" href="#" @click="setBuyWith('DAI')">DAI</a>
+              <a class="dropdown-item text-uppercase" href="#" @click="setBuyWith('USDC')">USDC</a>
+              <a class="dropdown-item text-uppercase" href="#" @click="setBuyWith('Exchange Balance')">Exchange Balance</a>
+            </li>
+          </ul>
+        </div>
+
+        <div class="show-text form-text">
+          Balance: {{Number(getUserStablecoinBalance).toFixed(2)}} {{buyWith}}.
+        </div>
       </div>
       
     </div>
-  </div>
 
+    <div class="row mt-3">
+      <button @click="buyOption" class="btn btn-success form-control" :disabled="isOptionSizeNotValid.status">
+        <span v-if="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+        Buy for ${{getTotal.toFixed(2)}}
+      </button>
+    </div>
+  </div>
   
 </div>
   
@@ -89,6 +111,10 @@ export default {
     ...mapGetters("optionsExchange", ["getOptionsExchangeAddress", "getExchangeUserBalance"]),
     ...mapGetters("usdc", ["getUsdcAddress", "getUserUsdcBalance", "getUsdcContract"]),
 
+    getBreakEvenPrice() {
+      return "$" + Number(Number(this.optionPrice)+Number(this.option.strike)).toFixed(2);
+    },
+    
     getMaxOptionSize() {
       // max option size that current user can buy
       let availableOptionVolume = Math.floor(Number(this.selectedOptionVolume*1000))/1000;
@@ -131,7 +157,7 @@ export default {
     isOptionSizeNotValid() { // validation for option size
       // option size bigger than volume.
       if (Number(this.selectedOptionSize) > Number(this.selectedOptionVolume)) {
-        return {status: true, message: "Option size must not be bigger than " + (Math.floor(Number(this.selectedOptionVolume*1000))/1000) + "!"};
+        return {status: true, message: "Must not be bigger than " + (Math.floor(Number(this.selectedOptionVolume*1000))/1000) + "!"};
       }
 
       // too many digits
@@ -151,11 +177,15 @@ export default {
 
       // null option size
       if (this.selectedOptionSize === null || Number(this.selectedOptionSize) === 0 || this.selectedOptionSize === undefined || this.selectedOptionSize === "") {
-        return {status: true, message: "Option size must not be empty or zero!"};
+        return {status: true, message: "Must not be empty or zero!"};
       }
 
       // total bigger than balance
       if (this.getTotal > Number(this.getUserStablecoinBalance)) {
+        if (this.buyWith === "Exchange Balance") {
+          return {status: true, message: "Your exchange balance is too low."};
+        }
+
         return {status: true, message: "Your " + this.buyWith + " balance is too low."};
       }
 
@@ -222,9 +252,6 @@ export default {
         }, function(error, hash) {
           component.loading = true;
 
-          // close the modal after tx is sent
-          window.$("#optionsModal").modal('hide');
-
           // Deposit tx error
           if (error) {
             component.$toast.error("The transaction has been rejected. Please try again.");
@@ -261,7 +288,7 @@ export default {
                 }
                 
                 component.selectedOptionSize = 0.1;
-                component.setModalData('Buy', component.option.symbol, component.option.strike);
+                component.setFormData();
               }
             });
           }
@@ -281,6 +308,10 @@ export default {
         this.optionPrice = this.getWeb3.utils.fromWei(result.price, "ether");
         this.optionPriceFormatted = "$" + Number(this.optionPrice).toFixed(2);
       }
+    },
+
+    setBuyWith(choice) {
+      this.buyWith = choice;
     },
 
     async setFormData() {
@@ -345,7 +376,7 @@ export default {
   margin-right: 10px;
 }
 
-#show-text {
+.show-text {
   color: white;
   font-weight: 400;
   font-size: 12px;
