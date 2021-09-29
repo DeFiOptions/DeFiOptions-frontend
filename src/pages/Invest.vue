@@ -1,75 +1,35 @@
 <template>
-  <div>
-    <!-- Page Heading -->
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">Invest in the liquidity pool</h1>
+  <div class="section-big row mt-4 mx-3">
+    <div class="col-md-3">
+      <LpData />
     </div>
-    <!-- END Page Heading -->
 
-    <div class="row">
+    <div class="col-md-9">
+      <h3>Deposit funds</h3>
 
-      <!-- Pool balance (user) -->
-      <div class="col-xl-3 col-md-6 mb-4">
-          <div class="card border-left-primary shadow h-100 py-2">
-              <div class="card-body">
-                  <div class="row no-gutters align-items-center">
-                      <div class="col mr-2">
-                          <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                              Your pool balance
-                          </div>
-                        
-                          <div class="h5 mb-0 font-weight-bold text-gray-800">
-                            ${{ Number(getUserPoolUsdValue).toFixed(2) }}
-                          </div>
-                      </div>
-                      <div class="col-auto">
-                          <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
-                      </div>
-                  </div>
-              </div>
+      <div class="section-small d-flex">
+        <div>
+          <input type="text" v-model="depositValue" class="form-control withdraw-input" placeholder="0.0" aria-describedby="depositText">
+          <div id="depositText" class="form-text">
+            Balance: $0.0000000
+            <a href="#" class="deposit-max-text" @click="depositValue=1234567890">(max)</a>
           </div>
-      </div>
+        </div>
 
-      <!-- Pool balance (total) -->
-      <div class="col-xl-3 col-md-6 mb-4">
-          <div class="card border-left-primary shadow h-100 py-2">
-              <div class="card-body">
-                  <div class="row no-gutters align-items-center">
-                      <div class="col mr-2">
-                          <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                              Total pool balance
-                          </div>
-                        
-                          <div class="h5 mb-0 font-weight-bold text-gray-800">
-                            ${{ Number(getLiquidityPoolBalance).toFixed(2) }}
-                          </div>
-                      </div>
-                      <div class="col-auto">
-                          <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
-                      </div>
-                  </div>
-              </div>
-          </div>
-      </div>
-
-      <!-- APY -->
-      <div class="col-xl-3 col-md-6 mb-4">
-          <div class="card border-left-primary shadow h-100 py-2">
-              <div class="card-body">
-                  <div class="row no-gutters align-items-center">
-                      <div class="col mr-2">
-                          <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                              Yield (Since start)</div>
-                          <div class="h5 mb-0 font-weight-bold text-gray-800">{{Number(getApy).toFixed(2)}}%</div>
-                      </div>
-                      <div class="col-auto">
-                          <i class="fas fa-percent fa-2x text-gray-300"></i>
-                      </div>
-                  </div>
-              </div>
-          </div>
+        <div>
+          <button @click="depositBalance" class="btn btn-success btn-user btn-block text-uppercase form-control">Deposit</button>
+          <div></div>
+        </div>
+        
       </div>
     </div>
+    
+
+
+    <br />
+    <br />
+    <br />
+    <br />
 
     <div class="col-xl-6">
         <div class="card o-hidden border-0 shadow-lg">
@@ -130,9 +90,13 @@
 <script>
 import { mapGetters } from "vuex";
 import { signERC2612Permit } from 'eth-permit';
+import LpData from '../components/invest/LpData.vue';
 
 export default {
   name: 'Invest',
+  components: { 
+    LpData
+  },
   computed: {
     ...mapGetters("accounts", ["getChainName", "isUserConnected", "getActiveAccount", "getWeb3"]),
     ...mapGetters("accounts", ["getActiveAccount", "getActiveBalanceEth"]),

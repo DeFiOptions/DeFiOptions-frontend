@@ -3,19 +3,9 @@
     <div class="col-md-3">
       <h3>Account balance</h3>
 
-      <div class="card card-balance">
-        <div class="card-body">
-          <h5 class="card-title">Your balance</h5>
-          <p class="card-text">${{ exchangeBalance.toFixed(2) }}</p>
-        </div>
-      </div>
+      <Card cardClass="card-green" title="Your balance" :text="'$'+exchangeBalance.toFixed(2)" />
 
-      <div class="card card-tokens mb-3">
-        <div class="card-body">
-          <h5 class="card-title">Credit tokens</h5>
-          <p class="card-text">${{ creditTokens }}</p>
-        </div>
-      </div>
+      <Card cardClass="card-blue" title="Credit tokens" :text="creditTokens" class="mb-3" />
     </div>
 
     <div class="col-md-9">
@@ -42,8 +32,10 @@
 
 <script>
 import { mapGetters } from "vuex";
+import Card from '../Card.vue';
 
 export default {
+  components: { Card },
   name: "AccountBalance",
   props: ["exchangeBalance", "creditTokens"],
 
@@ -108,33 +100,6 @@ export default {
 </script>
 
 <style scoped>
-  .card {
-    border-radius: 4px;
-    border: none;
-    margin-top: 16px;
-    padding: 8px 0px 4px 8px;
-  }
-
-  .card-balance {
-    background: linear-gradient(225deg, rgba(90, 255, 99, 0.75) 0%, rgba(16, 86, 133, 0.75) 100%);
-  }
-
-  .card-text {
-    color: white;
-    font-weight: normal;
-    font-size: 20px;
-  }
-
-  .card-title {
-    color: white;
-    font-weight: 300;
-    font-size: 14px;
-  }
-
-  .card-tokens {
-    background: #105685;
-  }
-
   .section-small {
     margin-top: 16px;
   }
