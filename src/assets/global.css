@@ -127,16 +127,19 @@ h3 {
 }
 
 .nav-item {
-  color: #5AFFB0;
   font-weight: 500;
 }
 
 .navbar-dark .navbar-nav .nav-link {
+  color: #48cc8c;
+}
+
+.navbar-dark .navbar-nav .nav-item .active {
   color: #5AFFB0;
 }
 
 .navbar-dark .navbar-nav .nav-link:hover {
-  color: #48cc8c;
+  color: #5AFFB0;
 }
 
 .primary-color {

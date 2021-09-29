@@ -41,7 +41,7 @@
             <!-- END Nav Item - Liquidity pool -->
 
             <li class="nav-item" v-if="isUserConnected">
-              <a class="nav-link" href="#">Governance</a>
+              <a class="nav-link disabled" href="#">Governance</a>
             </li>
           </ul>
 
