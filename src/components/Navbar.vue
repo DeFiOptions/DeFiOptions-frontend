@@ -1,5 +1,5 @@
 <template>
-  <nav class="navbar navbar-expand-lg navbar-dark primary-color">
+  <nav class="navbar navbar-expand-xl navbar-dark primary-color">
     <div class="container-fluid">
 
       <router-link to="/" style="text-decoration: none">

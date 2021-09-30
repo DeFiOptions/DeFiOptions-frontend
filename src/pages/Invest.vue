@@ -7,81 +7,54 @@
     <div class="col-md-9">
       <h3>Deposit funds</h3>
 
-      <div class="section-small d-flex">
-        <div>
-          <input type="text" v-model="depositValue" class="form-control withdraw-input" placeholder="0.0" aria-describedby="depositText">
-          <div id="depositText" class="form-text">
-            Balance: $0.0000000
-            <a href="#" class="deposit-max-text" @click="depositValue=1234567890">(max)</a>
+      <div class="section-small">
+        <div class="d-flex">
+          <div>
+            <input type="text" v-model="depositValue" class="form-control deposit-input" placeholder="0.0" aria-describedby="depositText">
           </div>
-        </div>
 
-        <div>
-          <button @click="depositBalance" class="btn btn-success btn-user btn-block text-uppercase form-control">Deposit</button>
-          <div></div>
-        </div>
-        
-      </div>
-    </div>
-    
-
-
-    <br />
-    <br />
-    <br />
-    <br />
-
-    <div class="col-xl-6">
-        <div class="card o-hidden border-0 shadow-lg">
-            <div class="card-body p-0">
-                <div class="p-5">
-                  <div class="text-center">
-                      <h2 class="h4 text-gray-900 mb-2">Deposit funds in the liquidity pool</h2>
-                  </div>
-
-                  <form @submit.prevent="depositIntoPool" class="mt-3">
-                    <div class="input-group">
-                      <div class="input-group-prepend">
-                        <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">{{selectedToken}}</button>
-                        <div class="dropdown-menu dropdown-menu-left">
-                          <a class="dropdown-item" @click="changeStablecoin('DAI')" href="#">DAI</a>
-                          <a class="dropdown-item" @click="changeStablecoin('USDC')" href="#">USDC</a>
-                        </div>
-                      </div>
-                      <input type="text" class="form-control" v-model="depositValue" :class="isDepositValueNotValid.status ? 'is-invalid' : ''" placeholder="0.0">
-                      <small v-if="isDepositValueNotValid.status" class="invalid-feedback ml-1">
-                        {{ isDepositValueNotValid.message }} 
-                        <span v-if="(Math.floor(Number(this.getUserStablecoinBalance*1000))/1000) > 0">
-                          Try <a href="#" @click="depositValue = String(Math.floor(Number(getUserStablecoinBalance*1000))/1000)">
-                            {{ Math.floor(Number(this.getUserStablecoinBalance*1000))/1000 }}
-                          </a> {{selectedToken}}.
-                        </span>
-                      </small>
-                    </div>
-
-                    <small v-if="!isDepositValueNotValid.status">
-                      Your {{selectedToken}} balance: 
-                      <a href="#" @click="depositValue = String(Math.floor(Number(getUserStablecoinBalance*1000))/1000)">
-                        {{ Math.floor(Number(this.getUserStablecoinBalance*1000))/1000 }}
-                      </a> {{selectedToken}}.
-                    </small>
-
-                    <div class="mt-2">
-                      <button :disabled="depositValue == null || Number(depositValue) == 0" class="btn btn-primary btn-block">
-                        <span v-if="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                        Deposit {{depositValue}} {{selectedToken}}
-                      </button>
-                    </div>
-                    
-                    <span>
-                      <small>
-                        (You will need to confirm two actions in MetaMask: Sign + Confirm transaction.)
-                      </small>
-                    </span>
-                  </form>
-              </div>
+          <div class="token-dropdown">
+            <div class="btn-group" aria-describedby="button-text">
+              <button type="button" class="btn btn-outline-success dropdown-toggle text-uppercase" data-bs-toggle="dropdown" aria-expanded="false">
+                {{selectedToken}}
+              </button>
+              <ul class="dropdown-menu">
+                <li>
+                  <a class="dropdown-item text-uppercase" href="#" @click="changeStablecoin('DAI')">DAI</a>
+                  <a class="dropdown-item text-uppercase" href="#" @click="changeStablecoin('USDC')">USDC</a>
+                </li>
+              </ul>
             </div>
+          </div>
+
+          <div class="deposit-button">
+            <button @click="depositIntoPool" class="btn btn-success btn-user btn-block text-uppercase form-control">
+              <span v-if="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+              Deposit
+            </button>
+            <div></div>
+          </div>
+          
         </div>
+
+        <!-- Help text -->
+        <div class="help-text" v-if="isDepositValueNotValid.status">
+          {{ isDepositValueNotValid.message }} 
+          <span v-if="(Math.floor(Number(this.getUserStablecoinBalance*1000))/1000) > 0">
+            Try <a href="#" @click="depositValue = String(Math.floor(Number(getUserStablecoinBalance*1000))/1000)">
+              {{ Math.floor(Number(this.getUserStablecoinBalance*1000))/1000 }}
+            </a> {{selectedToken}}.
+          </span>
+        </div>
+
+        <div class="help-text" v-if="!isDepositValueNotValid.status">
+          Your {{selectedToken}} balance: 
+          <a href="#" @click="depositValue = String(Math.floor(Number(getUserStablecoinBalance*1000))/1000)">
+            {{ Math.floor(Number(this.getUserStablecoinBalance*1000))/1000 }}
+          </a> {{selectedToken}}.
+        </div>
+
+      </div>
     </div>
     
   </div>
@@ -101,7 +74,7 @@ export default {
     ...mapGetters("accounts", ["getChainName", "isUserConnected", "getActiveAccount", "getWeb3"]),
     ...mapGetters("accounts", ["getActiveAccount", "getActiveBalanceEth"]),
     ...mapGetters("optionsExchange", ["getLiquidityPoolBalance"]),
-    ...mapGetters("liquidityPool", ["getApy", "getLiquidityPoolContract", "getLiquidityPoolAddress", "getLiquidityPoolUserBalance", "getUserPoolUsdValue"]),
+    ...mapGetters("liquidityPool", ["getApy", "getLiquidityPoolContract", "getLiquidityPoolAddress", "getUserPoolUsdValue"]),
     ...mapGetters("dai", ["getDaiAddress", "getUserDaiBalance", "getDaiContract"]),
     ...mapGetters("usdc", ["getUsdcAddress", "getUserUsdcBalance", "getUsdcContract"]),
 
@@ -168,7 +141,7 @@ export default {
   },
   data() {
     return {
-      depositValue: 1,
+      depositValue: null,
       loading: false,
       selectedToken: "DAI"
     }
@@ -236,6 +209,10 @@ export default {
               if (event) {
                 component.$toast.success("Your deposit was successfull.");
 
+                component.$store.dispatch("optionsExchange/fetchLiquidityPoolBalance");
+                component.$store.dispatch("liquidityPool/fetchUserBalance");
+                component.$store.dispatch("liquidityPool/fetchUserPoolUsdValue");
+
                 // refresh values
                 if (component.selectedToken === "DAI") {
                   component.$store.dispatch("dai/fetchUserBalance");
@@ -243,8 +220,6 @@ export default {
                   component.$store.dispatch("usdc/fetchUserBalance");
                 }
                 
-                component.$store.dispatch("optionsExchange/fetchLiquidityPoolBalance");
-                component.$store.dispatch("liquidityPool/fetchUserBalance");
                 component.depositValue = null;
               }
             });
@@ -260,3 +235,15 @@ export default {
   }
 }
 </script>
+
+<style>
+.deposit-button, .token-dropdown {
+  margin-left: 10px;
+}
+
+.help-text {
+  margin-top: .25rem;
+  font-size: .775em;
+  color: #ffffff;
+}
+</style>

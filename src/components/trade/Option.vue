@@ -19,7 +19,7 @@
         <i class="fas fa-chevron-up" v-if="showForm"></i>
       </button>
 
-      <button @click="toggleForm" class="btn btn-success" v-if="showForm">
+      <button @click="toggleForm" class="btn btn-outline-success" v-if="showForm">
         Close
         <i class="fas fa-chevron-up"></i>
       </button>
@@ -47,7 +47,7 @@
 
       <div>
         <div class="btn-group" aria-describedby="button-text">
-          <button type="button" class="btn btn-success dropdown-toggle text-uppercase" data-bs-toggle="dropdown" aria-expanded="false">
+          <button type="button" class="btn btn-outline-success dropdown-toggle text-uppercase" data-bs-toggle="dropdown" aria-expanded="false">
             {{buyWith}}
           </button>
           <ul class="dropdown-menu">
