@@ -189,49 +189,14 @@ const mutations = {
     state.chainId = chainId;
 
     switch(chainId) {
-      case "0x1":
-        state.chainName = "Ethereum Mainnet";
-        break;
-      case "0x1A4":
-        state.chainName = "Optimism Testnet";
-        break;
-      case "0x1E":
-        state.chainName = "RSK Mainnet";
-        break;
       case "0x2a":
-        state.chainName = "Kovan Testnet";
-        break;
-      case "0x3":
-        state.chainName = "Ropsten Testnet";
-        break;
-      case "0x4":
-        state.chainName = "Rinkeby Testnet";
-        break;
-      case "0x5":
-        state.chainName = "Goerli Testnet";
-        break;
-      case "0x38":
-        state.chainName = "BSC Mainnet";
-        break;
-      case "0x64":
-        state.chainName = "xDai Chain";
-        break;
-      case "0x80":
-        state.chainName = "Huobi Chain";
+        state.chainName = "Kovan";
         break;
       case "0x89":
-        state.chainName = "Polygon PoS Chain";
+        state.chainName = "Polygon";
         break;
-      case "0xA86A":
-        state.chainName = "Avalanche Mainnet";
-        break;
-      case "0xA869":
-        state.chainName = "Avalanche Testnet";
-        break;
-      case "0x539": // 1337 (often used on localhost)
-      case "0x1691": // 5777 (default in Ganache)
       default:
-        state.chainName = "Localhost";
+        state.chainName = null;
         break;
     }
   },

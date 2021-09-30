@@ -4,6 +4,7 @@ import store from "./store/index.js";
 import router from "./router.js";
 import Toast, { POSITION } from 'vue-toastification';
 import "vue-toastification/dist/index.css";
+import './assets/global.css';
 
 const toastOptions = {
   position: POSITION.TOP_LEFT,

@@ -162,7 +162,7 @@ const mutations = {
 
       // maturity
       let maturityHumanReadable = new Date(Number(itemList[3])*1e3).toLocaleDateString('en-GB', { day: 'numeric', 
-        month: 'long', 
+        month: 'short', 
         year: 'numeric' });
       state.defaultMaturity = maturityHumanReadable;
       

@@ -124,7 +124,7 @@ const actions = {
         // maturity
         let maturity = new Date(Number(itemList[3])*1e3).toLocaleDateString('en-GB', { 
           day: 'numeric', 
-          month: 'long', 
+          month: 'short', 
           year: 'numeric' });
         
         // option object
