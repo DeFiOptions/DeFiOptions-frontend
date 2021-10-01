@@ -20,8 +20,8 @@
               </button>
               <ul class="dropdown-menu">
                 <li>
-                  <a class="dropdown-item text-uppercase" href="#" @click="changeStablecoin('DAI')">DAI</a>
-                  <a class="dropdown-item text-uppercase" href="#" @click="changeStablecoin('USDC')">USDC</a>
+                  <span class="dropdown-item text-uppercase" @click="changeStablecoin('DAI')">DAI</span>
+                  <span class="dropdown-item text-uppercase" @click="changeStablecoin('USDC')">USDC</span>
                 </li>
               </ul>
             </div>

@@ -52,9 +52,9 @@
           </button>
           <ul class="dropdown-menu">
             <li>
-              <a class="dropdown-item text-uppercase" href="#" @click="setBuyWith('DAI')">DAI</a>
-              <a class="dropdown-item text-uppercase" href="#" @click="setBuyWith('USDC')">USDC</a>
-              <a class="dropdown-item text-uppercase" href="#" @click="setBuyWith('Exchange Balance')">Exchange Balance</a>
+              <span class="dropdown-item text-uppercase" @click="setBuyWith('DAI')">DAI</span>
+              <span class="dropdown-item text-uppercase" @click="setBuyWith('USDC')">USDC</span>
+              <span class="dropdown-item text-uppercase" @click="setBuyWith('Exchange Balance')">Exchange Balance</span>
             </li>
           </ul>
         </div>
