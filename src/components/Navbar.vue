@@ -14,36 +14,36 @@
       </button>
 
       <div class="collapse navbar-collapse" id="navbarSupportedContent">
+
         <ul class="navbar-nav me-auto mb-2 mb-lg-0 text-uppercase">
-
-            <!-- Nav Item - Trade -->
-            <router-link to="/trade" style="text-decoration: none" v-if="isUserConnected">
-              <li class="nav-item">
-                  <a class="nav-link" :class="{active:this.$route.name === 'trade'}" href="/trade">Trade</a>
-              </li>
-            </router-link>
-            <!-- END Nav Item - Trade -->
-
-            <!-- Nav Item - Portfolio -->
-            <router-link to="/portfolio" style="text-decoration: none" v-if="isUserConnected">
-              <li class="nav-item">
-                  <a class="nav-link" :class="{active:this.$route.name === 'portfolio'}" href="/portfolio">Portfolio</a>
-              </li>
-            </router-link>
-            <!-- END Nav Item - Portfolio -->
-
-            <!-- Nav Item - Liquidity pool -->
-            <router-link to="/invest" style="text-decoration: none" v-if="isUserConnected">
-              <li class="nav-item">
-                  <a class="nav-link" :class="{active:this.$route.name === 'invest'}" href="/invest">Liquidity pool</a>
-              </li>
-            </router-link>
-            <!-- END Nav Item - Liquidity pool -->
-
-            <li class="nav-item" v-if="isUserConnected">
-              <a class="nav-link disabled" href="#">Governance</a>
+          <!-- Nav Item - Trade -->
+          <router-link to="/trade" style="text-decoration: none" v-if="isUserConnected">
+            <li class="nav-item">
+                <a class="nav-link" :class="{active:this.$route.name === 'trade'}" href="/trade">Trade</a>
             </li>
-          </ul>
+          </router-link>
+          <!-- END Nav Item - Trade -->
+
+          <!-- Nav Item - Portfolio -->
+          <router-link to="/portfolio" style="text-decoration: none" v-if="isUserConnected">
+            <li class="nav-item">
+                <a class="nav-link" :class="{active:this.$route.name === 'portfolio'}" href="/portfolio">Portfolio</a>
+            </li>
+          </router-link>
+          <!-- END Nav Item - Portfolio -->
+
+          <!-- Nav Item - Liquidity pool -->
+          <router-link to="/invest" style="text-decoration: none" v-if="isUserConnected">
+            <li class="nav-item">
+                <a class="nav-link" :class="{active:this.$route.name === 'invest'}" href="/invest">Liquidity pool</a>
+            </li>
+          </router-link>
+          <!-- END Nav Item - Liquidity pool -->
+
+          <li class="nav-item" v-if="isUserConnected">
+            <a class="nav-link disabled" href="#">Governance</a>
+          </li>
+        </ul>
 
         <div class="d-flex flex-wrap">
           <button class="btn btn-success mx-1 mb-2" v-if="isUserConnected && getChainName">{{ getChainName }}</button>
@@ -52,6 +52,7 @@
           <button class="btn btn-outline-success mx-1 mb-2 text-uppercase" v-if="!isUserConnected" @click="connectWeb3Modal">Connect wallet</button>
           <button class="btn btn-outline-success mx-1 mb-2" v-if="isUserConnected" @click="disconnectWeb3Modal">{{getActiveAccount.substring(0, 6)}}...{{ getActiveAccount.substring(38, 42)}}</button>
         </div>
+
       </div>
     </div>
   </nav>
@@ -78,3 +79,12 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+/* Mobile screens */
+@media screen and (max-width: 1200px) {
+  #navbarSupportedContent {
+    margin-top: 10px;
+  }
+}
+</style>

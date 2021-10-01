@@ -38,4 +38,12 @@ export default {
 .grn {
   color: #5AFFB0;
 }
+
+/* Mobile screens */
+@media screen and (max-width: 600px) {
+  .divider {
+    width: 0;
+    height: 0;
+  }
+}
 </style>

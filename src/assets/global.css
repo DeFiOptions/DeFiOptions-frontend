@@ -190,3 +190,19 @@ h3 {
   box-sizing: border-box;
   border-radius: 4px;
 }
+
+/* Mobile screens */
+@media screen and (max-width: 600px) {
+  .btn-success, .btn-success:focus, .btn-success:visited, .btn-success:disabled, .btn-outline-success {
+    padding-left: 15px;
+    padding-right: 15px;
+  }
+
+  .form-button-mobile {
+    margin-top: 20px;
+  }
+
+  .section-big {
+    padding: 15px;
+  }
+}

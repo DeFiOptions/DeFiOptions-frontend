@@ -2,10 +2,10 @@
 
 <div class="section-small">
 
-  <div class="d-flex justify-content-between">
+  <div class="d-flex justify-content-between flex-wrap">
 
     <!-- Option data -->
-    <div class="d-flex justify-content-center">
+    <div class="div-flex justify-content-center">
       <OptionDataItem class="data-item" title="Option" :data="option.pair+' · ' + option.type" :divider="true" />
       <OptionDataItem class="data-item" title="Option size" :data="option.holding" :divider="true" />
       <OptionDataItem class="data-item" title="Expiration" :data="option.maturity" :divider="true" />
@@ -40,7 +40,7 @@
   <div v-if="showSellForm" class="sell-form">
     <h3>Option size</h3>
 
-    <div class="d-flex">
+    <div class="d-flex flex-wrap">
       <div>
         <input type="text" v-model="selectedOptionSize" class="form-control sell-input" placeholder="0.0" aria-describedby="sellText">
         <div id="sellText" class="form-text" v-if="!isOptionSizeNotValid.status">
@@ -53,7 +53,7 @@
         <div v-if="isOptionSizeNotValid.status" id="sellText" class="form-text" >{{ isOptionSizeNotValid.message }}</div>
       </div>
 
-      <div>
+      <div class="form-button-mobile">
         <button @click="sellOption" class="btn btn-success form-control" :disabled="isOptionSizeNotValid.status">
           <span v-if="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
           Sell for ${{getTotal.toFixed(2)}}
@@ -307,6 +307,10 @@ export default {
   margin-right: 5px;
 }
 
+.div-flex {
+  display: flex;
+}
+
 .fa-chevron-down, .fa-chevron-up {
   margin-left: 10px;
 }
@@ -339,5 +343,16 @@ export default {
 
 .section-small {
   margin-top: 16px;
+}
+
+/* Mobile screens */
+@media screen and (max-width: 600px) {
+  .data-time {
+    margin-right: 0px;
+  }
+
+  .div-flex {
+    display: block;
+  }
 }
 </style>

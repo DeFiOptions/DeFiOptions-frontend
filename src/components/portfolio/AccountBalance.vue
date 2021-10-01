@@ -11,7 +11,7 @@
     <div class="col-md-9">
       <h3>Withdraw</h3>
 
-      <div class="section-small d-flex">
+      <div class="section-small d-flex flex-wrap">
         <div>
           <input type="text" v-model="withdrawValue" class="form-control withdraw-input" placeholder="0.0" aria-describedby="withdrawText">
           <div id="withdrawText" class="form-text">
@@ -20,7 +20,7 @@
           </div>
         </div>
 
-        <div>
+        <div class="form-button-mobile">
           <button @click="withdrawBalance" class="btn btn-success btn-user btn-block text-uppercase form-control">Withdraw</button>
           <div></div>
         </div>

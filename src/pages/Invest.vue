@@ -8,12 +8,12 @@
       <h3>Deposit funds</h3>
 
       <div class="section-small">
-        <div class="d-flex">
+        <div class="d-flex flex-wrap">
           <div>
             <input type="text" v-model="depositValue" class="form-control deposit-input" placeholder="0.0" aria-describedby="depositText">
           </div>
 
-          <div class="token-dropdown">
+          <div class="token-dropdown form-button-mobile">
             <div class="btn-group" aria-describedby="button-text">
               <button type="button" class="btn btn-outline-success dropdown-toggle text-uppercase" data-bs-toggle="dropdown" aria-expanded="false">
                 {{selectedToken}}
@@ -27,7 +27,7 @@
             </div>
           </div>
 
-          <div class="deposit-button">
+          <div class="deposit-button form-button-mobile">
             <button @click="depositIntoPool" class="btn btn-success btn-user btn-block text-uppercase form-control">
               <span v-if="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
               Deposit
@@ -245,5 +245,12 @@ export default {
   margin-top: .25rem;
   font-size: .775em;
   color: #ffffff;
+}
+
+/* Mobile screens */
+@media screen and (max-width: 600px) {
+  .deposit-button, .token-dropdown {
+    margin-left: 0px;
+  }
 }
 </style>

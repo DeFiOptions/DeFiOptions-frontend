@@ -2,10 +2,10 @@
 
 <div class="section-small">
 
-  <div class="d-flex justify-content-between">
+  <div class="d-flex justify-content-between flex-wrap">
 
     <!-- Option data -->
-    <div class="d-flex d-wrap justify-content-center">
+    <div class="div-flex justify-content-center flex-wrap">
       <OptionDataItem class="data-item" title="Strike" :data="'$' + option.strike" :divider="true" />
       <OptionDataItem class="data-item" title="Break even" :data="getBreakEvenPrice" :divider="true" />
       <OptionDataItem class="data-item" title="Price" :green="true" :data="optionPriceFormatted" />
@@ -32,7 +32,7 @@
   <div v-if="showForm" class="show-form">
     <h3>Option size</h3>
 
-    <div class="d-flex">
+    <div class="d-flex flex-wrap">
       <div>
         <input type="text" v-model="selectedOptionSize" class="form-control show-input" placeholder="0.0" aria-describedby="show-text">
         <div class="show-text form-text" v-if="!isOptionSizeNotValid.status">
@@ -45,7 +45,7 @@
         <div v-if="isOptionSizeNotValid.status" class="show-text form-text" >{{ isOptionSizeNotValid.message }}</div>
       </div>
 
-      <div>
+      <div class="form-button-mobile">
         <div class="btn-group" aria-describedby="button-text">
           <button type="button" class="btn btn-outline-success dropdown-toggle text-uppercase" data-bs-toggle="dropdown" aria-expanded="false">
             {{buyWith}}
@@ -357,6 +357,10 @@ export default {
   margin-right: 5px;
 }
 
+.div-flex {
+  display: flex;
+}
+
 .fa-chevron-down, .fa-chevron-up {
   margin-left: 10px;
 }
@@ -389,5 +393,16 @@ export default {
 
 .section-small {
   margin-top: 16px;
+}
+
+/* Mobile screens */
+@media screen and (max-width: 600px) {
+  .data-time {
+    margin-right: 0px;
+  }
+
+  .div-flex {
+    display: block;
+  }
 }
 </style>
