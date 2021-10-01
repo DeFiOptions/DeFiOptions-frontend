@@ -112,7 +112,12 @@ export default {
     ...mapGetters("usdc", ["getUsdcAddress", "getUserUsdcBalance", "getUsdcContract"]),
 
     getBreakEvenPrice() {
-      return "$" + Number(Number(this.optionPrice)+Number(this.option.strike)).toFixed(2);
+      if (this.option.symbol.includes("EC")) { // CALL
+        return "$" + Number(Number(this.optionPrice)+Number(this.option.strike)).toFixed(2);
+      } else if (this.option.symbol.includes("EP")) { // PUT
+        return "$" + Number(Number(this.option.strike)-Number(this.optionPrice)).toFixed(2);
+      }
+      return null;
     },
     
     getMaxOptionSize() {
