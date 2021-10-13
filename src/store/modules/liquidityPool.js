@@ -4,12 +4,14 @@ import addresses from "../../contracts/addresses.json";
 const state = {
   abi: null,
   address: null,
-  contract: null,
   apy: null,
-  symbolsListJson: [],
+  contract: null,
   defaultPair: null,
   defaultType: null,
   defaultMaturity: null,
+  poolFreeBalance: null,
+  poolWithdrawalFee: null,
+  symbolsListJson: [],
   userBalance: null,
   userPoolUsdValue: null // USD value of the pool balance
 };
@@ -36,11 +38,17 @@ const getters = {
   getLiquidityPoolContract(state) {
     return state.contract;
   },
-  getSymbolsListJson(state) {
-    return state.symbolsListJson;
+  getLiquidityPoolFreeBalance(state) {
+    return state.poolFreeBalance;
   },
   getLiquidityPoolUserBalance(state) {
     return state.userBalance;
+  },
+  getLiquidityPoolWithdrawalFee(state) {
+    return state.poolWithdrawalFee;
+  },
+  getSymbolsListJson(state) {
+    return state.symbolsListJson;
   },
   getUserPoolUsdValue(state) {
     return state.userPoolUsdValue;
@@ -76,6 +84,31 @@ const actions = {
     let symbolsRaw = await state.contract.methods.listSymbols(operation.BUY).call();
 
     commit("setSymbolsList", {web3, symbolsRaw});
+  },
+  async fetchPoolFreeBalance({ commit, dispatch, rootState }) {
+    if (!state.contract) {
+      dispatch("fetchContract");
+    }
+
+    let freeBalanceWei = await state.contract.methods.calcFreeBalance().call();
+
+    let web3 = rootState.accounts.web3;
+    let balance = web3.utils.fromWei(freeBalanceWei, "ether");
+
+    commit("setPoolFreeBalance", balance);
+  },
+  async fetchPoolWithdrawalFee({ commit, dispatch }) {
+    if (!state.contract) {
+      dispatch("fetchContract");
+    }
+
+    console.log("contract: ");
+    console.log(state.contract);
+
+    let withdrawalFee = await state.contract.methods.withdrawFee().call();
+    console.log("withdrawFee: " + withdrawalFee);
+
+    commit("setPoolWithdrawalFee", withdrawalFee);
   },
   async fetchUserBalance({ commit, dispatch, rootState }) {
     if (!state.contract) {
@@ -134,6 +167,12 @@ const mutations = {
   },
   setDefaultType(state, type) {
     state.defaultType = type;
+  },
+  setPoolFreeBalance(state, balance) {
+    state.poolFreeBalance = balance;
+  },
+  setPoolWithdrawalFee(state, fee) {
+    state.poolWithdrawalFee = fee;
   },
   setUserLiquidityPoolBalance(state, balance) {
     state.userBalance = balance;
