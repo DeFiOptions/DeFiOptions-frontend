@@ -10,6 +10,7 @@ const state = {
   defaultType: null,
   defaultMaturity: null,
   poolFreeBalance: null,
+  poolWithdrawalFee: null,
   symbolsListJson: [],
   userBalance: null,
   userPoolUsdValue: null // USD value of the pool balance
@@ -42,6 +43,9 @@ const getters = {
   },
   getLiquidityPoolUserBalance(state) {
     return state.userBalance;
+  },
+  getLiquidityPoolWithdrawalFee(state) {
+    return state.poolWithdrawalFee;
   },
   getSymbolsListJson(state) {
     return state.symbolsListJson;
@@ -92,6 +96,19 @@ const actions = {
     let balance = web3.utils.fromWei(freeBalanceWei, "ether");
 
     commit("setPoolFreeBalance", balance);
+  },
+  async fetchPoolWithdrawalFee({ commit, dispatch }) {
+    if (!state.contract) {
+      dispatch("fetchContract");
+    }
+
+    console.log("contract: ");
+    console.log(state.contract);
+
+    let withdrawalFee = await state.contract.methods.withdrawFee().call();
+    console.log("withdrawFee: " + withdrawalFee);
+
+    commit("setPoolWithdrawalFee", withdrawalFee);
   },
   async fetchUserBalance({ commit, dispatch, rootState }) {
     if (!state.contract) {
@@ -153,6 +170,9 @@ const mutations = {
   },
   setPoolFreeBalance(state, balance) {
     state.poolFreeBalance = balance;
+  },
+  setPoolWithdrawalFee(state, fee) {
+    state.poolWithdrawalFee = fee;
   },
   setUserLiquidityPoolBalance(state, balance) {
     state.userBalance = balance;

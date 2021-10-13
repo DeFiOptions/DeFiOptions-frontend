@@ -23,9 +23,10 @@
         {{ isWithdrawAmountNotValid.message }} 
         <span>
           Try <a href="#" @click="withdrawAmount = String(maxWithdrawalAmount)">
-            {{Number(maxWithdrawalAmount).toFixed(2)}}
+            {{Number(maxWithdrawalAmount).toFixed(2)}}.
           </a>
         </span>
+        An early withdrawal fee may be taken.
       </div>
 
       <div class="help-text" v-if="!isWithdrawAmountNotValid.status">
@@ -33,7 +34,7 @@
         <a href="#" @click="withdrawAmount = String(getLiquidityPoolUserBalance)">
           {{Number(getLiquidityPoolUserBalance).toFixed(2)}}
         </a> tokens 
-        (worth ${{Number(getUserPoolUsdValue).toFixed(2)}}).
+        (worth ${{Number(getUserPoolUsdValue).toFixed(2)}}). An early withdrawal fee may be taken.
       </div>
 
     </div>
@@ -54,6 +55,7 @@ export default {
   },
 
   computed: {
+    ...mapGetters("accounts", ["getActiveAccount", "getWeb3"]),
     ...mapGetters("liquidityPool", ["getLiquidityPoolContract", "getLiquidityPoolUserBalance", 
                                     "getUserPoolUsdValue", "getLiquidityPoolFreeBalance"]),
 
@@ -91,7 +93,59 @@ export default {
 
   methods: {
     async withdraw() {
-      // TODO
+      let component = this;
+
+      const amountWei = component.getWeb3.utils.toWei(component.withdrawAmount, "ether");
+
+      // make a withdrawal
+      try {
+        await component.getLiquidityPoolContract.methods.withdraw(amountWei).send({
+          from: component.getActiveAccount
+        }, function(error, hash) {
+          component.loading = true;
+
+          // Withdrawal tx error
+          if (error) {
+            component.$toast.error("The transaction has been rejected. Please try again.");
+            component.loading = false;
+          }
+
+          // Withdrawal transaction sent
+          if (hash) {
+            // show a "tx submitted" toast
+            component.$toast.info("The Withdrawal transaction has been submitted. Please wait for it to be confirmed.");
+
+            // listen for the Transfer event
+            component.getLiquidityPoolContract.once("Transfer", {
+              filter: { owner: component.getActiveAccount }
+            }, function(error, event) {
+              component.loading = false;
+              
+              // failed transaction
+              if (error) {
+                component.$toast.error("The Withdrawal transaction has failed. Please try again, perhaps with a higher gas limit.");
+              }
+
+              // success
+              if (event) {
+                component.$toast.success("Your withdrawal was successfull.");
+
+                component.$store.dispatch("optionsExchange/fetchLiquidityPoolBalance");
+                component.$store.dispatch("liquidityPool/fetchUserBalance");
+                component.$store.dispatch("liquidityPool/fetchUserPoolUsdValue");
+                component.$store.dispatch("dai/fetchUserBalance");
+                component.$store.dispatch("usdc/fetchUserBalance");
+
+                component.withdrawAmount = null;
+              }
+            });
+          }
+        });
+      } catch (e) {
+          window.console.log("Error:", e);
+          component.$toast.error("The transaction has been reverted. Please try again or contact project admins.");
+          component.loading = false;
+      }
     }
   }
 }
