@@ -6,6 +6,8 @@
 
     <div class="col-md-9">
       <LpDeposit />
+
+      <LpWithdraw />
     </div>
     
   </div>
@@ -15,12 +17,14 @@
 import { mapGetters } from "vuex";
 import LpData from '../components/invest/LpData.vue';
 import LpDeposit from '../components/invest/LpDeposit.vue';
+import LpWithdraw from '../components/invest/LpWithdraw.vue';
 
 export default {
   name: 'Invest',
   components: { 
     LpData,
-    LpDeposit
+    LpDeposit,
+    LpWithdraw
   },
   computed: {
     ...mapGetters("accounts", ["isUserConnected", "getWeb3"])
@@ -43,6 +47,7 @@ export default {
     this.$store.dispatch("liquidityPool/fetchApy");
     this.$store.dispatch("liquidityPool/storeAddress");
     this.$store.dispatch("liquidityPool/fetchUserPoolUsdValue");
+    this.$store.dispatch("liquidityPool/fetchPoolFreeBalance");
   }
 }
 </script>

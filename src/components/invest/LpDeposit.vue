@@ -81,7 +81,7 @@ export default {
         return {status: true, message: "Please enter a number."};
       }
 
-      // deposit value than balance
+      // deposit value bigger than balance
       if (Number(this.depositValue) > Number(this.getUserStablecoinBalance)) {
         return {status: true, message: "Your " + this.selectedToken + " balance is too low."};
       }
