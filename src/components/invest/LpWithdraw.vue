@@ -26,7 +26,7 @@
             {{Number(maxWithdrawalAmount).toFixed(2)}}.
           </a>
         </span>
-        An early withdrawal fee may be taken.
+        An early withdrawal fee of {{getLiquidityPoolWithdrawalFee}}% may be taken.
       </div>
 
       <div class="help-text" v-if="!isWithdrawAmountNotValid.status">
@@ -34,7 +34,8 @@
         <a href="#" @click="withdrawAmount = String(getLiquidityPoolUserBalance)">
           {{Number(getLiquidityPoolUserBalance).toFixed(2)}}
         </a> tokens 
-        (worth ${{Number(getUserPoolUsdValue).toFixed(2)}}). An early withdrawal fee may be taken.
+        (worth ${{Number(getUserPoolUsdValue).toFixed(2)}}). 
+        An early withdrawal fee of {{getLiquidityPoolWithdrawalFee}}% may be taken.
       </div>
 
     </div>
@@ -57,7 +58,8 @@ export default {
   computed: {
     ...mapGetters("accounts", ["getActiveAccount", "getWeb3"]),
     ...mapGetters("liquidityPool", ["getLiquidityPoolContract", "getLiquidityPoolUserBalance", 
-                                    "getUserPoolUsdValue", "getLiquidityPoolFreeBalance"]),
+                                    "getUserPoolUsdValue", "getLiquidityPoolFreeBalance",
+                                    "getLiquidityPoolWithdrawalFee"]),
 
     isWithdrawAmountNotValid() { // validation for withdrawal amount
       // negative number

@@ -85,7 +85,7 @@ const actions = {
 
     commit("setSymbolsList", {web3, symbolsRaw});
   },
-  async fetchPoolFreeBalance({ commit, dispatch, rootState }) {
+  async fetchPoolFreeBalance({ commit, dispatch, state, rootState }) {
     if (!state.contract) {
       dispatch("fetchContract");
     }
@@ -97,20 +97,39 @@ const actions = {
 
     commit("setPoolFreeBalance", balance);
   },
-  async fetchPoolWithdrawalFee({ commit, dispatch }) {
+  async fetchPoolWithdrawalFee({ commit, dispatch, state }) {
     if (!state.contract) {
       dispatch("fetchContract");
     }
 
-    console.log("contract: ");
-    console.log(state.contract);
+    /*
+    Make sure to manually add this code in the LinearLiquidityPool.json ABI:
 
-    let withdrawalFee = await state.contract.methods.withdrawFee().call();
-    console.log("withdrawFee: " + withdrawalFee);
+    {
+      "inputs": [],
+      "name": "withdrawFee",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
 
-    commit("setPoolWithdrawalFee", withdrawalFee);
+    This is the only way to access a public variable as a method using the web3 library.
+    */
+
+    const withdrawalFeeBig = await state.contract.methods.withdrawFee().call();
+
+    const wFeeSmall = Number(withdrawalFeeBig) / 1000000000; // divide to remove 9 decimal places
+    const wFeePercentage = wFeeSmall * 100; // the result is percentage
+
+    commit("setPoolWithdrawalFee", wFeePercentage);
   },
-  async fetchUserBalance({ commit, dispatch, rootState }) {
+  async fetchUserBalance({ commit, dispatch, state, rootState }) {
     if (!state.contract) {
       dispatch("fetchContract");
     }
@@ -123,7 +142,7 @@ const actions = {
 
     commit("setUserLiquidityPoolBalance", balance);
   },
-  async fetchUserPoolUsdValue({ commit, dispatch, rootState }) {
+  async fetchUserPoolUsdValue({ commit, dispatch, state, rootState }) {
     if (!state.contract) {
       dispatch("fetchContract");
     }
