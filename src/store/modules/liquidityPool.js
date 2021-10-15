@@ -60,6 +60,24 @@ const actions = {
     let web3 = rootState.accounts.web3;
     let chainIdDec = parseInt(rootState.accounts.chainId);
     let address = addresses.LinearLiquidityPool[chainIdDec];
+
+    // add withdrawFee as a method into ABI 
+    // (withdrawFee is a public variable which means it automatically gets a getter method, but for some reason
+    // web3 library cannot find it, so it has to be added "manually" into the ABI with the code below)
+    LiquidityPool.abi.push({
+      "inputs": [],
+      "name": "withdrawFee",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    });
+
     let contract = new web3.eth.Contract(LiquidityPool.abi, address);
     commit("setContract", contract);
   },
@@ -101,26 +119,6 @@ const actions = {
     if (!state.contract) {
       dispatch("fetchContract");
     }
-
-    /*
-    Make sure to manually add this code in the LinearLiquidityPool.json ABI:
-
-    {
-      "inputs": [],
-      "name": "withdrawFee",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-
-    This is the only way to access a public variable as a method using the web3 library.
-    */
 
     const withdrawalFeeBig = await state.contract.methods.withdrawFee().call();
 
