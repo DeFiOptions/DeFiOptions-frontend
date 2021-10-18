@@ -26,7 +26,7 @@
             {{Number(maxWithdrawalAmount).toFixed(2)}}.
           </a>
         </span>
-        An early withdrawal fee of {{getLiquidityPoolWithdrawalFee}}% may be taken.
+        An early withdrawal fee of {{getLiquidityPoolWithdrawalFee}}% will be taken.
       </div>
 
       <div class="help-text" v-if="!isWithdrawAmountNotValid.status">
@@ -35,7 +35,7 @@
           {{Number(getLiquidityPoolUserBalance).toFixed(2)}}
         </a> tokens 
         (worth ${{Number(getUserPoolUsdValue).toFixed(2)}}). 
-        An early withdrawal fee of {{getLiquidityPoolWithdrawalFee}}% may be taken.
+        An early withdrawal fee of {{getLiquidityPoolWithdrawalFee}}% will be taken.
       </div>
 
     </div>
