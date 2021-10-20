@@ -7,6 +7,7 @@ const state = {
   contract: null,
   poolBalance: null,
   userBalance: null,
+  userExchangeBalanceAllowance: null,
   userOptions: null,
   underlyingPrice: null
 };
@@ -31,6 +32,9 @@ const getters = {
     // underlying price for the currently selected pair/symbol
     return state.underlyingPrice;
   },
+  getUserExchangeBalanceAllowance(state) {
+    return state.userExchangeBalanceAllowance;
+  },
   getUserOptions(state) {
     return state.userOptions;
   }
@@ -43,6 +47,23 @@ const actions = {
     let address = addresses.OptionsExchange[chainIdDec];
     let contract = new web3.eth.Contract(OptionsExchange.abi, address);
     commit("setContract", contract);
+  },
+  async fetchExchangeBalanceAllowance({ commit, dispatch, state, rootState }) {
+    if (!state.contract) {
+      dispatch("fetchContract");
+    }
+
+    let chainIdDec = parseInt(rootState.accounts.chainId);
+    let spender = addresses["LinearLiquidityPool"][chainIdDec];
+    let owner = rootState.accounts.activeAccount;
+
+    // check user's Exchange Balance allowance for the Liquidity Pool contract
+    let allowanceWei = await state.contract.methods.allowance(owner, spender).call();
+
+    let web3 = rootState.accounts.web3;
+    let allowance = web3.utils.fromWei(allowanceWei, "ether");
+
+    commit("setExchangeBalanceAllowance", allowance);
   },
   async fetchExchangeUserBalance({ commit, dispatch, state, rootState }) {
     if (!state.contract) {
@@ -159,6 +180,9 @@ const mutations = {
   },
   setLiquidityPoolBalance(state, balance) {
     state.poolBalance = balance;
+  },
+  setExchangeBalanceAllowance(state, allowance) {
+    state.userExchangeBalanceAllowance = allowance;
   },
   setUserExchangeBalance(state, balance) {
     state.userBalance = balance;

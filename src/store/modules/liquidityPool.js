@@ -61,23 +61,6 @@ const actions = {
     let chainIdDec = parseInt(rootState.accounts.chainId);
     let address = addresses.LinearLiquidityPool[chainIdDec];
 
-    // add withdrawFee as a method into ABI 
-    // (withdrawFee is a public variable which means it automatically gets a getter method, but for some reason
-    // web3 library cannot find it, so it has to be added "manually" into the ABI with the code below)
-    LiquidityPool.abi.push({
-      "inputs": [],
-      "name": "withdrawFee",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    });
-
     let contract = new web3.eth.Contract(LiquidityPool.abi, address);
     commit("setContract", contract);
   },

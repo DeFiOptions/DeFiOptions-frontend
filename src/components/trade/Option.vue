@@ -67,10 +67,19 @@
     </div>
 
     <div class="row mt-3">
-      <button @click="buyOption" class="btn btn-success form-control" :disabled="isOptionSizeNotValid.status">
+      <button v-if="!allowanceNeeded" @click="buyOption" class="btn btn-success form-control" :disabled="isOptionSizeNotValid.status">
         <span v-if="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
         Buy for ${{getTotal.toFixed(2)}}
       </button>
+
+      <button v-if="allowanceNeeded" @click="approveAllowance" class="btn btn-success form-control" :disabled="isOptionSizeNotValid.status">
+        <span v-if="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+        Approve {{buyWith}} for ${{getTotal.toFixed(2)}}
+      </button>
+
+      <small v-if="allowanceNeeded" class="show-text form-text text-center">
+        You'll need to do 2 transactions: approve & buy.
+      </small>
     </div>
   </div>
   
@@ -108,8 +117,29 @@ export default {
     ...mapGetters("accounts", ["getActiveAccount", "getWeb3"]),
     ...mapGetters("liquidityPool", ["getLiquidityPoolContract", "getLiquidityPoolAddress"]),
     ...mapGetters("dai", ["getDaiAddress", "getUserDaiBalance", "getDaiContract"]),
-    ...mapGetters("optionsExchange", ["getOptionsExchangeAddress", "getExchangeUserBalance"]),
+    ...mapGetters("optionsExchange", ["getOptionsExchangeAddress", "getOptionsExchangeContract", "getExchangeUserBalance", "getUserExchangeBalanceAllowance"]),
     ...mapGetters("usdc", ["getUsdcAddress", "getUserUsdcBalance", "getUsdcContract"]),
+
+    allowanceNeeded() {
+      if (this.buyWith === "DAI") {
+        return false; // allowance tx not needed due to permit()
+
+      } else if (this.buyWith === "USDC") {
+        return false; // allowance tx not needed due to permit()
+
+      } else if (this.buyWith === "USDT") { // Tether
+        return true;
+
+      } else if (this.buyWith === "Exchange Balance") {
+        if (this.getUserExchangeBalanceAllowance < this.getTotal) {
+          return true;
+        } else {
+          return false;
+        }
+      } 
+
+      return false;
+    },
 
     getBreakEvenPrice() {
       if (this.option.symbol.includes("EC")) { // CALL
@@ -203,19 +233,76 @@ export default {
   },
 
   methods: {
+    async approveAllowance() {
+      let component = this;
+
+      // define max buy value (and unit)
+      let unit = "ether"; // Exchange Balance - 18 decimals
+      if (component.buyWith === "USDT") {
+        unit = "kwei"; // USDT (Tether) - 4 decimals
+      }
+
+      const allowanceValue = component.getTotal * 1.01; // make it 1% bigger to avoid rounding errors
+      const allowanceValueWei = component.getWeb3.utils.toWei(String(allowanceValue.toFixed(4)), unit); // round to 4 decimals
+
+      // call the approve method in OptionsExchange
+      try {
+        await component.getOptionsExchangeContract.methods.approve(component.getLiquidityPoolAddress, allowanceValueWei).send({
+          from: component.getActiveAccount
+        }, function(error, hash) {
+          component.loading = true;
+
+          // Withdrawal tx error
+          if (error) {
+            component.$toast.error("The transaction has been rejected. Please try again.");
+            component.loading = false;
+          }
+
+          // Withdrawal transaction sent
+          if (hash) {
+            // show a "tx submitted" toast
+            component.$toast.info("The Approval transaction has been submitted. Please wait for it to be confirmed.");
+
+            // listen for the Transfer event
+            component.getOptionsExchangeContract.once("Approval", {
+              filter: { owner: component.getActiveAccount }
+            }, function(error, event) {
+              component.loading = false;
+              
+              // failed transaction
+              if (error) {
+                component.$toast.error("The Approval transaction has failed. Please try again, perhaps with a higher gas limit.");
+              }
+
+              // success
+              if (event) {
+                component.$toast.success("The approval was successfull. Now you can buy the option.");
+
+                component.$store.dispatch("optionsExchange/fetchExchangeBalanceAllowance");
+              }
+            });
+          }
+        });
+      } catch (e) {
+          window.console.log("Error:", e);
+          component.$toast.error("The transaction has been reverted. Please try again or contact project admins.");
+          component.loading = false;
+      }
+
+    },
     async buyOption() {
       let component = this;
 
       let optionSizeWei = component.getWeb3.utils.toWei(String(component.selectedOptionSize), "ether");
       let optionUnitPrice = component.getWeb3.utils.toWei(String(component.optionPrice), "ether");
       
-      // define max value (and unit)
-      let unit = "ether"; // DAI
+      // define max buy value (and unit)
+      let unit = "ether"; // DAI - 18 decimals
       if (component.buyWith === "USDC") {
-        unit = "mwei"; // USDC
+        unit = "mwei"; // USDC - 6 decimals
       }
 
-      let maxValue = component.getWeb3.utils.toWei(String(component.getTotal.toFixed(4)), unit); // round to 4 decimals
+      let buyValue = component.getWeb3.utils.toWei(String(component.getTotal.toFixed(4)), unit); // round to 4 decimals
 
       let buyObj;
 
@@ -234,7 +321,7 @@ export default {
           component.getStablecoinAddress, 
           component.getActiveAccount, 
           component.getLiquidityPoolAddress, 
-          maxValue
+          buyValue
         );
 
         buyObj = component.getLiquidityPoolContract.methods.buy(
@@ -242,7 +329,7 @@ export default {
           optionUnitPrice, // price per one option
           optionSizeWei, // volume a.k.a. user's selected option size
           component.getStablecoinAddress, // selected stablecoin
-          maxValue, // maxValue
+          buyValue, // buyValue
           result.deadline,
           result.v,
           result.r,
