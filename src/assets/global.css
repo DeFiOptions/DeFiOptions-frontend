@@ -131,6 +131,24 @@ h3 {
   background: #105685;
 }
 
+.hero-title {
+  font-weight: 400;
+  font-size: 60px;
+  color: #FFFFFF;
+}
+
+.mr-10-px {
+  margin-right: 10px;
+}
+
+.ml-10-px {
+  margin-left: 10px;
+}
+
+.ml-40-px {
+  margin-left: 40px;
+}
+
 .navbar {
   min-height: 40px;
   margin-top: 30px;
@@ -169,6 +187,24 @@ h3 {
   color: #5AFFB0;
 }
 
+.peckshield-banner {
+  margin-top: 50px;
+  padding: 40px;
+  background: linear-gradient(181.09deg, #105685 20.74%, #0B1448 99.52%);
+  border-radius: 8px;
+  width: 70%;
+}
+
+.peckshield-image {
+  max-height: 200px;
+}
+
+.peckshield-title {
+  font-size: 32px;
+  font-weight: 400;
+  color: #5AFFB0;
+}
+
 .primary-color {
   color: #5AFFB0;
 }
@@ -192,6 +228,38 @@ h3 {
 }
 
 /* Mobile screens */
+
+/* iPhone SE */
+@media screen and (max-width: 320px) {
+  .hero-title {
+    font-size: 45px;
+  }
+
+  .btn-success {
+    background-color: #5AFFB0;
+    border-color: #5AFFB0;
+    padding-left: 35px;
+    padding-right: 35px;
+    color: #00072D;
+    font-weight: 500;
+  }
+  
+  .btn-outline-success {
+    color: #5AFFB0;
+    border-color: #5AFFB0;
+    padding-left: 35px;
+    padding-right: 35px;
+    font-weight: 500;
+  }
+}
+
+/* iPhone 8 */
+@media screen and (max-width: 375px) {
+  .hero-title {
+    font-size: 50px;
+  }
+}
+
 @media screen and (max-width: 600px) {
   .btn-success, .btn-success:focus, .btn-success:visited, .btn-success:disabled, .btn-outline-success {
     padding-left: 15px;
@@ -202,7 +270,51 @@ h3 {
     margin-top: 20px;
   }
 
+  .peckshield-banner {
+    margin-top: 10px;
+    padding: 20px;
+  }
+
+  .peckshield-text {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 11px;
+  }
+
+  .peckshield-title {
+    font-size: 24px;
+    font-weight: 400;
+    color: #5AFFB0;
+    text-align: center;
+  }
+
+  .peckshield-description {
+    margin-top: 15px;
+    font-size: 14px;
+    font-weight: 300;
+    text-align: center;
+  }
+
   .section-big {
     padding: 15px;
+  }
+}
+
+@media (min-width: 770px) {
+  .divider-left {
+    position: relative;
+  }
+  
+  .divider-left:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 1px;
+    height: 100%;
+    background: rgb(32, 164, 221);
+    background: -webkit-linear-gradient(top, rgba(32, 164, 221, 0) 0%, #5AFFB0 48.96%, rgba(32, 164, 221, 0) 100%);
+    background: linear-gradient(to bottom, rgba(32, 164, 221, 0) 0%, #5AFFB0 48.96%, rgba(32, 164, 221, 0) 100%);
   }
 }

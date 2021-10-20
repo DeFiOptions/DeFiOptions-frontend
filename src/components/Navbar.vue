@@ -45,6 +45,35 @@
           </li>
         </ul>
 
+        <ul class="navbar-nav ms-auto mb-2 mb-lg-0 text-uppercase mx-5" v-if="!isUserConnected">
+          <li class="nav-item">
+            <a class="nav-link primary-color" aria-current="page" target="_blank" href="https://docs.defioptions.org/">Docs</a>
+          </li>
+
+          <li class="nav-item ml-40-px dropdown">
+              <a class="nav-link dropdown-toggle primary-color" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                Community
+              </a>
+              <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                <li><a class="dropdown-item" target="_blank" href="https://discord.gg/WCeKgHNz3z">
+                  <i class="fab fa-discord"></i> Discord
+                </a></li>
+                <li><a class="dropdown-item" target="_blank" href="https://github.com/DeFiOptions">
+                  <i class="fab fa-github"></i> GitHub
+                </a></li>
+                <li><a class="dropdown-item" target="_blank" href="https://reddit.com/r/DeFiOptionsDAO/">
+                  <i class="fab fa-reddit"></i> Reddit
+                </a></li>
+                <li><a class="dropdown-item" target="_blank" href="https://t.me/DeFiOptionsDiscussions">
+                  <i class="fab fa-telegram"></i> Telegram
+                </a></li>
+                <li><a class="dropdown-item" target="_blank" href="https://twitter.com/DeFiOptionsDAO">
+                  <i class="fab fa-twitter"></i> Twitter
+                </a></li>
+              </ul>
+            </li>
+        </ul>
+
         <div class="d-flex flex-wrap">
           <button class="btn btn-success mx-1 mb-2" v-if="isUserConnected && getChainName">{{ getChainName }}</button>
           <button class="btn btn-danger mx-1 mb-2" v-if="isUserConnected && !getChainName">Wrong network</button>
@@ -81,10 +110,18 @@ export default {
 </script>
 
 <style scoped>
+.ml-40-px {
+  margin-left: 40px;
+}
+
 /* Mobile screens */
 @media screen and (max-width: 1200px) {
   #navbarSupportedContent {
     margin-top: 10px;
+  }
+
+  .ml-40-px {
+    margin-left: 0px;
   }
 }
 </style>
