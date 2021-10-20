@@ -249,37 +249,33 @@
         </div>
       </div>
 
-      <ul class="nav justify-content-center pb-3 mb-3">
+      <ul class="nav pb-3 mb-3 row">
 
-        <li class="nav-item">
+        <li class="nav-item col mt-4">
           <a href="https://discord.gg/WCeKgHNz3z" target="_blank" class="btn btn-social">
             <i class="fab fa-discord"></i>
           </a>
         </li>
 
-        <li class="nav-item ml-40-px">
+        <li class="nav-item col mt-4">
           <a href="https://twitter.com/DeFiOptionsDAO" target="_blank" class="btn btn-social">
             <i class="fab fa-twitter"></i>
           </a>
         </li>
 
-        <li class="nav-item ml-40-px">
+        <li class="nav-item col mt-4">
           <a href="https://www.reddit.com/r/DeFiOptionsDAO/" target="_blank" class="btn btn-social">
             <i class="fab fa-reddit"></i>
           </a>
         </li>
 
-      </ul>
-
-      <ul class="nav justify-content-center pb-3 mb-5">
-
-        <li class="nav-item">
+        <li class="nav-item col mt-4">
           <a href="https://github.com/DeFiOptions" target="_blank" class="btn btn-social">
             <i class="fab fa-github"></i>
           </a>
         </li>
 
-        <li class="nav-item ml-40-px">
+        <li class="nav-item col mt-4">
           <a href="https://t.me/DeFiOptionsDiscussions" target="_blank" class="btn btn-social">
             <i class="fab fa-telegram"></i>
           </a>
