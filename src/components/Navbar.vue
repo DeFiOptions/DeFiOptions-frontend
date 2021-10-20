@@ -64,7 +64,7 @@ import { mapGetters, mapActions } from "vuex";
 export default {
   name: "Navbar",
   computed: {
-    ...mapGetters("accounts", ["getActiveAccount", "getChainName", "isUserConnected", "getWeb3Modal", "isCurrentChainSupported", "getSupportedChains"]),
+    ...mapGetters("accounts", ["getActiveAccount", "getChainName", "isUserConnected", "getWeb3Modal", "getSupportedChains"]),
 
     getSupportedChainsString() {
       return String(this.getSupportedChains).replace("[", "").replace("]", "").replace(",", ", ");
