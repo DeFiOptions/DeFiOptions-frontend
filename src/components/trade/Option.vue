@@ -78,7 +78,7 @@
       </button>
 
       <small v-if="allowanceNeeded" class="show-text form-text text-center">
-        You'll need to do 2 transactions: approve & buy.
+        You'll need to make 2 transactions: approve & buy.
       </small>
     </div>
   </div>
@@ -236,34 +236,37 @@ export default {
     async approveAllowance() {
       let component = this;
 
-      // define max buy value (and unit)
+      // define unit and token contract
       let unit = "ether"; // Exchange Balance - 18 decimals
+      let tokenContract = component.getOptionsExchangeContract; // Exchange Balance contract
       if (component.buyWith === "USDT") {
         unit = "kwei"; // USDT (Tether) - 4 decimals
+        // TODO: tokenContract = ...; // USDT contract
       }
 
+      // define allowance value
       const allowanceValue = component.getTotal * 1.01; // make it 1% bigger to avoid rounding errors
       const allowanceValueWei = component.getWeb3.utils.toWei(String(allowanceValue.toFixed(4)), unit); // round to 4 decimals
 
-      // call the approve method in OptionsExchange
+      // call the approve method
       try {
-        await component.getOptionsExchangeContract.methods.approve(component.getLiquidityPoolAddress, allowanceValueWei).send({
+        await tokenContract.methods.approve(component.getLiquidityPoolAddress, allowanceValueWei).send({
           from: component.getActiveAccount
         }, function(error, hash) {
           component.loading = true;
 
-          // Withdrawal tx error
+          // Approval tx error
           if (error) {
             component.$toast.error("The transaction has been rejected. Please try again.");
             component.loading = false;
           }
 
-          // Withdrawal transaction sent
+          // Approval transaction sent
           if (hash) {
             // show a "tx submitted" toast
             component.$toast.info("The Approval transaction has been submitted. Please wait for it to be confirmed.");
 
-            // listen for the Transfer event
+            // listen for the Approval event
             component.getOptionsExchangeContract.once("Approval", {
               filter: { owner: component.getActiveAccount }
             }, function(error, event) {
@@ -307,7 +310,7 @@ export default {
       let buyObj;
 
       if (component.buyWith === "Exchange Balance") {
-        // buy with exchange balance (no permit needed)
+        // buy with exchange balance (allowance needs to be given before)
         buyObj = component.getLiquidityPoolContract.methods.buy(
           this.option.symbol, // symbol
           optionUnitPrice, // price per one option
