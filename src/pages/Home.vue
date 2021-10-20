@@ -23,7 +23,7 @@
         </router-link>
 
         <router-link to="/invest" style="text-decoration: none">
-          <a class="btn btn-outline-success m-1" href="/invest">Liquidity Pool</a>
+          <a class="btn btn-success m-1" href="/invest">Liquidity Pool</a>
         </router-link>
 
         <router-link to="/portfolio" style="text-decoration: none">

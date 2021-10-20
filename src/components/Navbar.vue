@@ -40,8 +40,37 @@
           </router-link>
           <!-- END Nav Item - Liquidity pool -->
 
-          <li class="nav-item" v-if="isUserConnected">
-            <a class="nav-link disabled" href="#">Governance</a>
+          <li class="nav-item dropdown" v-if="isUserConnected">
+            <a class="nav-link dropdown-toggle primary-color" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              More
+            </a>
+            <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+              <li>
+                <a class="dropdown-item disabled" aria-current="page" target="_blank" href="#">
+                  <i class="fas fa-landmark"></i> Governance
+                </a>
+              </li>
+              <li>
+                <a class="dropdown-item" aria-current="page" target="_blank" href="https://docs.defioptions.org/">
+                  <i class="fas fa-book"></i> Docs
+                </a>
+              </li>
+              <li><a class="dropdown-item" target="_blank" href="https://discord.gg/WCeKgHNz3z">
+                <i class="fab fa-discord"></i> Discord
+              </a></li>
+              <li><a class="dropdown-item" target="_blank" href="https://github.com/DeFiOptions">
+                <i class="fab fa-github"></i> GitHub
+              </a></li>
+              <li><a class="dropdown-item" target="_blank" href="https://reddit.com/r/DeFiOptionsDAO/">
+                <i class="fab fa-reddit"></i> Reddit
+              </a></li>
+              <li><a class="dropdown-item" target="_blank" href="https://t.me/DeFiOptionsDiscussions">
+                <i class="fab fa-telegram"></i> Telegram
+              </a></li>
+              <li><a class="dropdown-item" target="_blank" href="https://twitter.com/DeFiOptionsDAO">
+                <i class="fab fa-twitter"></i> Twitter
+              </a></li>
+            </ul>
           </li>
         </ul>
 
@@ -51,27 +80,27 @@
           </li>
 
           <li class="nav-item ml-40-px dropdown">
-              <a class="nav-link dropdown-toggle primary-color" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                Community
-              </a>
-              <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                <li><a class="dropdown-item" target="_blank" href="https://discord.gg/WCeKgHNz3z">
-                  <i class="fab fa-discord"></i> Discord
-                </a></li>
-                <li><a class="dropdown-item" target="_blank" href="https://github.com/DeFiOptions">
-                  <i class="fab fa-github"></i> GitHub
-                </a></li>
-                <li><a class="dropdown-item" target="_blank" href="https://reddit.com/r/DeFiOptionsDAO/">
-                  <i class="fab fa-reddit"></i> Reddit
-                </a></li>
-                <li><a class="dropdown-item" target="_blank" href="https://t.me/DeFiOptionsDiscussions">
-                  <i class="fab fa-telegram"></i> Telegram
-                </a></li>
-                <li><a class="dropdown-item" target="_blank" href="https://twitter.com/DeFiOptionsDAO">
-                  <i class="fab fa-twitter"></i> Twitter
-                </a></li>
-              </ul>
-            </li>
+            <a class="nav-link dropdown-toggle primary-color" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              Community
+            </a>
+            <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+              <li><a class="dropdown-item" target="_blank" href="https://discord.gg/WCeKgHNz3z">
+                <i class="fab fa-discord"></i> Discord
+              </a></li>
+              <li><a class="dropdown-item" target="_blank" href="https://github.com/DeFiOptions">
+                <i class="fab fa-github"></i> GitHub
+              </a></li>
+              <li><a class="dropdown-item" target="_blank" href="https://reddit.com/r/DeFiOptionsDAO/">
+                <i class="fab fa-reddit"></i> Reddit
+              </a></li>
+              <li><a class="dropdown-item" target="_blank" href="https://t.me/DeFiOptionsDiscussions">
+                <i class="fab fa-telegram"></i> Telegram
+              </a></li>
+              <li><a class="dropdown-item" target="_blank" href="https://twitter.com/DeFiOptionsDAO">
+                <i class="fab fa-twitter"></i> Twitter
+              </a></li>
+            </ul>
+          </li>
         </ul>
 
         <div class="d-flex flex-wrap">
