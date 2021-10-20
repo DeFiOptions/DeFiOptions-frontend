@@ -108,6 +108,7 @@ export default {
     this.$store.dispatch("optionsExchange/fetchContract");
     this.$store.dispatch("optionsExchange/storeAddress");
     this.$store.dispatch("optionsExchange/fetchExchangeUserBalance");
+    this.$store.dispatch("optionsExchange/fetchExchangeBalanceAllowance");
     this.$store.dispatch("liquidityPool/fetchContract");
     this.$store.dispatch("liquidityPool/fetchSymbolsList");
     this.$store.dispatch("liquidityPool/storeAddress");
