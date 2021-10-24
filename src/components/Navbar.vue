@@ -46,7 +46,7 @@
             </a>
             <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
               <li>
-                <a class="dropdown-item disabled" aria-current="page" target="_blank" href="#">
+                <a class="dropdown-item" aria-current="page" target="_blank" href="https://snapshot.org/#/defioptionsdao.eth">
                   <i class="fas fa-landmark"></i> Governance
                 </a>
               </li>
@@ -84,6 +84,9 @@
               Community
             </a>
             <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+              <li><a class="dropdown-item" target="_blank" href="https://snapshot.org/#/defioptionsdao.eth">
+                <i class="fas fa-landmark"></i> Governance
+              </a></li>
               <li><a class="dropdown-item" target="_blank" href="https://discord.gg/WCeKgHNz3z">
                 <i class="fab fa-discord"></i> Discord
               </a></li>
