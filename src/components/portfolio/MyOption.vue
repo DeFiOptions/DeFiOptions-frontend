@@ -8,6 +8,7 @@
     <div class="div-flex justify-content-center">
       <OptionDataItem class="data-item" title="Option" :data="option.pair+' · ' + option.type" :divider="true" />
       <OptionDataItem class="data-item" title="Option size" :data="option.holding" :divider="true" />
+      <OptionDataItem class="data-item" title="Strike" :data="strikePrice" :divider="true" />
       <OptionDataItem class="data-item" title="Expiration" :data="option.maturity" :divider="true" />
       <OptionDataItem class="data-item" title="Intrinsic value" :green="true" :data="'$'+intrinsicValue" />
     </div>
@@ -139,6 +140,9 @@ export default {
       }
 
       return {status: false, message: "Valid option size"};
+    },
+    strikePrice() {
+      return "$"+Number(this.option.strike).toFixed(0);
     }
   },
 
