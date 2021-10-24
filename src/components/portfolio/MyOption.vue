@@ -149,6 +149,7 @@ export default {
 
     async redeemOption() {
       let component = this;
+      component.loading = true;
 
       // get option contract
       let optionContract = new this.getWeb3.eth.Contract(OptionTokenContractJson.abi, this.option.address);
@@ -161,8 +162,6 @@ export default {
           from: component.getActiveAccount,
           gas: Number(150000)
         }, function(error, hash) {
-          component.loading = true;
-
           // transaction error
           if (error) {
             component.$toast.error("The transaction has been rejected. Please try again.");
@@ -203,6 +202,7 @@ export default {
 
     async sellOption() {
       let component = this;
+      component.loading = true;
 
       this.setSellData(component.option); // fetch price again to avoid errors 
 
@@ -234,8 +234,6 @@ export default {
         ).send({
           from: component.getActiveAccount
         }, function(error, hash) {
-          component.loading = true;
-
           // transaction error
           if (error) {
             component.$toast.error("The transaction has been rejected. Please try again.");

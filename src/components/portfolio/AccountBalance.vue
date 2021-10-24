@@ -21,7 +21,10 @@
         </div>
 
         <div class="form-button-mobile">
-          <button @click="withdrawBalance" class="btn btn-success btn-user btn-block text-uppercase form-control">Withdraw</button>
+          <button @click="withdrawBalance" class="btn btn-success btn-user btn-block text-uppercase form-control">
+            <span v-if="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+            Withdraw
+          </button>
           <div></div>
         </div>
         
@@ -46,13 +49,16 @@ export default {
 
   data() {
     return {
-      withdrawValue: null
+      withdrawValue: null,
+      loading: false
     }
   },
 
   methods: {
     async withdrawBalance() {
       let component = this;
+      component.loading = true;
+
       let tokensWei = this.getWeb3.utils.toWei(this.withdrawValue, "ether");
 
       await this.getOptionsExchangeContract.methods.withdrawTokens(tokensWei).send({
@@ -62,6 +68,7 @@ export default {
           component.$toast.error("The transaction has been rejected. Please try again.", {
               timeout: 5000
           });
+          component.loading = false;
         }
 
         if (hash) {
@@ -91,6 +98,8 @@ export default {
 
             // Refresh the exchange balance no matter if the tx was successful or not
             component.$store.dispatch("optionsExchange/fetchExchangeUserBalance");
+
+            component.loading = false;
           });
         }
       });

@@ -235,6 +235,7 @@ export default {
   methods: {
     async approveAllowance() {
       let component = this;
+      component.loading = true;
 
       // define unit and token contract
       let unit = "ether"; // Exchange Balance - 18 decimals
@@ -253,8 +254,6 @@ export default {
         await tokenContract.methods.approve(component.getLiquidityPoolAddress, allowanceValueWei).send({
           from: component.getActiveAccount
         }, function(error, hash) {
-          component.loading = true;
-
           // Approval tx error
           if (error) {
             component.$toast.error("The transaction has been rejected. Please try again.");
@@ -295,6 +294,7 @@ export default {
     },
     async buyOption() {
       let component = this;
+      component.loading = true;
 
       let optionSizeWei = component.getWeb3.utils.toWei(String(component.selectedOptionSize), "ether");
       let optionUnitPrice = component.getWeb3.utils.toWei(String(component.optionPrice), "ether");
@@ -345,8 +345,6 @@ export default {
         await buyObj.send({
           from: component.getActiveAccount
         }, function(error, hash) {
-          component.loading = true;
-
           // Deposit tx error
           if (error) {
             component.$toast.error("The transaction has been rejected. Please try again.");

@@ -227,6 +227,24 @@ h3 {
   border-radius: 4px;
 }
 
+/* Vue Toastification */
+.Vue-Toastification__toast--info {
+  background-color: #00072D;
+  border: 2px solid #105685;
+}
+
+.Vue-Toastification__toast--success {
+  background-color: #5AFFB0;
+  border: 2px solid #105685;
+  color: #00072D;
+}
+
+.Vue-Toastification__toast--error {
+  background-color: #dc3545;
+  border: 2px solid #105685;
+  color: #00072D;
+}
+
 /* Mobile screens */
 
 /* iPhone SE */

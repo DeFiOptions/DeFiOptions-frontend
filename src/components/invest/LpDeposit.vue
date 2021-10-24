@@ -120,6 +120,7 @@ export default {
     },
     async depositIntoPool() {
       let component = this;
+      component.loading = true;
 
       let unit = "ether"; // DAI
       if (component.selectedToken === "USDC") {
@@ -149,8 +150,6 @@ export default {
         ).send({
           from: component.getActiveAccount
         }, function(error, hash) {
-          component.loading = true;
-
           // Deposit tx error
           if (error) {
             component.$toast.error("The transaction has been rejected. Please try again.");

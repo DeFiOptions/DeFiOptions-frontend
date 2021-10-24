@@ -96,6 +96,7 @@ export default {
   methods: {
     async withdraw() {
       let component = this;
+      component.loading = true;
 
       const amountWei = component.getWeb3.utils.toWei(component.withdrawAmount, "ether");
 
@@ -104,8 +105,6 @@ export default {
         await component.getLiquidityPoolContract.methods.withdraw(amountWei).send({
           from: component.getActiveAccount
         }, function(error, hash) {
-          component.loading = true;
-
           // Withdrawal tx error
           if (error) {
             component.$toast.error("The transaction has been rejected. Please try again.");

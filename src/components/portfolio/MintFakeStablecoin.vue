@@ -62,13 +62,12 @@ export default {
   methods: {
     async getDai() {
       let component = this;
+      component.daiLoading = true;
       let tokensWei = this.getWeb3.utils.toWei(this.daiValue, "ether");
 
       await this.getDaiContract.methods.issue(this.getActiveAccount, tokensWei).send({
         from: this.getActiveAccount
       }, function(error, hash) {
-        component.daiLoading = true;
-
         if (error) {
           component.daiLoading = false;
 
@@ -109,14 +108,14 @@ export default {
     },
     async getUsdc() {
       let component = this;
+      component.usdcLoading = true;
+
       // mwei because USDC has 6 decimals
       let tokensWei = this.getWeb3.utils.toWei(this.usdcValue, "mwei");
 
       await this.getUsdcContract.methods.issue(this.getActiveAccount, tokensWei).send({
         from: this.getActiveAccount
       }, function(error, hash) {
-        component.usdcLoading = true;
-
         if (error) {
           component.usdcLoading = false;
 
