@@ -23,7 +23,11 @@
         </div>
 
         <div class="deposit-button form-button-mobile">
-          <button @click="depositIntoPool" class="btn btn-success btn-user btn-block text-uppercase form-control">
+          <button 
+            class="btn btn-success btn-user btn-block text-uppercase form-control" 
+            data-bs-toggle="modal" data-bs-target="#depositModal"
+            :disabled="isDepositValueNotValid.status || Number(this.depositValue) === 0"
+          >
             <span v-if="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
             Deposit
           </button>
@@ -48,6 +52,38 @@
           {{ Math.floor(Number(this.getUserStablecoinBalance*1000))/1000 }}
         </a> {{selectedToken}}.
       </div>
+    
+      <!-- Deposit Confirmation Modal -->
+      <div class="modal fade" id="depositModal" tabindex="-1" aria-labelledby="depositModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="depositModalLabel">Deposit Confirmation</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              By making a deposit you confirm being aware that:
+
+              <ul>
+                <li>Deposits are held by the liquidity pool until its maturity date.</li>
+                <li>Depositors receive pool tokens proportionally to the amount of funds deposited</li>
+                <li>Upon maturity, each depositor is able to redeem their share of the pool's stablecoin balance free of any charge.</li>
+                <li>Early withdrawal of funds is possible, but the Early Withdrawal Fee of {{getLiquidityPoolWithdrawalFee}}% is charged in that case.</li>
+                <li>The Early Withdrawal Fee can be changed at any time by the DeFi Options DAO.</li>
+                <li>
+                  Depositors should be aware of the 
+                  <a href="https://docs.defioptions.org/knowledge-base/risk-factors" target="_blank">risk factors</a> 
+                  related to options trading.
+                </li>
+              </ul>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal">Cancel</button>
+              <button @click="depositIntoPool" type="button" class="btn btn-success" data-bs-dismiss="modal">Deposit</button>
+            </div>
+          </div>
+        </div>
+      </div>
 
     </div>
   </div>
@@ -61,7 +97,7 @@ export default {
   name: 'LpDeposit',
   computed: {
     ...mapGetters("accounts", ["getActiveAccount", "getWeb3"]),
-    ...mapGetters("liquidityPool", ["getLiquidityPoolContract", "getLiquidityPoolAddress"]),
+    ...mapGetters("liquidityPool", ["getLiquidityPoolContract", "getLiquidityPoolAddress", "getLiquidityPoolWithdrawalFee"]),
     ...mapGetters("dai", ["getUserDaiBalance", "getDaiContract"]),
     ...mapGetters("usdc", ["getUserUsdcBalance", "getUsdcContract"]),
 
@@ -129,72 +165,78 @@ export default {
 
       let tokensWei = component.getWeb3.utils.toWei(component.depositValue, unit);
 
-      const result = await signERC2612Permit(
-        window.ethereum, 
-        component.getStablecoinContract._address, 
-        component.getActiveAccount, 
-        component.getLiquidityPoolAddress, 
-        tokensWei
-      );
-
-      // make a deposit
       try {
-        await component.getLiquidityPoolContract.methods.depositTokens(
-          component.getActiveAccount, 
+        const result = await signERC2612Permit(
+          window.ethereum, 
           component.getStablecoinContract._address, 
-          tokensWei,
-          result.deadline,
-          result.v,
-          result.r,
-          result.s
-        ).send({
-          from: component.getActiveAccount
-        }, function(error, hash) {
-          // Deposit tx error
-          if (error) {
-            component.$toast.error("The transaction has been rejected. Please try again.");
-            component.loading = false;
-          }
+          component.getActiveAccount, 
+          component.getLiquidityPoolAddress, 
+          tokensWei
+        );
 
-          // Deposit transaction sent
-          if (hash) {
-            // show a "tx submitted" toast
-            component.$toast.info("The Deposit transaction has been submitted. Please wait for it to be confirmed.");
-
-            // listen for the Transfer event
-            component.getStablecoinContract.once("Transfer", {
-              filter: { owner: component.getActiveAccount }
-            }, function(error, event) {
+        // make a deposit
+        try {
+          await component.getLiquidityPoolContract.methods.depositTokens(
+            component.getActiveAccount, 
+            component.getStablecoinContract._address, 
+            tokensWei,
+            result.deadline,
+            result.v,
+            result.r,
+            result.s
+          ).send({
+            from: component.getActiveAccount
+          }, function(error, hash) {
+            // Deposit tx error
+            if (error) {
+              component.$toast.error("The transaction has been rejected. Please try again.");
               component.loading = false;
-              
-              // failed transaction
-              if (error) {
-                component.$toast.error("The Deposit transaction has failed. Please try again, perhaps with a higher gas limit.");
-              }
+            }
 
-              // success
-              if (event) {
-                component.$toast.success("Your deposit was successfull.");
+            // Deposit transaction sent
+            if (hash) {
+              // show a "tx submitted" toast
+              component.$toast.info("The Deposit transaction has been submitted. Please wait for it to be confirmed.");
 
-                component.$store.dispatch("optionsExchange/fetchLiquidityPoolBalance");
-                component.$store.dispatch("liquidityPool/fetchUserBalance");
-                component.$store.dispatch("liquidityPool/fetchUserPoolUsdValue");
-
-                // refresh values
-                if (component.selectedToken === "DAI") {
-                  component.$store.dispatch("dai/fetchUserBalance");
-                } else if (component.selectedToken === "USDC") {
-                  component.$store.dispatch("usdc/fetchUserBalance");
-                }
+              // listen for the Transfer event
+              component.getStablecoinContract.once("Transfer", {
+                filter: { owner: component.getActiveAccount }
+              }, function(error, event) {
+                component.loading = false;
                 
-                component.depositValue = null;
-              }
-            });
-          }
-        });
+                // failed transaction
+                if (error) {
+                  component.$toast.error("The Deposit transaction has failed. Please try again, perhaps with a higher gas limit.");
+                }
+
+                // success
+                if (event) {
+                  component.$toast.success("Your deposit was successfull.");
+
+                  component.$store.dispatch("optionsExchange/fetchLiquidityPoolBalance");
+                  component.$store.dispatch("liquidityPool/fetchUserBalance");
+                  component.$store.dispatch("liquidityPool/fetchUserPoolUsdValue");
+
+                  // refresh values
+                  if (component.selectedToken === "DAI") {
+                    component.$store.dispatch("dai/fetchUserBalance");
+                  } else if (component.selectedToken === "USDC") {
+                    component.$store.dispatch("usdc/fetchUserBalance");
+                  }
+                  
+                  component.depositValue = null;
+                }
+              });
+            }
+          });
+        } catch (e) {
+            window.console.log("Error:", e);
+            component.$toast.error("The transaction has been reverted. Please try again or contact project admins.");
+            component.loading = false;
+        }
       } catch (e) {
           window.console.log("Error:", e);
-          component.$toast.error("The transaction has been reverted. Please try again or contact project admins.");
+          component.$toast.error("The signature has been rejected.");
           component.loading = false;
       }
  

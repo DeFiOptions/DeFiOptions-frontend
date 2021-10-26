@@ -10,7 +10,11 @@
         </div>
 
         <div class="withdraw-button form-button-mobile">
-          <button @click="withdraw" class="btn btn-success btn-user btn-block text-uppercase form-control">
+          <button 
+            @click="withdraw" 
+            class="btn btn-success btn-user btn-block text-uppercase form-control"
+            :disabled="isWithdrawAmountNotValid.status || Number(this.withdrawAmount) === 0"
+          >
             <span v-if="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
             Withdraw
           </button>

@@ -319,25 +319,31 @@ export default {
         )
       } else {
         // buy with DAI or USDC - allowance through permit()
-        let result = await signERC2612Permit(
-          window.ethereum, 
-          component.getStablecoinAddress, 
-          component.getActiveAccount, 
-          component.getLiquidityPoolAddress, 
-          buyValue
-        );
+        try {
+          let result = await signERC2612Permit(
+            window.ethereum, 
+            component.getStablecoinAddress, 
+            component.getActiveAccount, 
+            component.getLiquidityPoolAddress, 
+            buyValue
+          );
 
-        buyObj = component.getLiquidityPoolContract.methods.buy(
-          component.option.symbol, // symbol
-          optionUnitPrice, // price per one option
-          optionSizeWei, // volume a.k.a. user's selected option size
-          component.getStablecoinAddress, // selected stablecoin
-          buyValue, // buyValue
-          result.deadline,
-          result.v,
-          result.r,
-          result.s
-        )
+          buyObj = component.getLiquidityPoolContract.methods.buy(
+            component.option.symbol, // symbol
+            optionUnitPrice, // price per one option
+            optionSizeWei, // volume a.k.a. user's selected option size
+            component.getStablecoinAddress, // selected stablecoin
+            buyValue, // buyValue
+            result.deadline,
+            result.v,
+            result.r,
+            result.s
+          )
+        } catch (e) {
+          window.console.log("Error:", e);
+          component.$toast.error("The signature has been rejected.");
+          component.loading = false;
+        } 
       }
 
       // buy option transaction

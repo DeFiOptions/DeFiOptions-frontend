@@ -149,6 +149,23 @@ h3 {
   margin-left: 40px;
 }
 
+.modal-body {
+  color: white;
+}
+
+.modal-content {
+  background-color: #00072D;
+  border: 2px solid #105685;
+}
+
+.modal-header .btn-close {
+  background-color: white;
+}
+
+.modal-title {
+  color: white;
+}
+
 .navbar {
   min-height: 40px;
   margin-top: 30px;
