@@ -107,8 +107,33 @@
         </ul>
 
         <div class="d-flex flex-wrap">
-          <button class="btn btn-success mx-1 mb-2" v-if="isUserConnected && getChainName">{{ getChainName }}</button>
-          <button class="btn btn-danger mx-1 mb-2" v-if="isUserConnected && !getChainName">Wrong network</button>
+
+          <div class="dropdown" v-if="isUserConnected">
+            <button 
+              v-if="getChainName"
+              class="btn btn-success dropdown-toggle" 
+              type="button" 
+              id="dropdownMenuButton1" 
+              data-bs-toggle="dropdown" 
+              aria-expanded="false">
+              {{ getChainName }}
+            </button>
+
+            <button 
+              v-if="!getChainName"
+              class="btn btn-danger dropdown-toggle" 
+              type="button" 
+              id="dropdownMenuButton1" 
+              data-bs-toggle="dropdown" 
+              aria-expanded="false">
+              Wrong network
+            </button>
+
+            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+              <li><button @click="switchToPolygon" class="dropdown-item">Polygon PoS Chain</button></li>
+              <li><button @click="switchToKovan" class="dropdown-item">Kovan Testnet</button></li>
+            </ul>
+          </div>
 
           <button class="btn btn-outline-success mx-1 mb-2 text-uppercase" v-if="!isUserConnected" @click="connectWeb3Modal">Connect wallet</button>
           <button class="btn btn-outline-success mx-1 mb-2" v-if="isUserConnected" @click="disconnectWeb3Modal">{{getActiveAccount.substring(0, 6)}}...{{ getActiveAccount.substring(38, 42)}}</button>
@@ -137,6 +162,27 @@ export default {
   },
   methods: {
     ...mapActions("accounts", ["connectWeb3Modal", "disconnectWeb3Modal"]),
+
+    switchToPolygon() {
+      window.ethereum.request({ 
+        method: 'wallet_addEthereumChain', 
+        params: [{ 
+          chainId: '0x89', 
+          chainName: 'Polygon PoS Chain', 
+          nativeCurrency: { name: 'MATIC', symbol: 'MATIC', decimals: 18 }, 
+          rpcUrls: ['https://polygon-rpc.com/'], 
+          blockExplorerUrls: ['https://polygonscan.com/']
+        }] 
+      });
+    },
+    switchToKovan() {
+      window.ethereum.request({ 
+        method: 'wallet_switchEthereumChain', 
+        params: [{ 
+          chainId: '0x2a'
+        }] 
+      });
+    }
   }
 }
 </script>
