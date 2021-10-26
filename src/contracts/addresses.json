@@ -15,5 +15,9 @@
   "USDC": {
     "42":"0x2154bce9A2bfaC75Fe97E17BCf9F003BA74CFDaE",
     "137":"0x2791bca1f2de4661ed88a30c99a7a9449aa84174"
+  },
+  "Tether": {
+    "42":"0xB56d0c35683e04e051bB2C677e138116EE4199dc",
+    "137":"0xc2132d05d31c914a87c6611c10748aeb04b58e8f"
   }
 }
