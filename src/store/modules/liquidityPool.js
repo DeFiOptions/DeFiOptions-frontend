@@ -129,7 +129,14 @@ const actions = {
     }
 
     let activeAccount = rootState.accounts.activeAccount;
-    let balanceWei = await state.contract.methods.valueOf(activeAccount).call();
+
+    let balanceWei = "0";
+
+    try {
+      balanceWei = await state.contract.methods.valueOf(activeAccount).call();
+    } catch(e) {
+      console.log("The total pool balance is probably 0, which is why MetaMask may be showing the 'Internal JSON-RPC... division by 0' error.");
+    }
 
     let web3 = rootState.accounts.web3;
     let value = web3.utils.fromWei(balanceWei, "ether");
