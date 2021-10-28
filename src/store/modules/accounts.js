@@ -202,7 +202,6 @@ const mutations = {
   },
 
   setLastSelectedTradePair(state, pair) {
-    window.console.log("setLastSelectedTradePair called: " + pair);
     state.lastSelectedTradePair = pair;
   },
 

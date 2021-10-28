@@ -183,9 +183,14 @@ const mutations = {
   setSymbolsList(state, {web3, symbolsRaw}) {
     let symbolsLines = symbolsRaw.split("\n");
 
-    let symbolsArray = {};
+    let symbolsArray = {}; // to be populated in the for loop
 
     for (let item of symbolsLines) {
+      if (symbolsLines.length === 1 && symbolsLines[0] === '') {
+        // if the symbolsLines array is [''], skip the rest of the code in the loop
+        continue;
+      }
+
       let itemList = item.split("-");
 
       // pair

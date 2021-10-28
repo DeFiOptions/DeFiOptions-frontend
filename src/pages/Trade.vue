@@ -47,6 +47,8 @@
         </div>
 
         <OptionsList :symbols="getFilteredSymbols" />
+        <h3 v-if="Object.keys(this.getSymbolsListJson).length === 0">No options available.</h3>
+        
       </div>
     </div>
 
@@ -120,7 +122,7 @@ export default {
     this.$store.dispatch("usdc/storeAddress");
 
     this.unsubscribe = this.$store.subscribe((mutation) => {
-      if (mutation.type === 'liquidityPool/setSymbolsList') {
+      if (mutation.type === 'liquidityPool/setSymbolsList' && Object.keys(this.getSymbolsListJson).length > 0) {
         // extract values from getSymbolsListJson and pre-populate dropdowns (pair, maturity, type)
         this.pairs = Object.keys(this.getSymbolsListJson);
         this.selectedPair = this.pairs[0];
