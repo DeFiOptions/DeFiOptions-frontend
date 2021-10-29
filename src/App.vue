@@ -70,6 +70,8 @@ export default {
 
       this.$store.dispatch("dai/fetchUserBalance");
       this.$store.dispatch("usdc/fetchUserBalance");
+      this.$store.dispatch("dai/fetchLpAllowance");
+      this.$store.dispatch("usdc/fetchLpAllowance");
 
       this.$store.dispatch("optionsExchange/fetchExchangeUserBalance");
       this.$store.dispatch("optionsExchange/fetchUserOptions");

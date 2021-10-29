@@ -22,7 +22,7 @@
           </div>
         </div>
 
-        <div class="deposit-button form-button-mobile">
+        <div class="deposit-button form-button-mobile" v-if="isEnoughAllowance">
           <button 
             class="btn btn-success btn-user btn-block text-uppercase form-control" 
             data-bs-toggle="modal" data-bs-target="#depositModal"
@@ -30,6 +30,18 @@
           >
             <span v-if="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
             Deposit
+          </button>
+          <div></div>
+        </div>
+
+        <div class="deposit-button form-button-mobile" v-if="!isEnoughAllowance">
+          <button 
+            class="btn btn-success btn-user btn-block text-uppercase form-control" 
+            :disabled="isDepositValueNotValid.status || Number(this.depositValue) === 0" 
+            @click="approveAllowance"
+          >
+            <span v-if="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+            Approve
           </button>
           <div></div>
         </div>
@@ -91,15 +103,14 @@
 
 <script>
 import { mapGetters } from "vuex";
-import { signERC2612Permit } from 'eth-permit';
 
 export default {
   name: 'LpDeposit',
   computed: {
     ...mapGetters("accounts", ["getActiveAccount", "getWeb3"]),
     ...mapGetters("liquidityPool", ["getLiquidityPoolContract", "getLiquidityPoolAddress", "getLiquidityPoolWithdrawalFee"]),
-    ...mapGetters("dai", ["getUserDaiBalance", "getDaiContract"]),
-    ...mapGetters("usdc", ["getUserUsdcBalance", "getUsdcContract"]),
+    ...mapGetters("dai", ["getUserDaiBalance", "getDaiContract", "getLpDaiAllowance"]),
+    ...mapGetters("usdc", ["getUserUsdcBalance", "getUsdcContract", "getLpUsdcAllowance"]),
 
     isDepositValueNotValid() { // validation for deposit value
       // too many digits
@@ -124,6 +135,15 @@ export default {
 
       return {status: false, message: "Valid deposit value"};
     },
+    isEnoughAllowance() {
+      if (this.selectedToken === "DAI") {
+        return Number(this.depositValue) <= Number(this.getLpDaiAllowance);
+      } else if (this.selectedToken === "USDC") {
+        return Number(this.depositValue) <= Number(this.getLpUsdcAllowance);
+      }
+
+      return false;
+    },
     getStablecoinContract() {
       if (this.selectedToken === "DAI") {
         return this.getDaiContract;
@@ -145,12 +165,80 @@ export default {
   },
   data() {
     return {
-      depositValue: null,
+      depositValue: "0",
       loading: false,
       selectedToken: "DAI"
     }
   },
   methods: {
+    async approveAllowance() {
+      let component = this;
+      component.loading = true;
+
+      // define unit and token contract
+      let unit = "ether"; // DAI - 18 decimals
+      
+      if (component.selectedToken === "USDT") {
+        unit = "kwei"; // USDT (Tether) - 4 decimals
+      }
+
+      if (component.selectedToken === "USDC") {
+        unit = "mwei"; // USDC - 6 decimals
+      }
+
+      // convert deposit value to wei
+      let tokensWei = component.getWeb3.utils.toWei(component.depositValue, unit);
+
+      // call the approve method
+      try {
+        await component.getStablecoinContract.methods.approve(component.getLiquidityPoolAddress, tokensWei).send({
+          from: component.getActiveAccount
+        }, function(error, hash) {
+          // Approval tx error
+          if (error) {
+            component.$toast.error("The transaction has been rejected. Please try again.");
+            component.loading = false;
+          }
+
+          // Approval transaction sent
+          if (hash) {
+            // show a "tx submitted" toast
+            component.$toast.info("The Approval transaction has been submitted. Please wait for it to be confirmed.");
+
+            // listen for the Approval event
+            component.getStablecoinContract.once("Approval", {
+              filter: { owner: component.getActiveAccount }
+            }, function(error, event) {
+              component.loading = false;
+              
+              // failed transaction
+              if (error) {
+                component.$toast.error("The Approval transaction has failed. Please try again, perhaps with a higher gas limit.");
+              }
+
+              // success
+              if (event) {
+                component.$toast.success("The approval was successfull. Now you can make the deposit.");
+
+                
+                if (component.selectedToken === "DAI") {
+                  component.$store.dispatch("dai/fetchUserBalance");
+                  component.$store.dispatch("dai/fetchLpAllowance");
+                } else if (component.selectedToken === "USDC") {
+                  component.$store.dispatch("usdc/fetchUserBalance");
+                  component.$store.dispatch("usdc/fetchLpAllowance");
+                }
+              }
+            });
+          }
+        });
+      } catch (e) {
+          window.console.log("Error:", e);
+          component.$toast.error("The transaction has been reverted. Please try again or contact project admins.");
+          component.loading = false;
+      }
+
+    },
     changeStablecoin(token) {
       this.selectedToken = token;
     },
@@ -165,78 +253,62 @@ export default {
 
       let tokensWei = component.getWeb3.utils.toWei(component.depositValue, unit);
 
+      // make a deposit
       try {
-        const result = await signERC2612Permit(
-          window.ethereum, 
-          component.getStablecoinContract._address, 
+        await component.getLiquidityPoolContract.methods.depositTokens(
           component.getActiveAccount, 
-          component.getLiquidityPoolAddress, 
+          component.getStablecoinContract._address, 
           tokensWei
-        );
-
-        // make a deposit
-        try {
-          await component.getLiquidityPoolContract.methods.depositTokens(
-            component.getActiveAccount, 
-            component.getStablecoinContract._address, 
-            tokensWei,
-            result.deadline,
-            result.v,
-            result.r,
-            result.s
-          ).send({
-            from: component.getActiveAccount
-          }, function(error, hash) {
-            // Deposit tx error
-            if (error) {
-              component.$toast.error("The transaction has been rejected. Please try again.");
-              component.loading = false;
-            }
-
-            // Deposit transaction sent
-            if (hash) {
-              // show a "tx submitted" toast
-              component.$toast.info("The Deposit transaction has been submitted. Please wait for it to be confirmed.");
-
-              // listen for the Transfer event
-              component.getStablecoinContract.once("Transfer", {
-                filter: { owner: component.getActiveAccount }
-              }, function(error, event) {
-                component.loading = false;
-                
-                // failed transaction
-                if (error) {
-                  component.$toast.error("The Deposit transaction has failed. Please try again, perhaps with a higher gas limit.");
-                }
-
-                // success
-                if (event) {
-                  component.$toast.success("Your deposit was successfull.");
-
-                  component.$store.dispatch("optionsExchange/fetchLiquidityPoolBalance");
-                  component.$store.dispatch("liquidityPool/fetchUserBalance");
-                  component.$store.dispatch("liquidityPool/fetchUserPoolUsdValue");
-
-                  // refresh values
-                  if (component.selectedToken === "DAI") {
-                    component.$store.dispatch("dai/fetchUserBalance");
-                  } else if (component.selectedToken === "USDC") {
-                    component.$store.dispatch("usdc/fetchUserBalance");
-                  }
-                  
-                  component.depositValue = null;
-                }
-              });
-            }
-          });
-        } catch (e) {
-            window.console.log("Error:", e);
-            component.$toast.error("The transaction has been reverted. Please try again or contact project admins.");
+        ).send({
+          from: component.getActiveAccount
+        }, function(error, hash) {
+          // Deposit tx error
+          if (error) {
+            component.$toast.error("The transaction has been rejected. Please try again.");
             component.loading = false;
-        }
+          }
+
+          // Deposit transaction sent
+          if (hash) {
+            // show a "tx submitted" toast
+            component.$toast.info("The Deposit transaction has been submitted. Please wait for it to be confirmed.");
+
+            // listen for the Transfer event
+            component.getStablecoinContract.once("Transfer", {
+              filter: { owner: component.getActiveAccount }
+            }, function(error, event) {
+              component.loading = false;
+              
+              // failed transaction
+              if (error) {
+                component.$toast.error("The Deposit transaction has failed. Please try again, perhaps with a higher gas limit.");
+              }
+
+              // success
+              if (event) {
+                component.$toast.success("Your deposit was successfull.");
+
+                component.$store.dispatch("optionsExchange/fetchLiquidityPoolBalance");
+                component.$store.dispatch("liquidityPool/fetchUserBalance");
+                component.$store.dispatch("liquidityPool/fetchUserPoolUsdValue");
+
+                // refresh values
+                if (component.selectedToken === "DAI") {
+                  component.$store.dispatch("dai/fetchUserBalance");
+                  component.$store.dispatch("dai/fetchLpAllowance");
+                } else if (component.selectedToken === "USDC") {
+                  component.$store.dispatch("usdc/fetchUserBalance");
+                  component.$store.dispatch("usdc/fetchLpAllowance");
+                }
+                
+                component.depositValue = null;
+              }
+            });
+          }
+        });
       } catch (e) {
           window.console.log("Error:", e);
-          component.$toast.error("The signature has been rejected.");
+          component.$toast.error(e);
           component.loading = false;
       }
  
