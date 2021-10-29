@@ -191,6 +191,37 @@ export default {
 
       // call the approve method
       try {
+
+        await component.getStablecoinContract.methods.approve(component.getLiquidityPoolAddress, tokensWei).send({
+          from: component.getActiveAccount
+        }).on('transactionHash', function(hash){
+          console.log("tx hash: " + hash);
+          component.$toast.info("The Approval transaction has been submitted. Please wait for it to be confirmed.");
+        }).on('receipt', function(receipt){
+          console.log(receipt);
+
+          if (receipt.status) {
+            component.$toast.success("The approval was successfull. Now you can make the deposit.");
+
+            if (component.selectedToken === "DAI") {
+              component.$store.dispatch("dai/fetchUserBalance");
+              component.$store.dispatch("dai/fetchLpAllowance");
+            } else if (component.selectedToken === "USDC") {
+              component.$store.dispatch("usdc/fetchUserBalance");
+              component.$store.dispatch("usdc/fetchLpAllowance");
+            }
+          } else {
+            component.$toast.error("The Approval transaction has failed. Please contact the DeFi Options support.");
+          }
+          
+          component.loading = false;
+        }).on('error', function(error){
+          console.log(error);
+          component.loading = false;
+          component.$toast.error("The Approval transaction has failed. Please contact the DeFi Options support.");
+        });
+
+        /*
         await component.getStablecoinContract.methods.approve(component.getLiquidityPoolAddress, tokensWei).send({
           from: component.getActiveAccount
         }, function(error, hash) {
@@ -205,36 +236,39 @@ export default {
             // show a "tx submitted" toast
             component.$toast.info("The Approval transaction has been submitted. Please wait for it to be confirmed.");
 
-            // listen for the Approval event
-            component.getStablecoinContract.once("Approval", {
-              filter: { owner: component.getActiveAccount }
-            }, function(error, event) {
-              component.loading = false;
-              
-              // failed transaction
-              if (error) {
-                component.$toast.error("The Approval transaction has failed. Please try again, perhaps with a higher gas limit.");
-              }
+            // listen for the Approval event in logs
+            component.getWeb3.eth.subscribe('logs', {
+                address: component.getStablecoinContract._address,
+                topics: [component.getWeb3.utils.keccak256("Approval(address,address,uint256)")]
+            }, function(error, result){
+              if (!error) {
+                // successful transaction
+                if (result.transactionHash === hash) {
+                  component.loading = false;
 
-              // success
-              if (event) {
-                component.$toast.success("The approval was successfull. Now you can make the deposit.");
+                  component.$toast.success("The approval was successfull. Now you can make the deposit.");
 
-                
-                if (component.selectedToken === "DAI") {
-                  component.$store.dispatch("dai/fetchUserBalance");
-                  component.$store.dispatch("dai/fetchLpAllowance");
-                } else if (component.selectedToken === "USDC") {
-                  component.$store.dispatch("usdc/fetchUserBalance");
-                  component.$store.dispatch("usdc/fetchLpAllowance");
+                  if (component.selectedToken === "DAI") {
+                    component.$store.dispatch("dai/fetchUserBalance");
+                    component.$store.dispatch("dai/fetchLpAllowance");
+                  } else if (component.selectedToken === "USDC") {
+                    component.$store.dispatch("usdc/fetchUserBalance");
+                    component.$store.dispatch("usdc/fetchLpAllowance");
+                  }
+
                 }
-              }
-            });
+                
+              } else if (error) {
+                window.console.log(error);
+                component.loading = false;
+                component.$toast.error("The Approval transaction has failed. Please try again, perhaps with a higher gas limit.");
+              }  
+            })
           }
-        });
+        }); */
       } catch (e) {
           window.console.log("Error:", e);
-          component.$toast.error("The transaction has been reverted. Please try again or contact project admins.");
+          component.$toast.error("The transaction has been reverted. Please try again or contact DeFi Options support.");
           component.loading = false;
       }
 
