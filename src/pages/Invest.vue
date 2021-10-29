@@ -48,7 +48,7 @@ export default {
     this.$store.dispatch("liquidityPool/storeAddress");
     this.$store.dispatch("liquidityPool/fetchUserPoolUsdValue");
     this.$store.dispatch("liquidityPool/fetchPoolFreeBalance");
-    this.$store.dispatch("liquidityPool/fetchPoolWithdrawalFee"); // TODO: resolve the "withdrawFee is not a function" error
+    this.$store.dispatch("liquidityPool/fetchPoolWithdrawalFee");
   }
 }
 </script>

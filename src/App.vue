@@ -52,6 +52,41 @@ export default {
         }] 
       });
     }
+  },
+
+  watch: {
+    getChainName: function () {
+      // update everything whenever the network is changed
+      this.$store.dispatch("optionsExchange/fetchContract");
+      this.$store.dispatch("optionsExchange/storeAddress");
+      this.$store.dispatch("liquidityPool/fetchContract");
+      this.$store.dispatch("liquidityPool/storeAddress");
+      this.$store.dispatch("dai/fetchContract");
+      this.$store.dispatch("dai/storeAddress");
+      this.$store.dispatch("usdc/fetchContract");
+      this.$store.dispatch("usdc/storeAddress");
+      this.$store.dispatch("creditToken/fetchContract");
+      this.$store.dispatch("creditToken/storeAddress");
+
+      this.$store.dispatch("dai/fetchUserBalance");
+      this.$store.dispatch("usdc/fetchUserBalance");
+
+      this.$store.dispatch("optionsExchange/fetchExchangeUserBalance");
+      this.$store.dispatch("optionsExchange/fetchUserOptions");
+      this.$store.dispatch("optionsExchange/fetchExchangeBalanceAllowance");
+      this.$store.dispatch("optionsExchange/fetchLiquidityPoolBalance");
+
+      this.$store.dispatch("liquidityPool/fetchUserBalance");
+      this.$store.dispatch("liquidityPool/fetchSymbolsList");
+      this.$store.dispatch("liquidityPool/fetchApy");
+      this.$store.dispatch("liquidityPool/fetchUserPoolUsdValue");
+      this.$store.dispatch("liquidityPool/fetchPoolFreeBalance");
+      this.$store.dispatch("liquidityPool/fetchPoolWithdrawalFee");
+
+      this.$store.dispatch("creditToken/fetchUserBalance");
+
+      this.$store.dispatch("accounts/fetchActiveBalance");
+    }
   }
 }
 </script>
