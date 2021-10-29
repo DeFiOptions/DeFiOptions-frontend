@@ -163,9 +163,15 @@ export default {
       return null;
     },
   },
+  created() {
+    this.$store.dispatch("dai/fetchUserBalance");
+    this.$store.dispatch("dai/fetchLpAllowance");
+    this.$store.dispatch("usdc/fetchUserBalance");
+    this.$store.dispatch("usdc/fetchLpAllowance");
+  },
   data() {
     return {
-      depositValue: "0",
+      depositValue: null,
       loading: false,
       selectedToken: "DAI"
     }
@@ -188,84 +194,46 @@ export default {
 
       // convert deposit value to wei
       let tokensWei = component.getWeb3.utils.toWei(component.depositValue, unit);
+      const depValue = component.depositValue;
 
       // call the approve method
       try {
 
         await component.getStablecoinContract.methods.approve(component.getLiquidityPoolAddress, tokensWei).send({
           from: component.getActiveAccount
+
         }).on('transactionHash', function(hash){
           console.log("tx hash: " + hash);
-          component.$toast.info("The Approval transaction has been submitted. Please wait for it to be confirmed.");
+          component.$toast.info("The transaction has been submitted. Please wait for it to be confirmed.");
+
         }).on('receipt', function(receipt){
           console.log(receipt);
 
           if (receipt.status) {
             component.$toast.success("The approval was successfull. Now you can make the deposit.");
 
+            // refresh values
             if (component.selectedToken === "DAI") {
-              component.$store.dispatch("dai/fetchUserBalance");
-              component.$store.dispatch("dai/fetchLpAllowance");
+              // needs to be updated this way because Polygon RPC nodes are slow with updating state
+              component.$store.state.dai.lpAllowance = depValue;
             } else if (component.selectedToken === "USDC") {
-              component.$store.dispatch("usdc/fetchUserBalance");
-              component.$store.dispatch("usdc/fetchLpAllowance");
+              // needs to be updated this way because Polygon RPC nodes are slow with updating state
+              component.$store.state.usdc.lpAllowance = depValue;
             }
+            
+            
           } else {
-            component.$toast.error("The Approval transaction has failed. Please contact the DeFi Options support.");
+            component.$toast.error("The transaction has failed. Please contact the DeFi Options support.");
           }
           
           component.loading = false;
+
         }).on('error', function(error){
           console.log(error);
           component.loading = false;
-          component.$toast.error("The Approval transaction has failed. Please contact the DeFi Options support.");
+          component.$toast.error("There has been an error. Please contact the DeFi Options support.");
         });
 
-        /*
-        await component.getStablecoinContract.methods.approve(component.getLiquidityPoolAddress, tokensWei).send({
-          from: component.getActiveAccount
-        }, function(error, hash) {
-          // Approval tx error
-          if (error) {
-            component.$toast.error("The transaction has been rejected. Please try again.");
-            component.loading = false;
-          }
-
-          // Approval transaction sent
-          if (hash) {
-            // show a "tx submitted" toast
-            component.$toast.info("The Approval transaction has been submitted. Please wait for it to be confirmed.");
-
-            // listen for the Approval event in logs
-            component.getWeb3.eth.subscribe('logs', {
-                address: component.getStablecoinContract._address,
-                topics: [component.getWeb3.utils.keccak256("Approval(address,address,uint256)")]
-            }, function(error, result){
-              if (!error) {
-                // successful transaction
-                if (result.transactionHash === hash) {
-                  component.loading = false;
-
-                  component.$toast.success("The approval was successfull. Now you can make the deposit.");
-
-                  if (component.selectedToken === "DAI") {
-                    component.$store.dispatch("dai/fetchUserBalance");
-                    component.$store.dispatch("dai/fetchLpAllowance");
-                  } else if (component.selectedToken === "USDC") {
-                    component.$store.dispatch("usdc/fetchUserBalance");
-                    component.$store.dispatch("usdc/fetchLpAllowance");
-                  }
-
-                }
-                
-              } else if (error) {
-                window.console.log(error);
-                component.loading = false;
-                component.$toast.error("The Approval transaction has failed. Please try again, perhaps with a higher gas limit.");
-              }  
-            })
-          }
-        }); */
       } catch (e) {
           window.console.log("Error:", e);
           component.$toast.error("The transaction has been reverted. Please try again or contact DeFi Options support.");
@@ -289,57 +257,49 @@ export default {
 
       // make a deposit
       try {
+
         await component.getLiquidityPoolContract.methods.depositTokens(
           component.getActiveAccount, 
           component.getStablecoinContract._address, 
           tokensWei
         ).send({
           from: component.getActiveAccount
-        }, function(error, hash) {
-          // Deposit tx error
-          if (error) {
-            component.$toast.error("The transaction has been rejected. Please try again.");
-            component.loading = false;
+        }).on('transactionHash', function(hash){
+          console.log("tx hash: " + hash);
+          component.$toast.info("The transaction has been submitted. Please wait for it to be confirmed.");
+
+        }).on('receipt', function(receipt){
+          console.log(receipt);
+
+          if (receipt.status) {
+            component.$toast.success("Your deposit was successfull.");
+
+            component.$store.dispatch("optionsExchange/fetchLiquidityPoolBalance");
+            component.$store.dispatch("liquidityPool/fetchUserBalance");
+            component.$store.dispatch("liquidityPool/fetchUserPoolUsdValue");
+
+            // refresh values
+            if (component.selectedToken === "DAI") {
+              component.$store.dispatch("dai/fetchUserBalance");
+              component.$store.dispatch("dai/fetchLpAllowance");
+            } else if (component.selectedToken === "USDC") {
+              component.$store.dispatch("usdc/fetchUserBalance");
+              component.$store.dispatch("usdc/fetchLpAllowance");
+            }
+            
+            component.depositValue = null;
+          } else {
+            component.$toast.error("The transaction has failed. Please contact the DeFi Options support.");
           }
+          
+          component.loading = false;
 
-          // Deposit transaction sent
-          if (hash) {
-            // show a "tx submitted" toast
-            component.$toast.info("The Deposit transaction has been submitted. Please wait for it to be confirmed.");
-
-            // listen for the Transfer event
-            component.getStablecoinContract.once("Transfer", {
-              filter: { owner: component.getActiveAccount }
-            }, function(error, event) {
-              component.loading = false;
-              
-              // failed transaction
-              if (error) {
-                component.$toast.error("The Deposit transaction has failed. Please try again, perhaps with a higher gas limit.");
-              }
-
-              // success
-              if (event) {
-                component.$toast.success("Your deposit was successfull.");
-
-                component.$store.dispatch("optionsExchange/fetchLiquidityPoolBalance");
-                component.$store.dispatch("liquidityPool/fetchUserBalance");
-                component.$store.dispatch("liquidityPool/fetchUserPoolUsdValue");
-
-                // refresh values
-                if (component.selectedToken === "DAI") {
-                  component.$store.dispatch("dai/fetchUserBalance");
-                  component.$store.dispatch("dai/fetchLpAllowance");
-                } else if (component.selectedToken === "USDC") {
-                  component.$store.dispatch("usdc/fetchUserBalance");
-                  component.$store.dispatch("usdc/fetchLpAllowance");
-                }
-                
-                component.depositValue = null;
-              }
-            });
-          }
+        }).on('error', function(error){
+          console.log(error);
+          component.loading = false;
+          component.$toast.error("There has been an error. Please contact the DeFi Options support.");
         });
+
       } catch (e) {
           window.console.log("Error:", e);
           component.$toast.error(e);
