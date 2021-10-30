@@ -89,7 +89,6 @@
 
 <script>
 import { mapGetters } from "vuex";
-import { signERC2612Permit } from 'eth-permit';
 import OptionDataItem from '../OptionDataItem.vue';
 //import OptionTokenContractJson from "../../contracts/RedeemableToken.json";
 
@@ -291,58 +290,20 @@ export default {
               component.$store.state.optionsExchange.userExchangeBalanceAllowance = allowanceValue;
             }
             
-            
           } else {
             component.$toast.error("The transaction has failed. Please contact the DeFi Options support.");
           }
-          
-          component.loading = false;
 
         }).on('error', function(error){
           console.log(error);
-          component.loading = false;
           component.$toast.error("There has been an error. Please contact the DeFi Options support.");
         });
-
-        /*
-        await tokenContract.methods.approve(component.getLiquidityPoolAddress, allowanceValueWei).send({
-          from: component.getActiveAccount
-        }, function(error, hash) {
-          // Approval tx error
-          if (error) {
-            component.$toast.error("The transaction has been rejected. Please try again.");
-            component.loading = false;
-          }
-
-          // Approval transaction sent
-          if (hash) {
-            // show a "tx submitted" toast
-            component.$toast.info("The Approval transaction has been submitted. Please wait for it to be confirmed.");
-
-            // listen for the Approval event
-            component.getOptionsExchangeContract.once("Approval", {
-              filter: { owner: component.getActiveAccount }
-            }, function(error, event) {
-              component.loading = false;
-              
-              // failed transaction
-              if (error) {
-                component.$toast.error("The Approval transaction has failed. Please try again, perhaps with a higher gas limit.");
-              }
-
-              // success
-              if (event) {
-                component.$toast.success("The approval was successfull. Now you can buy the option.");
-
-                component.$store.dispatch("optionsExchange/fetchExchangeBalanceAllowance");
-              }
-            });
-          }
-        });*/
       } catch (e) {
           window.console.log("Error:", e);
           component.$toast.error("The transaction has been reverted. Please try again or contact DeFi Options support.");
-          component.loading = false;
+      } finally {
+        //component.setFormData();
+        component.loading = false;
       }
 
     },
@@ -352,104 +313,64 @@ export default {
 
       let optionSizeWei = component.getWeb3.utils.toWei(String(component.selectedOptionSize), "ether");
       let optionUnitPrice = component.getWeb3.utils.toWei(String(component.optionPrice), "ether");
-      
-      // define max buy value (and unit)
-      let unit = "ether"; // DAI - 18 decimals
-      if (component.buyWith === "USDC") {
-        unit = "mwei"; // USDC - 6 decimals
-      }
-
-      let buyValue = component.getWeb3.utils.toWei(String(component.getTotal.toFixed(4)), unit); // round to 4 decimals
-
-      let buyObj;
-
-      if (component.buyWith === "Exchange Balance") {
-        // buy with exchange balance (allowance needs to be given before)
-        buyObj = component.getLiquidityPoolContract.methods.buy(
-          this.option.symbol, // symbol
-          optionUnitPrice, // price per one option
-          optionSizeWei, // volume a.k.a. user's selected option size
-          component.getStablecoinAddress, // selected stablecoin
-        )
-      } else {
-        // buy with DAI or USDC - allowance through permit()
-        try {
-          let result = await signERC2612Permit(
-            window.ethereum, 
-            component.getStablecoinAddress, 
-            component.getActiveAccount, 
-            component.getLiquidityPoolAddress, 
-            buyValue
-          );
-
-          buyObj = component.getLiquidityPoolContract.methods.buy(
-            component.option.symbol, // symbol
-            optionUnitPrice, // price per one option
-            optionSizeWei, // volume a.k.a. user's selected option size
-            component.getStablecoinAddress, // selected stablecoin
-            buyValue, // buyValue
-            result.deadline,
-            result.v,
-            result.r,
-            result.s
-          )
-        } catch (e) {
-          window.console.log("Error:", e);
-          component.$toast.error("The signature has been rejected.");
-          component.loading = false;
-        } 
-      }
 
       // buy option transaction
       try {
-        await buyObj.send({
+        await component.getLiquidityPoolContract.methods.buy(
+          component.option.symbol, // symbol
+          optionUnitPrice, // price per one option
+          optionSizeWei, // volume a.k.a. user's selected option size
+          component.getStablecoinAddress, // selected stablecoin
+        ).send({
           from: component.getActiveAccount
-        }, function(error, hash) {
-          // Deposit tx error
-          if (error) {
-            component.$toast.error("The transaction has been rejected. Please try again.");
-            component.loading = false;
+        }).on('transactionHash', function(hash){
+          console.log("tx hash: " + hash);
+          component.$toast.info("The Buy transaction has been submitted. Please wait for it to be confirmed.");
+
+        }).on('receipt', function(receipt){
+          console.log(receipt);
+
+          if (receipt.status) {
+            component.$toast.success("You have successfully bought an option.");
+
+            // refresh values
+            if (component.buyWith === "DAI") {
+              component.$store.dispatch("dai/fetchUserBalance");
+              component.$store.state.dai.lpAllowance = 0;
+              component.$store.dispatch("dai/fetchLpAllowance");
+
+            } else if (component.buyWith === "USDC") {
+              component.$store.dispatch("usdc/fetchUserBalance");
+              component.$store.state.usdc.lpAllowance = 0;
+              component.$store.dispatch("usdc/fetchLpAllowance");
+
+            } else if (component.buyWith === "USDT") {
+              // TODO
+              //component.$store.dispatch("tether/fetchUserBalance");
+              //component.$store.state.tether.lpAllowance = 0;
+              //this.$store.dispatch("tether/fetchLpAllowance");
+
+            } else if (component.buyWith === "Exchange Balance") {
+              component.$store.dispatch("optionsExchange/fetchExchangeUserBalance");
+              component.$store.state.optionsExchange.userExchangeBalanceAllowance = 0;
+              component.$store.dispatch("optionsExchange/fetchExchangeBalanceAllowance");
+            }
+            
+          } else {
+            component.$toast.error("The transaction has failed. Please contact the DeFi Options support.");
           }
 
-          // Deposit transaction sent
-          if (hash) {
-            // show a "tx submitted" toast
-            component.$toast.info("The Buy transaction has been submitted. Please wait for it to be confirmed.");
-
-            // listen for the Transfer event
-            component.getLiquidityPoolContract.once("Buy", {
-              filter: { buyer: component.getActiveAccount }
-            }, function(error, event) {
-              component.loading = false;
-              
-              // failed transaction
-              if (error) {
-                component.$toast.error("The Buy transaction has failed. Please try again, perhaps with a higher gas limit.");
-              }
-
-              // success
-              if (event) {
-                component.$toast.success("You have successfully bought an option.");
-
-                // refresh values
-                if (component.buyWith === "DAI") {
-                  component.$store.dispatch("dai/fetchUserBalance");
-                } else if (component.buyWith === "USDC") {
-                  component.$store.dispatch("usdc/fetchUserBalance");
-                } else if (component.buyWith === "Exchange Balance") {
-                  component.$store.dispatch("optionsExchange/fetchExchangeUserBalance");
-                }
-                
-                component.selectedOptionSize = 0.1;
-                component.setFormData();
-              }
-            });
-          }
+        }).on('error', function(error){
+          console.log(error);
+          component.$toast.error("There has been an error. Please contact the DeFi Options support.");
         });
       } catch (e) {
           window.console.log("Error:", e);
-          component.$toast.error("The transaction has been reverted. Please try again or contact project admins.");
-          component.loading = false;
+          component.$toast.error("The transaction has been reverted. Please contact DeFi Options support.");
+          
+      } finally {
+        component.setFormData();
+        component.loading = false;
       }
     },
 
@@ -477,7 +398,7 @@ export default {
       let result = await this.getLiquidityPoolContract.methods.queryBuy(this.option.symbol).call();
       
       if (result) {
-        this.optionPrice = this.getWeb3.utils.fromWei(result.price, "ether");
+        this.optionPrice = this.getWeb3.utils.fromWei(result.price, "ether") * 1.01;
         this.optionPriceFormatted = "$" + Number(this.optionPrice).toFixed(2);
         this.selectedOptionVolume = this.getWeb3.utils.fromWei(result.volume, "ether");
 
