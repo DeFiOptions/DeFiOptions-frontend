@@ -194,7 +194,7 @@ export default {
 
       // convert deposit value to wei
       let tokensWei = component.getWeb3.utils.toWei(component.depositValue, unit);
-      const depValue = component.depositValue;
+      const allowanceValue = component.depositValue;
 
       // call the approve method
       try {
@@ -210,15 +210,15 @@ export default {
           console.log(receipt);
 
           if (receipt.status) {
-            component.$toast.success("The approval was successfull. Now you can make the deposit.");
+            component.$toast.success("The approval was successfull. You can make the deposit now.");
 
             // refresh values
             if (component.selectedToken === "DAI") {
               // needs to be updated this way because Polygon RPC nodes are slow with updating state
-              component.$store.state.dai.lpAllowance = depValue;
+              component.$store.state.dai.lpAllowance = allowanceValue;
             } else if (component.selectedToken === "USDC") {
               // needs to be updated this way because Polygon RPC nodes are slow with updating state
-              component.$store.state.usdc.lpAllowance = depValue;
+              component.$store.state.usdc.lpAllowance = allowanceValue;
             }
             
             

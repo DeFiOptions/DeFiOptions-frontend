@@ -113,29 +113,36 @@ export default {
     OptionDataItem 
   },
 
+  created() {
+    this.getOptionPrice();
+
+    this.$store.dispatch("dai/fetchUserBalance");
+    this.$store.dispatch("dai/fetchLpAllowance");
+    this.$store.dispatch("usdc/fetchUserBalance");
+    this.$store.dispatch("usdc/fetchLpAllowance");
+    this.$store.dispatch("optionsExchange/fetchExchangeUserBalance");
+    this.$store.dispatch("optionsExchange/fetchExchangeBalanceAllowance");
+  },
+
   computed: {
     ...mapGetters("accounts", ["getActiveAccount", "getWeb3"]),
     ...mapGetters("liquidityPool", ["getLiquidityPoolContract", "getLiquidityPoolAddress"]),
-    ...mapGetters("dai", ["getDaiAddress", "getUserDaiBalance", "getDaiContract"]),
+    ...mapGetters("dai", ["getDaiAddress", "getUserDaiBalance", "getDaiContract", "getLpDaiAllowance"]),
     ...mapGetters("optionsExchange", ["getOptionsExchangeAddress", "getOptionsExchangeContract", "getExchangeUserBalance", "getUserExchangeBalanceAllowance"]),
-    ...mapGetters("usdc", ["getUsdcAddress", "getUserUsdcBalance", "getUsdcContract"]),
+    ...mapGetters("usdc", ["getUsdcAddress", "getUserUsdcBalance", "getUsdcContract", "getLpUsdcAllowance"]),
 
     allowanceNeeded() {
       if (this.buyWith === "DAI") {
-        return false; // allowance tx not needed due to permit()
+        return this.getLpDaiAllowance < this.getTotal;
 
       } else if (this.buyWith === "USDC") {
-        return false; // allowance tx not needed due to permit()
+        return this.getLpUsdcAllowance < this.getTotal;
 
       } else if (this.buyWith === "USDT") { // Tether
-        return true;
+        return true; // TODO
 
       } else if (this.buyWith === "Exchange Balance") {
-        if (this.getUserExchangeBalanceAllowance < this.getTotal) {
-          return true;
-        } else {
-          return false;
-        }
+        return this.getUserExchangeBalanceAllowance < this.getTotal;
       } 
 
       return false;
@@ -192,7 +199,7 @@ export default {
     isOptionSizeNotValid() { // validation for option size
       // option size bigger than volume.
       if (Number(this.selectedOptionSize) > Number(this.selectedOptionVolume)) {
-        return {status: true, message: "Must not be bigger than " + (Math.floor(Number(this.selectedOptionVolume*1000))/1000) + "!"};
+        return {status: true, message: "Must not be bigger than " + Math.floor(Number(this.selectedOptionVolume*1000))/1000 + "!"};
       }
 
       // too many digits
@@ -228,21 +235,27 @@ export default {
     }
   },
 
-  created() {
-    this.getOptionPrice();
-  },
-
   methods: {
     async approveAllowance() {
       let component = this;
       component.loading = true;
 
       // define unit and token contract
-      let unit = "ether"; // Exchange Balance - 18 decimals
+      let unit = "ether"; // Exchange Balance & DAI - 18 decimals
       let tokenContract = component.getOptionsExchangeContract; // Exchange Balance contract
+
       if (component.buyWith === "USDT") {
         unit = "kwei"; // USDT (Tether) - 4 decimals
         // TODO: tokenContract = ...; // USDT contract
+      }
+
+      if (component.buyWith === "USDC") {
+        unit = "mwei"; // USDC - 6 decimals
+        tokenContract = component.getUsdcContract; // USDC contract
+      }
+
+      if (component.buyWith === "DAI") {
+        tokenContract = component.getDaiContract; // DAI contract
       }
 
       // define allowance value
@@ -251,6 +264,47 @@ export default {
 
       // call the approve method
       try {
+        await tokenContract.methods.approve(component.getLiquidityPoolAddress, allowanceValueWei).send({
+          from: component.getActiveAccount
+        }).on('transactionHash', function(hash){
+          console.log("tx hash: " + hash);
+          component.$toast.info("The transaction has been submitted. Please wait for it to be confirmed.");
+
+        }).on('receipt', function(receipt){
+          console.log(receipt);
+
+          if (receipt.status) {
+            component.$toast.success("The approval was successfull. You can buy the option now.");
+
+            // refresh values
+            if (component.buyWith === "DAI") {
+              // needs to be updated this way because Polygon RPC nodes are slow with updating state
+              component.$store.state.dai.lpAllowance = allowanceValue;
+            } else if (component.buyWith === "USDC") {
+              // needs to be updated this way because Polygon RPC nodes are slow with updating state
+              component.$store.state.usdc.lpAllowance = allowanceValue;
+            } else if (component.buyWith === "USDT") {
+              // needs to be updated this way because Polygon RPC nodes are slow with updating state
+              // component.$store.state.tether.lpAllowance = allowanceValue;
+            } else if (component.buyWith === "Exchange Balance") {
+              // needs to be updated this way because Polygon RPC nodes are slow with updating state
+              component.$store.state.optionsExchange.userExchangeBalanceAllowance = allowanceValue;
+            }
+            
+            
+          } else {
+            component.$toast.error("The transaction has failed. Please contact the DeFi Options support.");
+          }
+          
+          component.loading = false;
+
+        }).on('error', function(error){
+          console.log(error);
+          component.loading = false;
+          component.$toast.error("There has been an error. Please contact the DeFi Options support.");
+        });
+
+        /*
         await tokenContract.methods.approve(component.getLiquidityPoolAddress, allowanceValueWei).send({
           from: component.getActiveAccount
         }, function(error, hash) {
@@ -284,10 +338,10 @@ export default {
               }
             });
           }
-        });
+        });*/
       } catch (e) {
           window.console.log("Error:", e);
-          component.$toast.error("The transaction has been reverted. Please try again or contact project admins.");
+          component.$toast.error("The transaction has been reverted. Please try again or contact DeFi Options support.");
           component.loading = false;
       }
 
