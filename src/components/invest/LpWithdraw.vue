@@ -124,7 +124,7 @@ export default {
         console.log(receipt);
 
         if (receipt.status) {
-          component.$toast.success("Your withdrawal was successfull. It may take 10s or more for values to update.");
+          component.$toast.success("Your withdrawal was successfull. It may take 10 seconds or more for values to update.");
 
           // refresh values
           component.$store.dispatch("optionsExchange/fetchLiquidityPoolBalance");

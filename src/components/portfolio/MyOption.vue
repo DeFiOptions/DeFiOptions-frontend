@@ -159,49 +159,35 @@ export default {
       let optionContract = new this.getWeb3.eth.Contract(OptionTokenContractJson.abi, this.option.address);
 
       // redeem option transaction
-      try {
-        await optionContract.methods.redeem(
-          component.getActiveAccount
-        ).send({
-          from: component.getActiveAccount,
-          gas: Number(150000)
-        }, function(error, hash) {
-          // transaction error
-          if (error) {
-            component.$toast.error("The transaction has been rejected. Please try again.");
-            component.loading = false;
-          }
+      await optionContract.methods.redeem(
+        component.getActiveAccount
+      ).send({
+        from: component.getActiveAccount,
+      }).on('transactionHash', function(hash){
+        console.log("tx hash: " + hash);
+        component.$toast.info("The transaction has been submitted. Please wait for it to be confirmed.");
 
-          // transaction sent
-          if (hash) {
-            // show a "tx submitted" toast
-            component.$toast.info("The Redeem transaction has been submitted. Please wait for it to be confirmed.");
+      }).on('receipt', function(receipt){
+        console.log(receipt);
 
-            // listen for the event
-            optionContract.once("Transfer", {
-              filter: { owner: component.getActiveAccount }
-            }, function(error, event) {
-              component.loading = false;
-              
-              // failed transaction
-              if (error) {
-                component.$toast.error("The Redeem transaction has failed. Please try again, perhaps with a higher gas limit.");
-              }
+        if (receipt.status) {
+          component.$toast.success("You have successfully redeemed your expired option. It may take 10 seconds or more for values to update.");
 
-              // success
-              if (event) {
-                component.$toast.success("You have successfully redeemed your expired option.");
-                component.$store.dispatch("optionsExchange/fetchExchangeUserBalance");
-                component.$store.dispatch("optionsExchange/fetchUserOptions");
-              }
-            });
-          }
-        });
-      } catch (e) {
-          window.console.log("Error:", e);
-          component.$toast.error("The transaction has been reverted. Please try again or contact project admins.");
-          component.loading = false;
-      }
+          // refresh values
+          component.$store.dispatch("optionsExchange/fetchExchangeUserBalance");
+          component.$store.dispatch("optionsExchange/fetchUserOptions");
+          
+        } else {
+          component.$toast.error("The transaction has failed. Please contact the DeFi Options support.");
+        }
+        
+        component.loading = false;
+
+      }).on('error', function(error){
+        console.log(error);
+        component.loading = false;
+        component.$toast.error("There has been an error. Please contact the DeFi Options support.");
+      });
     },
 
     async sellOption() {
