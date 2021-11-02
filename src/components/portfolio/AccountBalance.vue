@@ -47,6 +47,12 @@ export default {
     ...mapGetters("optionsExchange", ["getOptionsExchangeContract"]),
   },
 
+  created() {
+    this.$store.dispatch("creditToken/fetchUserBalance");
+    this.$store.dispatch("dai/fetchUserBalance");
+    this.$store.dispatch("usdc/fetchUserBalance");
+  },
+
   data() {
     return {
       withdrawValue: null,
@@ -63,45 +69,37 @@ export default {
 
       await this.getOptionsExchangeContract.methods.withdrawTokens(tokensWei).send({
         from: this.getActiveAccount
-      }, function(error, hash) {
-        if (error) {
-          component.$toast.error("The transaction has been rejected. Please try again.", {
-              timeout: 5000
-          });
-          component.loading = false;
+      }).on('transactionHash', function(hash){
+        console.log("tx hash: " + hash);
+        component.$toast.info("The transaction has been submitted. Please wait for it to be confirmed.");
+
+      }).on('receipt', function(receipt){
+        console.log(receipt);
+
+        if (receipt.status) {
+          component.$toast.success("Your withdrawal was successfull. It may take 10s or more for values to update.");
+
+          // refresh values
+          component.$store.dispatch("dai/fetchUserBalance"); // refresh the user's dai balance
+          component.$store.dispatch("usdc/fetchUserBalance"); // refresh the user's usdc balance
+          component.$store.dispatch("creditToken/fetchUserBalance"); // refresh the user's credit token balance
+          component.withdrawValue = null;
+
+          component.withdrawAmount = null;
+          
+        } else {
+          component.$toast.error("The transaction has failed. Please contact the DeFi Options support.");
         }
 
-        if (hash) {
-          // show a "tx submitted" toast
-          component.$toast.info("The transaction has been submitted. Please wait for it to be confirmed.");
+        // Refresh the exchange balance no matter if the tx was successful or not
+        component.$store.dispatch("optionsExchange/fetchExchangeUserBalance");
+        
+        component.loading = false;
 
-          // listen for the WithdrawTokens event
-          component.getOptionsExchangeContract.once("WithdrawTokens", {
-            filter: { owner: component.getActiveAccount }
-          }, function(error, event) {
-            // failed transaction
-            
-            if (error) {
-              component.$toast.error("The withdrawal transaction has failed. Please try again, perhaps with a higher gas limit.");
-            }
-
-            // success
-            if (event) {
-              component.$toast.success("You have successfully withdrew your exchange balance (or were credited with Credit Tokens).");
-
-              // Refresh values
-              component.$store.dispatch("dai/fetchUserBalance"); // refresh the user's dai balance
-              component.$store.dispatch("usdc/fetchUserBalance"); // refresh the user's usdc balance
-              component.$store.dispatch("creditToken/fetchUserBalance"); // refresh the user's credit token balance
-              component.withdrawValue = null;
-            }
-
-            // Refresh the exchange balance no matter if the tx was successful or not
-            component.$store.dispatch("optionsExchange/fetchExchangeUserBalance");
-
-            component.loading = false;
-          });
-        }
+      }).on('error', function(error){
+        console.log(error);
+        component.loading = false;
+        component.$toast.error("There has been an error. Please contact the DeFi Options support.");
       });
     }
   }
