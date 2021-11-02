@@ -104,6 +104,7 @@ export default {
       selectedOptionSize: 0.1,
       selectedOptionVolume: null,
       showForm: false,
+      slippage: 0.5, // 0.5% by default
       tooLowVolume: false
     }
   },
@@ -366,7 +367,7 @@ export default {
         });
       } catch (e) {
           window.console.log("Error:", e);
-          component.$toast.error("The transaction has been reverted. Please contact DeFi Options support.");
+          //component.$toast.error("The transaction has been reverted. Please contact DeFi Options support.");
           
       } finally {
         component.setFormData();
@@ -379,7 +380,9 @@ export default {
       let result = await this.getLiquidityPoolContract.methods.queryBuy(this.option.symbol).call();
       
       if (result) {
-        this.optionPrice = this.getWeb3.utils.fromWei(result.price, "ether");
+        
+        this.optionPrice = this.getWeb3.utils.fromWei(result.price, "ether") * (1 + (this.slippage/100));
+        
         this.optionPriceFormatted = "$" + Number(this.optionPrice).toFixed(2);
       }
     },
@@ -398,8 +401,7 @@ export default {
       let result = await this.getLiquidityPoolContract.methods.queryBuy(this.option.symbol).call();
       
       if (result) {
-        // hardcoded slippage of 1% (TODO: create a field where user can set slippage)
-        this.optionPrice = this.getWeb3.utils.fromWei(result.price, "ether") * 1.01;
+        this.optionPrice = this.getWeb3.utils.fromWei(result.price, "ether") * (1 + (this.slippage/100));
 
         this.optionPriceFormatted = "$" + Number(this.optionPrice).toFixed(2);
         this.selectedOptionVolume = this.getWeb3.utils.fromWei(result.volume, "ether");
