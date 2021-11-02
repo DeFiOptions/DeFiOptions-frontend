@@ -398,7 +398,9 @@ export default {
       let result = await this.getLiquidityPoolContract.methods.queryBuy(this.option.symbol).call();
       
       if (result) {
+        // hardcoded slippage of 1% (TODO: create a field where user can set slippage)
         this.optionPrice = this.getWeb3.utils.fromWei(result.price, "ether") * 1.01;
+
         this.optionPriceFormatted = "$" + Number(this.optionPrice).toFixed(2);
         this.selectedOptionVolume = this.getWeb3.utils.fromWei(result.volume, "ether");
 

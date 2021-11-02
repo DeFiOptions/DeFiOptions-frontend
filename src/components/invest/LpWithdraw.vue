@@ -59,6 +59,15 @@ export default {
     }
   },
 
+  created() {
+    this.$store.dispatch("liquidityPool/fetchUserPoolUsdValue");
+    this.$store.dispatch("liquidityPool/fetchPoolFreeBalance");
+    this.$store.dispatch("optionsExchange/fetchLiquidityPoolBalance");
+    this.$store.dispatch("liquidityPool/fetchUserBalance");
+    this.$store.dispatch("dai/fetchUserBalance");
+    this.$store.dispatch("usdc/fetchUserBalance");
+  },
+
   computed: {
     ...mapGetters("accounts", ["getActiveAccount", "getWeb3"]),
     ...mapGetters("liquidityPool", ["getLiquidityPoolContract", "getLiquidityPoolUserBalance", 
@@ -108,43 +117,36 @@ export default {
       try {
         await component.getLiquidityPoolContract.methods.withdraw(amountWei).send({
           from: component.getActiveAccount
-        }, function(error, hash) {
-          // Withdrawal tx error
-          if (error) {
-            component.$toast.error("The transaction has been rejected. Please try again.");
-            component.loading = false;
+        }).on('transactionHash', function(hash){
+          console.log("tx hash: " + hash);
+          component.$toast.info("The transaction has been submitted. Please wait for it to be confirmed.");
+
+        }).on('receipt', function(receipt){
+          console.log(receipt);
+
+          if (receipt.status) {
+            component.$toast.success("Your withdrawal was successfull.");
+
+            // refresh values
+            component.$store.dispatch("optionsExchange/fetchLiquidityPoolBalance");
+            component.$store.dispatch("liquidityPool/fetchUserBalance");
+            component.$store.dispatch("liquidityPool/fetchUserPoolUsdValue");
+            component.$store.dispatch("dai/fetchUserBalance");
+            component.$store.dispatch("usdc/fetchUserBalance");
+            component.$store.dispatch("liquidityPool/fetchPoolFreeBalance");
+
+            component.withdrawAmount = null;
+            
+          } else {
+            component.$toast.error("The transaction has failed. Please contact the DeFi Options support.");
           }
+          
+          component.loading = false;
 
-          // Withdrawal transaction sent
-          if (hash) {
-            // show a "tx submitted" toast
-            component.$toast.info("The Withdrawal transaction has been submitted. Please wait for it to be confirmed.");
-
-            // listen for the Transfer event
-            component.getLiquidityPoolContract.once("Transfer", {
-              filter: { owner: component.getActiveAccount }
-            }, function(error, event) {
-              component.loading = false;
-              
-              // failed transaction
-              if (error) {
-                component.$toast.error("The Withdrawal transaction has failed. Please try again, perhaps with a higher gas limit.");
-              }
-
-              // success
-              if (event) {
-                component.$toast.success("Your withdrawal was successfull.");
-
-                component.$store.dispatch("optionsExchange/fetchLiquidityPoolBalance");
-                component.$store.dispatch("liquidityPool/fetchUserBalance");
-                component.$store.dispatch("liquidityPool/fetchUserPoolUsdValue");
-                component.$store.dispatch("dai/fetchUserBalance");
-                component.$store.dispatch("usdc/fetchUserBalance");
-
-                component.withdrawAmount = null;
-              }
-            });
-          }
+        }).on('error', function(error){
+          console.log(error);
+          component.loading = false;
+          component.$toast.error("There has been an error. Please contact the DeFi Options support.");
         });
       } catch (e) {
           window.console.log("Error:", e);
