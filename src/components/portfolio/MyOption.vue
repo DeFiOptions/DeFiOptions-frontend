@@ -212,54 +212,41 @@ export default {
       );
 
       // sell option transaction
-      try {
-        await component.getLiquidityPoolContract.methods.sell(
-          component.option.symbol, // symbol
-          optionUnitPrice, // price per one option
-          optionSizeWei, // volume a.k.a. user's selected option size
-          result.deadline,
-          result.v,
-          result.r,
-          result.s
-        ).send({
-          from: component.getActiveAccount
-        }, function(error, hash) {
-          // transaction error
-          if (error) {
-            component.$toast.error("The transaction has been rejected. Please try again.");
-            component.loading = false;
-          }
+      await component.getLiquidityPoolContract.methods.sell(
+        component.option.symbol, // symbol
+        optionUnitPrice, // price per one option
+        optionSizeWei, // volume a.k.a. user's selected option size
+        result.deadline,
+        result.v,
+        result.r,
+        result.s
+      ).send({
+        from: component.getActiveAccount
+      }).on('transactionHash', function(hash){
+        console.log("tx hash: " + hash);
+        component.$toast.info("The transaction has been submitted. Please wait for it to be confirmed.");
 
-          // transaction sent
-          if (hash) {
-            // show a "tx submitted" toast
-            component.$toast.info("The Sell transaction has been submitted. Please wait for it to be confirmed.");
+      }).on('receipt', function(receipt){
+        console.log(receipt);
 
-            // listen for the event
-            component.getLiquidityPoolContract.once("Sell", {
-              filter: { seller: component.getActiveAccount }
-            }, function(error, event) {
-              component.loading = false;
-              
-              // failed transaction
-              if (error) {
-                component.$toast.error("The Sell transaction has failed. Please try again, perhaps with a higher gas limit.");
-              }
+        if (receipt.status) {
+          component.$toast.success("You have successfully sold an option. Please reload the website to refresh values.");
 
-              // success
-              if (event) {
-                component.$toast.success("You have successfully sold an option.");
-                component.$store.dispatch("optionsExchange/fetchExchangeUserBalance");
-                component.$store.dispatch("optionsExchange/fetchUserOptions");
-              }
-            });
-          }
-        });
-      } catch (e) {
-          window.console.log("Error:", e);
-          component.$toast.error("The transaction has been reverted. Please try again or contact project admins.");
-          component.loading = false;
-      }
+          // reduce the amount of options user can sell
+          // needs to be reduced manually, because Polygon nodes have a lag
+          component.option.holding = String(Number(component.option.holding) - Number(component.selectedOptionSize).toFixed(5));
+        } else {
+          component.$toast.error("The transaction has failed. Please contact the DeFi Options support.");
+        }
+        
+        component.loading = false;
+
+      }).on('error', function(error){
+        console.log(error);
+        component.loading = false;
+        component.$toast.error("There has been an error. Please contact the DeFi Options support.");
+      });
+
     },
 
     async setSellData() {
@@ -273,8 +260,8 @@ export default {
           this.selectedOptionSize = this.getMaxOptionSize;
         }
 
-        // Reducing the query price to avoid precision errors in the smart contract (-0.01%)
-        this.selectedOptionPrice -= Number(this.selectedOptionPrice) * 0.0001;
+        // hardcoded 1% slippage
+        this.selectedOptionPrice -= Number(this.selectedOptionPrice) * 0.01;
       }
     },
 
