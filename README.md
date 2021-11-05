@@ -1,6 +1,6 @@
-# DeFiOptions Vue.js front-end
+# DeFiOptions web3 app
 
-GH Pages: https://DeFiOptions.github.io/DeFiOptions-frontend/ 
+Accessible via: https://DeFiOptions.org
 
 ### Install npm packages
 
@@ -14,9 +14,11 @@ npm install
 npm run serve
 ```
 
-(Make sure your network is set to Kovan.)
+(Make sure your network is set to Kovan or Polygon.)
 
 ### Deploy to GitHub Pages
+
+Do not edit the `gh-pages` branch. Instead edit the `master` branch and then run the commands below to deploy to GH Pages:
 
 ```bash
 npm run build
