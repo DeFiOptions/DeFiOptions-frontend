@@ -234,7 +234,10 @@ export default {
 
           // reduce the amount of options user can sell
           // needs to be reduced manually, because Polygon nodes have a lag
-          component.option.holding = String(Number(component.option.holding) - Number(component.selectedOptionSize).toFixed(5));
+          // BigNumber needs to be used to avoid precision errors
+          let bnHolding = component.getWeb3.utils.toBN(component.getWeb3.utils.toWei(String(component.option.holding), "ether"));
+          let bnSold = component.getWeb3.utils.toBN(component.getWeb3.utils.toWei(String(component.selectedOptionSize), "ether"));
+          component.option.holding = component.getWeb3.utils.fromWei(bnHolding.sub(bnSold), "ether").toString();
         } else {
           component.$toast.error("The transaction has failed. Please contact the DeFi Options support.");
         }
