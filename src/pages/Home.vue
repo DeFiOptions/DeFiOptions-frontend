@@ -108,7 +108,12 @@
         <div class="peckshield-text">
           <h2 class="peckshield-title">Security is our top priority.</h2>
 
-          <p class="text-white peckshield-description">DeFi Options DAO is currently being audited.</p>
+          <p class="text-white peckshield-description">
+            DeFi Options DAO 
+            <a class="audit-link" target="_blank" href="https://github.com/DeFiOptions/DeFiOptions-core/blob/master/audits/PeckShield-Audit-Report-DeFiOptions-v1.0.pdf">
+              has been audited by PeckShield.
+            </a>
+          </p>
         </div>
         
       </div>
@@ -327,6 +332,15 @@ export default {
 </script>
 
 <style scoped>
+.audit-link {
+  color: white;
+  text-decoration: underline;
+}
+
+.audit-link:hover {
+  text-decoration: none;
+}
+
 .btn-social:hover {
   background-color: #00072D;
   border-color: #5AFFB0;
