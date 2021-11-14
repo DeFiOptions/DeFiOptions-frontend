@@ -3,9 +3,19 @@
     <div class="col-md-3">
       <h3>Account balance</h3>
 
-      <Card cardClass="card-green" title="Your balance" :text="'$'+exchangeBalance.toFixed(2)" />
+      <Card 
+        cardClass="card-green" 
+        title="Your balance" 
+        :text="'$'+exchangeBalance.toFixed(2)" 
+        info="Your exchange balance in USD, deposited in the options exchange, which you can withdraw at any time free of charge, use to purchase options from the liquidity pool, or provide as collateral for writing options."
+      />
 
-      <Card cardClass="card-blue" title="Credit tokens" :text="creditTokens" class="mb-3" />
+      <Card 
+        cardClass="card-blue" 
+        title="Credit tokens" 
+        :text="creditTokens" class="mb-3" 
+        info="Your Credit Tokens balance, which accrues interest over time and is redeemable for stablecoins at a 1:1 value conversion ratio in the options exchange as long as there's enough stablecoin supply available."
+      />
     </div>
 
     <div class="col-md-9">

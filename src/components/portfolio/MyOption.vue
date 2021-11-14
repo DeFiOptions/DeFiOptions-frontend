@@ -10,7 +10,7 @@
       <OptionDataItem class="data-item" title="Option size" :data="option.holding" :divider="true" />
       <OptionDataItem class="data-item" title="Strike" :data="strikePrice" :divider="true" />
       <OptionDataItem class="data-item" title="Expiration" :data="option.maturity" :divider="true" />
-      <OptionDataItem class="data-item" title="Intrinsic value" :green="true" :data="'$'+intrinsicValue" />
+      <OptionDataItem class="data-item" title="Intrinsic value" :green="true" :data="'$'+intrinsicValue" info="Intrinsic value is the difference between the current price of the underlying asset and the strike price of the option." />
     </div>
 
     <!-- Action button -->
@@ -39,19 +39,36 @@
 
   <!-- Sell option form -->
   <div v-if="showSellForm" class="sell-form">
-    <h3>Option size</h3>
+    <h3>
+      Option size
+      <i 
+        @mouseover="showInfo" 
+        id="infoEl" 
+        class="fas fa-info-circle" 
+        data-bs-toggle="tooltip" 
+        data-bs-placement="bottom" 
+        title="The Sell button shows the price the liquidity pool is willing to pay for your options, consisting of the option's intrinsic value and a potential premium on top of it."
+      ></i>
+    </h3>
 
     <div class="d-flex flex-wrap">
+
       <div>
-        <input type="text" v-model="selectedOptionSize" class="form-control sell-input" placeholder="0.0" aria-describedby="sellText">
-        <div id="sellText" class="form-text" v-if="!isOptionSizeNotValid.status">
-          Maximum option size to sell: <span class="max-sell" @click="selectedOptionSize = getMaxOptionSize">{{getMaxOptionSize}}</span>
-          <span v-if="Number(this.option.holding) > Number(getMaxOptionSize)"> 
-            (Your total holding is bigger: {{this.option.holding}})
-          </span>.
+        <input type="text" v-model="selectedOptionSize" class="form-control sell-input" placeholder="0.0">
+
+        <div class="form-text sell-text">
+          <span v-if="isOptionSizeNotValid.status" >
+            {{ isOptionSizeNotValid.message }}
+          </span>
+
+          <span class="form-text sell-text">
+            Max size: <span class="max-sell" @click="selectedOptionSize = getMaxOptionSize">{{getMaxOptionSize}}</span>
+            <span v-if="Number(this.option.holding) > Number(getMaxOptionSize)"> 
+              (Your total holding is bigger: {{this.option.holding}})
+            </span>.
+          </span>
         </div>
 
-        <div v-if="isOptionSizeNotValid.status" id="sellText" class="form-text" >{{ isOptionSizeNotValid.message }}</div>
       </div>
 
       <div class="form-button-mobile">
@@ -121,12 +138,12 @@ export default {
 
       // too many digits
       if (String(this.selectedOptionSize).length > 14) {
-        return {status: true, message: "Please reduce the number of digits."};
+        return {status: true, message: "Reduce the number of digits."};
       }
 
       // negative option size
       if (Number(this.selectedOptionSize) < 0) {
-        return {status: true, message: "Option size must not be negative!"};
+        return {status: true, message: "Must not be negative!"};
       }
 
       // not a number
@@ -136,7 +153,7 @@ export default {
 
       // null option size
       if (this.selectedOptionSize === null || Number(this.selectedOptionSize) === 0 || this.selectedOptionSize === undefined || this.selectedOptionSize === "") {
-        return {status: true, message: "Option size must not be empty or zero!"};
+        return {status: true, message: "Must not be empty/zero!"};
       }
 
       return {status: false, message: "Valid option size"};
@@ -275,8 +292,16 @@ export default {
         this.setSellData();
         this.showSellForm = true;
       }
+    },
+
+    showInfo() {
+      // enable tooltip
+      var infoEl = document.getElementById('infoEl')
+      var tooltip = new window.bootstrap.Tooltip(infoEl)
+      tooltip.show();
     }
   }
+  
 }
 </script>
 
@@ -313,7 +338,7 @@ export default {
   margin-right: 10px;
 }
 
-#sellText {
+.sell-text {
   color: white;
   font-weight: 400;
   font-size: 12px;

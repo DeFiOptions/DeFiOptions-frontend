@@ -1,7 +1,10 @@
 <template>
   <div class="d-flex d-row">
     <div>
-      <h3 :class="{grn:green}">{{title}}</h3>
+      <h3 :class="{grn:green}">
+        {{title}}
+        <i v-if="info" class="fas fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="bottom" :title="info"></i>
+      </h3>
       <p class="data-text" :class="{grn:green}" v-if="data === 'loading'">
         <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
       </p>
@@ -15,7 +18,15 @@
 <script>
 export default {
   name: "OptionDataItem",
-  props: ["title", "data", "divider", "green"]
+  props: ["title", "data", "divider", "green", "info"],
+
+  mounted() {
+    // enable tooltips
+    let tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+      return new window.bootstrap.Tooltip(tooltipTriggerEl);
+    });
+  },
 }
 </script>
 
