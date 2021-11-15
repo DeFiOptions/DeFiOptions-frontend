@@ -24,14 +24,6 @@
           </router-link>
           <!-- END Nav Item - Trade -->
 
-          <!-- Nav Item - Portfolio -->
-          <router-link to="/portfolio" style="text-decoration: none" v-if="isUserConnected">
-            <li class="nav-item">
-                <a class="nav-link" :class="{active:this.$route.name === 'portfolio'}" href="/portfolio">Portfolio</a>
-            </li>
-          </router-link>
-          <!-- END Nav Item - Portfolio -->
-
           <!-- Nav Item - Liquidity pool -->
           <router-link to="/invest" style="text-decoration: none" v-if="isUserConnected">
             <li class="nav-item">
@@ -39,6 +31,14 @@
             </li>
           </router-link>
           <!-- END Nav Item - Liquidity pool -->
+
+          <!-- Nav Item - Portfolio -->
+          <router-link to="/portfolio" style="text-decoration: none" v-if="isUserConnected">
+            <li class="nav-item">
+                <a class="nav-link" :class="{active:this.$route.name === 'portfolio'}" href="/portfolio">Portfolio</a>
+            </li>
+          </router-link>
+          <!-- END Nav Item - Portfolio -->
 
           <li class="nav-item dropdown" v-if="isUserConnected">
             <a class="nav-link dropdown-toggle primary-color" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
