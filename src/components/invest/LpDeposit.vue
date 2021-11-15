@@ -77,7 +77,7 @@
               By making a deposit you confirm being aware that:
 
               <ul>
-                <li>Deposits are held by the liquidity pool until its maturity date.</li>
+                <li>Deposits are held by the liquidity pool until its maturity date ({{getLiquidityPoolMaturityDate}}).</li>
                 <li>Depositors receive pool tokens proportionally to the amount of funds deposited</li>
                 <li>Upon maturity, each depositor is able to redeem their share of the pool's stablecoin balance free of any charge.</li>
                 <li>Early withdrawal of funds is possible, but the Early Withdrawal Fee of {{getLiquidityPoolWithdrawalFee}}% is charged in that case.</li>
@@ -108,7 +108,8 @@ export default {
   name: 'LpDeposit',
   computed: {
     ...mapGetters("accounts", ["getActiveAccount", "getWeb3"]),
-    ...mapGetters("liquidityPool", ["getLiquidityPoolContract", "getLiquidityPoolAddress", "getLiquidityPoolWithdrawalFee"]),
+    ...mapGetters("liquidityPool", ["getLiquidityPoolContract", "getLiquidityPoolAddress", 
+                                    "getLiquidityPoolWithdrawalFee", "getLiquidityPoolMaturityDate"]),
     ...mapGetters("dai", ["getUserDaiBalance", "getDaiContract", "getLpDaiAllowance"]),
     ...mapGetters("usdc", ["getUserUsdcBalance", "getUsdcContract", "getLpUsdcAllowance"]),
 
