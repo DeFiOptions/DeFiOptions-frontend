@@ -74,8 +74,8 @@ h3 {
 .btn-success, .btn-success:focus, .btn-success:visited, .btn-success:disabled {
   background-color: #5AFFB0;
   border-color: #5AFFB0;
-  padding-left: 50px;
-  padding-right: 50px;
+  padding-left: 40px;
+  padding-right: 40px;
   color: #00072D;
   font-weight: 500;
   text-transform: uppercase;
@@ -262,7 +262,7 @@ h3 {
   color: #00072D;
 }
 
-/* Mobile screens */
+/* Specific screens */
 
 /* iPhone SE */
 @media screen and (max-width: 320px) {
@@ -351,5 +351,11 @@ h3 {
     background: rgb(32, 164, 221);
     background: -webkit-linear-gradient(top, rgba(32, 164, 221, 0) 0%, #5AFFB0 48.96%, rgba(32, 164, 221, 0) 100%);
     background: linear-gradient(to bottom, rgba(32, 164, 221, 0) 0%, #5AFFB0 48.96%, rgba(32, 164, 221, 0) 100%);
+  }
+}
+
+@media (min-width: 1200px){
+  .container, .container-lg, .container-md, .container-sm, .container-xl {
+    max-width: 1200px;
   }
 }

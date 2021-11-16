@@ -7,8 +7,9 @@
     <!-- Option data -->
     <div class="div-flex justify-content-center">
       <OptionDataItem class="data-item" title="Option" :data="option.pair+' · ' + option.type" :divider="true" />
-      <OptionDataItem class="data-item" title="Option size" :data="option.holding" :divider="true" />
+      <OptionDataItem class="data-item" title="Size" :data="option.holding" :divider="true" />
       <OptionDataItem class="data-item" title="Strike" :data="strikePrice" :divider="true" />
+      <OptionDataItem v-if="Number(option.timestamp)*1e3 < Date.now()" class="data-item" title="Expiry price" :data="'$'+expiryPrice" :divider="true" />
       <OptionDataItem class="data-item" title="Expiration" :data="option.maturity" :divider="true" />
       <OptionDataItem class="data-item" title="Intrinsic value" :green="true" :data="'$'+intrinsicValue" info="Intrinsic value is the difference between the current price of the underlying asset and the strike price of the option." />
     </div>
@@ -91,6 +92,8 @@ import { mapGetters } from "vuex";
 import { signERC2612Permit } from 'eth-permit';
 import OptionDataItem from '../OptionDataItem.vue';
 import OptionTokenContractJson from "../../contracts/RedeemableToken.json";
+import ChainlinkContractJson from "../../contracts/ChainlinkFeed.json";
+import addresses from "../../contracts/addresses.json";
 
 export default {
   name: "MyOption",
@@ -98,6 +101,7 @@ export default {
   data() {
     return {
       loading: false,
+      expiryPrice: null, // price at the expiration date (if option expired already)
       selectedOptionPrice: null, // sell option data
       selectedOptionSize: null, // sell option data
       selectedOptionVolume: null, // sell option data
@@ -110,7 +114,7 @@ export default {
   },
 
   computed: {
-    ...mapGetters("accounts", ["getActiveAccount", "getWeb3"]),
+    ...mapGetters("accounts", ["getActiveAccount", "getChainId", "getWeb3"]),
     ...mapGetters("liquidityPool", ["getLiquidityPoolContract", "getLiquidityPoolAddress"]),
     
     getMaxOptionSize() {
@@ -163,9 +167,31 @@ export default {
     }
   },
 
+  created() {
+    this.fetchExpiryPrice();
+  },
+
   methods: {
     isOptionExpired(option) {
       return Math.floor(Date.now()/1000) > Number(option.timestamp);
+    },
+
+    async fetchExpiryPrice() {
+      if (Number(this.option.timestamp)*1e3 < Date.now()) {
+        let priceFeedType = "";
+
+        if (this.option.pair === "ETH/USD") {
+          priceFeedType = "ChainlinkFeedEth";
+        } else if (this.option.pair === "BTC/USD") {
+          priceFeedType = "ChainlinkFeedBtc";
+        }
+
+        const feedAddress = addresses[priceFeedType][parseInt(this.getChainId)];
+        const feedContract = new this.getWeb3.eth.Contract(ChainlinkContractJson.abi, feedAddress);
+        const historicPriceObj = await feedContract.methods.getPrice(this.option.timestamp).call();
+        this.expiryPrice = Number(this.getWeb3.utils.fromWei(historicPriceObj.price, "ether")).toFixed(0);
+      }
+
     },
 
     async redeemOption() {

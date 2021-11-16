@@ -140,6 +140,7 @@ export default {
       this.$store.dispatch("liquidityPool/fetchUserPoolUsdValue");
       this.$store.dispatch("liquidityPool/fetchPoolFreeBalance");
       this.$store.dispatch("liquidityPool/fetchPoolWithdrawalFee");
+      this.$store.dispatch("liquidityPool/fetchPoolMaturityDate");
 
       this.$store.dispatch("creditToken/fetchUserBalance");
 

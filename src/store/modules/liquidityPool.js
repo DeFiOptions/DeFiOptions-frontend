@@ -113,9 +113,6 @@ const actions = {
         month: 'short', 
         year: 'numeric' });
 
-    console.log("Pool maturity:");
-    console.log(maturityHumanReadable);
-
     commit("setPoolMaturityDate", maturityHumanReadable);
   },
   async fetchPoolWithdrawalFee({ commit, dispatch, state }) {
