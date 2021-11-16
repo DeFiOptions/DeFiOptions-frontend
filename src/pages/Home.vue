@@ -33,7 +33,9 @@
 
       <div class="d-flex flex-wrap flex-row justify-content-center text-uppercase hero-buttons" v-if="!isUserConnected">
         <a class="btn btn-outline-success m-1" target="_blank" href="https://discord.gg/WCeKgHNz3z">Join Discord</a>
-        <button class="btn btn-success m-1" @click="connectWeb3Modal">Connect wallet</button>
+
+        <button class="btn btn-success m-1" v-if="!isUserConnected && isCompliant" @click="connectWeb3Modal">Connect wallet</button>
+        <button class="btn btn-success m-1" v-if="!isUserConnected && !isCompliant" data-bs-toggle="modal" data-bs-target="#complianceModal">Connect wallet</button>
       </div> 
 
     </section>
@@ -318,13 +320,25 @@ import { mapGetters, mapActions } from "vuex";
 
 export default {
   name: "Home",
+
   computed: {
     ...mapGetters("accounts", ["getChainName", "isUserConnected"]),
   },
+
   created() {
     this.$store.dispatch("accounts/initWeb3Modal");
     this.$store.dispatch("accounts/ethereumListener");
+
+    // check if user has already confirmed the compliance modal (this modal is in Navbar)
+    this.isCompliant = localStorage.getItem('isCompliant');
   },
+
+  data() {
+    return {
+      isCompliant: null
+    }
+  },
+
   methods: {
     ...mapActions("accounts", ["connectWeb3Modal"]),
   }
