@@ -68,13 +68,19 @@ const actions = {
     let contract = new web3.eth.Contract(LiquidityPool.abi, address);
     commit("setContract", contract);
   },
-  async fetchApy({ commit, dispatch, state }) {
+  async fetchApy({ commit, dispatch, state, rootState }) {
     if (!state.contract) {
       dispatch("fetchContract");
     }
 
-    let apy = await state.contract.methods.yield(365 * 24 * 60 * 60).call();
+    const apy = await state.contract.methods.yield(365 * 24 * 60 * 60).call();
     let apyBig = ((apy-1e9)/1e9)*100;
+
+    if (parseInt(rootState.accounts.chainId) === 137) {
+      // needed for the soft launch in Nov 2021 to reset yield to 0%
+      const base = 1262535945;
+      apyBig = (apy / base  - 1) * 100;
+    }
 
     commit("setApy", apyBig);
   },
