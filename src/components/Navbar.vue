@@ -139,29 +139,28 @@
           <button class="btn btn-outline-success mx-1 mb-2 text-uppercase" v-if="!isUserConnected && !isCompliant" data-bs-toggle="modal" data-bs-target="#complianceModal">Connect wallet</button>
           <button class="btn btn-outline-success mx-1 mb-2" v-if="isUserConnected" @click="disconnectWeb3Modal">{{getActiveAccount.substring(0, 6)}}...{{ getActiveAccount.substring(38, 42)}}</button>
         </div>
+      </div>
 
-        <!-- Compliance Modal -->
-        <div class="modal fade" id="complianceModal" tabindex="-1" aria-labelledby="complianceModalLabel" aria-hidden="true">
-          <div class="modal-dialog">
-            <div class="modal-content">
-              <div class="modal-header">
-                <h5 class="modal-title" id="complianceModalLabel">Information and Compliance</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-              </div>
-              
-              <ComplianceModalBody />
-
-              <div class="modal-footer">
-                <button type="button" class="btn btn-primary" data-bs-dismiss="modal" @click="confirmComplianceAndConnect">I confirm all of the above</button>
-                <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
-              </div>
-
+      <!-- Compliance Modal -->
+      <div class="modal fade" id="complianceModal" tabindex="-1" aria-labelledby="complianceModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="complianceModalLabel">Information and Compliance</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
+            
+            <ComplianceModalBody />
+
+            <div class="modal-footer">
+              <button type="button" class="btn btn-primary" data-bs-dismiss="modal" @click="confirmComplianceAndConnect">I confirm all of the above</button>
+              <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
+            </div>
+
           </div>
         </div>
-        <!-- End Compliance Modal -->
-
       </div>
+      <!-- End Compliance Modal -->
     </div>
   </nav>
 </template>
