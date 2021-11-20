@@ -72,10 +72,18 @@
 
       </div>
 
-      <div class="form-button-mobile">
+      <div class="form-button-mobile" v-if="isEnoughAllowance">
         <button @click="sellOption" class="btn btn-success form-control" :disabled="isOptionSizeNotValid.status">
           <span v-if="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
           Sell for ${{getTotal.toFixed(2)}}
+        </button>
+        <div></div>
+      </div>
+
+      <div class="form-button-mobile" v-if="!isEnoughAllowance">
+        <button @click="approveAllowance" class="btn btn-success form-control" :disabled="isOptionSizeNotValid.status">
+          <span v-if="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+          Approve the sell (${{getTotal.toFixed(2)}})
         </button>
         <div></div>
       </div>
@@ -89,7 +97,6 @@
 
 <script>
 import { mapGetters } from "vuex";
-import { signERC2612Permit } from 'eth-permit';
 import OptionDataItem from '../OptionDataItem.vue';
 import OptionTokenContractJson from "../../contracts/RedeemableToken.json";
 import ChainlinkContractJson from "../../contracts/ChainlinkFeed.json";
@@ -102,6 +109,7 @@ export default {
     return {
       loading: false,
       expiryPrice: null, // price at the expiration date (if option expired already)
+      optionAllowance: 0, // has user approved the option token yet and for what amount
       selectedOptionPrice: null, // sell option data
       selectedOptionSize: null, // sell option data
       selectedOptionVolume: null, // sell option data
@@ -133,6 +141,13 @@ export default {
     },
     intrinsicValue() {
       return (Number(this.option.intrinsicValue)*Number(this.option.holding)).toFixed(2);
+    },
+    isEnoughAllowance() {
+      if (Number(this.optionAllowance) >= Number(this.selectedOptionSize)) {
+        return true;
+      }
+
+      return false;
     },
     isOptionSizeNotValid() { // validation for option size
       // option size bigger than volume.
@@ -169,11 +184,51 @@ export default {
 
   created() {
     this.fetchExpiryPrice();
+    this.fetchOptionAllowance();
   },
 
   methods: {
-    isOptionExpired(option) {
-      return Math.floor(Date.now()/1000) > Number(option.timestamp);
+    // approve allowance to sell an option
+    async approveAllowance() {
+      let component = this;
+      component.loading = true;
+
+      // convert selected option size to wei
+      let tokensWei = component.getWeb3.utils.toWei(String(component.selectedOptionSize), "ether");
+      const allowanceValue = component.selectedOptionSize;
+
+      // option token contract
+      const optionContract = new component.getWeb3.eth.Contract(OptionTokenContractJson.abi, this.option.address);
+
+      // call the approve method
+      await optionContract.methods.approve(component.getLiquidityPoolAddress, tokensWei).send({
+        from: component.getActiveAccount
+
+      }).on('transactionHash', function(hash){
+        console.log("tx hash: " + hash);
+        component.$toast.info("The transaction has been submitted. Please wait for it to be confirmed.");
+
+      }).on('receipt', function(receipt){
+        console.log(receipt);
+
+        if (receipt.status) {
+          component.$toast.success("The approval was successfull. You can sell the option now.");
+
+          component.optionAllowance += allowanceValue; // manually increase the allowance amount
+          component.$store.dispatch("optionsExchange/fetchUserOptions"); // refresh values
+          
+        } else {
+          component.$toast.error("The transaction has failed. Please contact the DeFi Options support.");
+        }
+        
+        component.loading = false;
+
+      }).on('error', function(error){
+        console.log(error);
+        component.loading = false;
+        component.$toast.error("There has been an error. Please contact the DeFi Options support.");
+      });
+
     },
 
     async fetchExpiryPrice() {
@@ -192,6 +247,18 @@ export default {
         this.expiryPrice = Number(this.getWeb3.utils.fromWei(historicPriceObj.price, "ether")).toFixed(0);
       }
 
+    },
+
+    async fetchOptionAllowance() {
+      const optionContract = new this.getWeb3.eth.Contract(OptionTokenContractJson.abi, this.option.address);
+
+      const allowanceWei = await optionContract.methods.allowance(this.getActiveAccount, this.getLiquidityPoolAddress).call();
+
+      this.optionAllowance = this.getWeb3.utils.fromWei(String(allowanceWei), "ether");
+    },
+
+    isOptionExpired(option) {
+      return Math.floor(Date.now()/1000) > Number(option.timestamp);
     },
 
     async redeemOption() {
@@ -234,35 +301,19 @@ export default {
     },
 
     async sellOption() {
-      let component = this;
+      const component = this;
       component.loading = true;
 
-      this.setSellData(component.option); // fetch price again to avoid errors 
+      component.setSellData(component.option); // fetch price again to avoid errors 
 
-      let optionSizeWei = component.getWeb3.utils.toWei(String(component.selectedOptionSize), "ether");
-      let optionUnitPrice = component.getWeb3.utils.toWei(String(component.selectedOptionPrice), "ether");
-
-      let sigDeadline = Math.floor(new Date().getTime()/1000) + (3600 * 1); // valid for 1 hour
-
-      // allowance through permit()
-      const result = await signERC2612Permit(
-        window.ethereum, 
-        component.option.address, // option token address
-        component.getActiveAccount, // option owner
-        component.getLiquidityPoolAddress, // spender
-        optionSizeWei, // value: the amount of option tokens that user decided to sell
-        sigDeadline // deadline/expiry for the signature
-      );
+      const optionSizeWei = component.getWeb3.utils.toWei(String(component.selectedOptionSize), "ether");
+      const optionUnitPrice = component.getWeb3.utils.toWei(String(component.selectedOptionPrice), "ether");
 
       // sell option transaction
       await component.getLiquidityPoolContract.methods.sell(
         component.option.symbol, // symbol
         optionUnitPrice, // price per one option
         optionSizeWei, // volume a.k.a. user's selected option size
-        result.deadline,
-        result.v,
-        result.r,
-        result.s
       ).send({
         from: component.getActiveAccount
       }).on('transactionHash', function(hash){
