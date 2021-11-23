@@ -240,6 +240,8 @@ export default {
       let component = this;
       component.loading = true;
 
+      component.getOptionPrice(); // refresh the option price
+
       // define unit and token contract
       let unit = "ether"; // Exchange Balance & DAI - 18 decimals
       let tokenContract = component.getOptionsExchangeContract; // Exchange Balance contract
@@ -259,7 +261,7 @@ export default {
       }
 
       // define allowance value
-      const allowanceValue = component.getTotal * 1.01; // make it 1% bigger to avoid rounding errors
+      const allowanceValue = component.getTotal * 1.05; // make it 5% bigger to avoid slippage issues
       const allowanceValueWei = component.getWeb3.utils.toWei(String(allowanceValue.toFixed(4)), unit); // round to 4 decimals
 
       // call the approve method
@@ -290,6 +292,8 @@ export default {
               // needs to be updated this way because Polygon RPC nodes are slow with updating state
               component.$store.state.optionsExchange.userExchangeBalanceAllowance = allowanceValue;
             }
+
+            component.getOptionPrice(); // refresh the option price
             
           } else {
             component.$toast.error("The transaction has failed. Please contact the DeFi Options support.");
@@ -303,7 +307,6 @@ export default {
           window.console.log("Error:", e);
           component.$toast.error("The transaction has been reverted. Please try again or contact DeFi Options support.");
       } finally {
-        //component.setFormData();
         component.loading = false;
       }
 
@@ -312,7 +315,7 @@ export default {
       let component = this;
       component.loading = true;
 
-      component.getOptionPrice();
+      component.getOptionPrice(); // refresh the option price
 
       let optionSizeWei = component.getWeb3.utils.toWei(String(component.selectedOptionSize), "ether");
       let optionUnitPrice = component.getWeb3.utils.toWei(String(component.optionPrice), "ether");
@@ -372,7 +375,7 @@ export default {
           //component.$toast.error("The transaction has been reverted. Please contact DeFi Options support.");
           
       } finally {
-        component.setFormData();
+        component.setFormData(); // refresh the option price
         component.loading = false;
       }
     },
