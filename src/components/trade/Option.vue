@@ -104,7 +104,7 @@ export default {
       selectedOptionSize: 0.1,
       selectedOptionVolume: null,
       showForm: false,
-      slippage: 0.5, // 0.5% by default
+      slippage: 2, // 2% by default
       tooLowVolume: false
     }
   },
@@ -312,6 +312,8 @@ export default {
       let component = this;
       component.loading = true;
 
+      component.getOptionPrice();
+
       let optionSizeWei = component.getWeb3.utils.toWei(String(component.selectedOptionSize), "ether");
       let optionUnitPrice = component.getWeb3.utils.toWei(String(component.optionPrice), "ether");
 
@@ -338,12 +340,12 @@ export default {
             if (component.buyWith === "DAI") {
               component.$store.dispatch("dai/fetchUserBalance");
               component.$store.state.dai.lpAllowance = 0;
-              component.$store.dispatch("dai/fetchLpAllowance");
+              //component.$store.dispatch("dai/fetchLpAllowance");
 
             } else if (component.buyWith === "USDC") {
               component.$store.dispatch("usdc/fetchUserBalance");
               component.$store.state.usdc.lpAllowance = 0;
-              component.$store.dispatch("usdc/fetchLpAllowance");
+              //component.$store.dispatch("usdc/fetchLpAllowance");
 
             } else if (component.buyWith === "USDT") {
               // TODO
@@ -354,7 +356,7 @@ export default {
             } else if (component.buyWith === "Exchange Balance") {
               component.$store.dispatch("optionsExchange/fetchExchangeUserBalance");
               component.$store.state.optionsExchange.userExchangeBalanceAllowance = 0;
-              component.$store.dispatch("optionsExchange/fetchExchangeBalanceAllowance");
+              //component.$store.dispatch("optionsExchange/fetchExchangeBalanceAllowance");
             }
             
           } else {

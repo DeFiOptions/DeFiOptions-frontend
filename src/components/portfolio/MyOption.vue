@@ -48,7 +48,9 @@
         class="fas fa-info-circle" 
         data-bs-toggle="tooltip" 
         data-bs-placement="bottom" 
-        title="The Sell button shows the price the liquidity pool is willing to pay for your options, consisting of the option's intrinsic value and a potential premium on top of it."
+        title="The Sell button shows the price the liquidity pool is willing to pay for your options, 
+        consisting of the option's intrinsic value and a potential premium on top of it. If you sell
+        your option before expiry, you'll be subject to a spread of up to 5%."
       ></i>
     </h3>
 
