@@ -38,10 +38,20 @@
         <button class="btn btn-success m-1" v-if="!isUserConnected && !isCompliant" data-bs-toggle="modal" data-bs-target="#complianceModal">Connect wallet</button>
       </div> 
 
+      <div class="row mt-5">
+        <div class="col-md-6 offset-md-3">
+          <div class="ratio ratio-16x9">
+            <iframe src="https://www.youtube.com/embed/cFAhKQFsskM?rel=0" title="What is DeFi Options" allowfullscreen></iframe>
+          </div>
+        </div>
+      </div>
+
+      
+
     </section>
     <!-- END Hero -->
 
-    <div class="d-flex flex-row justify-content-center mb-5 mt-3">
+    <div class="d-flex flex-row justify-content-center mb-5">
       <hr class="section-divider" />
     </div>
 
@@ -398,7 +408,7 @@ export default {
 
 .hero {
   margin-top: 120px;
-  margin-bottom: 120px;
+  margin-bottom: 60px;
 }
 
 .hero-buttons {
