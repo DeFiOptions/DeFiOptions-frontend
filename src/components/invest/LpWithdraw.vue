@@ -1,8 +1,22 @@
 <template>
   <div class="mt-3">
-    <h3>Withdraw funds</h3>
+    <h3>
+      Withdraw funds
+      <i 
+        class="fas fa-info-circle" 
+        data-bs-toggle="tooltip" 
+        data-bs-placement="bottom" 
+        title="Withdrawing funds from the pool means increasing your portfolio account balance. It does NOT 
+        mean you receive stablecoins. If you want to receive stablecoins, you need to go to 
+        the Portfolio page and withdraw from there, too."
+      ></i>
+    </h3>
 
     <div class="section-small">
+
+      <p class="text-white">
+        Withdraw funds from the pool to your Portfolio account balance:
+      </p>
 
       <div class="d-flex flex-wrap">
         <div>

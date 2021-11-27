@@ -19,7 +19,15 @@
     </div>
 
     <div class="col-md-9">
-      <h3>Withdraw</h3>
+      <h3>
+        Withdraw
+        <i 
+          class="fas fa-info-circle" 
+          data-bs-toggle="tooltip" 
+          data-bs-placement="bottom" 
+          title="Withdraw stablecoins from your DeFi Options account balance to your Polygon account."
+        ></i>
+      </h3>
 
       <div class="section-small d-flex flex-wrap">
         <div>
