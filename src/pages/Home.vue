@@ -281,6 +281,12 @@
         </li>
 
         <li class="nav-item col mt-4">
+          <a href="https://forum.defioptions.org/" target="_blank" class="btn btn-social">
+            <i class="fab fa-discourse"></i>
+          </a>
+        </li>
+
+        <li class="nav-item col mt-4">
           <a href="https://www.reddit.com/r/DeFiOptionsDAO/" target="_blank" class="btn btn-social">
             <i class="fab fa-reddit"></i>
           </a>

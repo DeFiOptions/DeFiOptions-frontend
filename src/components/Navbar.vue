@@ -58,6 +58,9 @@
               <li><a class="dropdown-item" target="_blank" href="https://discord.gg/WCeKgHNz3z">
                 <i class="fab fa-discord"></i> Discord
               </a></li>
+              <li><a class="dropdown-item" target="_blank" href="https://forum.defioptions.org/">
+                <i class="fab fa-discourse"></i> Forum
+              </a></li>
               <li><a class="dropdown-item" target="_blank" href="https://github.com/DeFiOptions">
                 <i class="fab fa-github"></i> GitHub
               </a></li>
@@ -89,6 +92,9 @@
               </a></li>
               <li><a class="dropdown-item" target="_blank" href="https://discord.gg/WCeKgHNz3z">
                 <i class="fab fa-discord"></i> Discord
+              </a></li>
+              <li><a class="dropdown-item" target="_blank" href="https://forum.defioptions.org/">
+                <i class="fab fa-discourse"></i> Forum
               </a></li>
               <li><a class="dropdown-item" target="_blank" href="https://github.com/DeFiOptions">
                 <i class="fab fa-github"></i> GitHub
