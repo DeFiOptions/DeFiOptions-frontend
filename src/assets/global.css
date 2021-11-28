@@ -131,6 +131,11 @@ h3 {
   background: #105685;
 }
 
+.form-check-input[role=switch]:checked {
+  background-color: #5AFFB0;
+  border-color: #5AFFB0;
+}
+
 .hero-title {
   font-weight: 400;
   font-size: 60px;

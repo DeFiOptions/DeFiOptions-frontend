@@ -2,10 +2,23 @@
   <div class="section-big row mt-4 mx-3">
     <h3>My options</h3>
 
-    <div v-for="option in getUserOptions" v-bind:key="option.symbol">
-      <MyOption :option="option" />
+    <div class="form-check form-switch mt-1 mx-3">
+      <input 
+        class="form-check-input" 
+        type="checkbox" 
+        role="switch" 
+        id="expiredOptionsSwitch" 
+        :checked="showExpired" 
+        @click="toggleExpired"
+      >
+      <label class="form-check-label text-white" for="expiredOptionsSwitch">
+        show expired options
+      </label>
     </div>
 
+    <div v-for="option in filteredUserOptions" v-bind:key="option.symbol">
+      <MyOption :option="option" />
+    </div>
     
   </div>
 </template>
@@ -17,9 +30,55 @@ export default {
   name: "MyOptions",
   props: ["getUserOptions"],
 
+  data() {
+    return {
+      showExpired: false
+    }
+  },
+
+  computed: {
+    filteredUserOptions() {
+      if (this.showExpired === true) {
+        return this.getUserOptions;
+      }
+
+      let filtered = [];
+
+      for (let option of this.getUserOptions) {
+        if (!this.isOptionExpired(option)) {
+          filtered.push(option);
+        }
+      }
+
+      return filtered;
+    }
+  },
+
   components: { 
     MyOption 
   },
+
+  created() {
+    const storedExpired = localStorage.getItem("showExpired"); // this returns a string, not a bool
+
+    if (storedExpired === "true") {
+      this.showExpired = true;
+    } else {
+      this.showExpired = false;
+    }
+  },
+
+  methods: {
+    isOptionExpired(option) {
+      return Math.floor(Date.now()/1000) > Number(option.timestamp);
+    },
+
+    toggleExpired() {
+      this.showExpired = !this.showExpired;
+
+      localStorage.setItem("showExpired", this.showExpired);
+    }
+  }
 }
 </script>
 
