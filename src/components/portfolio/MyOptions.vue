@@ -11,8 +11,8 @@
         :checked="showExpired" 
         @click="toggleExpired"
       >
-      <label class="form-check-label text-white" for="expiredOptionsSwitch">
-        show expired options
+      <label class="form-check-label sell-text" for="expiredOptionsSwitch">
+        Show expired options
       </label>
     </div>
 
