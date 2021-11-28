@@ -238,9 +238,14 @@ const mutations = {
       state.defaultType = typeName;
 
       // maturity
-      let maturityHumanReadable = new Date(Number(itemList[3])*1e3).toLocaleDateString('en-GB', { day: 'numeric', 
-        month: 'short', 
-        year: 'numeric' });
+      let maturityHumanReadable = new Date(Number(itemList[3])*1e3).toLocaleDateString('en-GB', 
+        { 
+          hour12 : true,
+          hour: 'numeric',
+          day: 'numeric', 
+          month: 'short', 
+          year: 'numeric' 
+        }) + " (UTC)";
       state.defaultMaturity = maturityHumanReadable;
       
       // strike price
