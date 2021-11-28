@@ -72,7 +72,12 @@
         Buy for ${{getTotal.toFixed(2)}}
       </button>
 
-      <button v-if="allowanceNeeded" @click="approveAllowance" class="btn btn-success form-control" :disabled="isOptionSizeNotValid.status">
+      <button 
+        v-if="allowanceNeeded" 
+        class="btn btn-success form-control" 
+        data-bs-toggle="modal" :data-bs-target="'#approveModal'+getUniqueOptionId"
+        :disabled="isOptionSizeNotValid.status"
+      >
         <span v-if="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
         Approve {{buyWith}} for ${{getTotal.toFixed(2)}}
       </button>
@@ -80,6 +85,58 @@
       <small v-if="allowanceNeeded" class="show-text form-text text-center">
         You'll need to make 2 transactions: approve & buy.
       </small>
+    </div>
+  </div>
+
+  <!-- Approve Confirmation Modal -->
+  <div class="modal fade" :id="'approveModal'+getUniqueOptionId" tabindex="-1" aria-labelledby="approveModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="approveModalLabel">Confirm allowance</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          Choose the amount of {{buyWith}} that you want to give DeFi Options spending approval for:
+
+          <div class="form-check" @click="unlimitedApproval=false">
+            <input 
+              class="form-check-input" 
+              name="buyApprovalCheckbox" 
+              type="radio" id="specifiedRadio" 
+              :value="!unlimitedApproval"
+              :checked="!unlimitedApproval"
+            >
+            <label class="form-check-label" for="specifiedRadio">
+              ${{getTotal.toFixed(2)}}
+            </label>
+          </div>
+
+          <div class="form-check" @click="unlimitedApproval=true">
+            <input 
+              class="form-check-input" 
+              name="buyApprovalCheckbox" 
+              type="radio" id="unlimitedRadio"
+              :value="unlimitedApproval"
+              :checked="unlimitedApproval"
+            >
+            <label class="form-check-label" for="unlimitedRadio">
+              Unlimited amount of {{buyWith}}
+            </label>
+          </div>
+
+          <p class="mt-3">
+            After the approval transaction goes through you can click the Buy button and actually buy the option.
+          </p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal">Cancel</button>
+          <button @click="approveAllowance" type="button" class="btn btn-success" data-bs-dismiss="modal">
+            <span v-if="!unlimitedApproval">Approve {{buyWith}} for ${{getTotal.toFixed(2)}}</span>
+            <span v-if="unlimitedApproval">Approve {{buyWith}} (unlimited)</span>
+          </button>
+        </div>
+      </div>
     </div>
   </div>
   
@@ -105,7 +162,8 @@ export default {
       selectedOptionVolume: null,
       showForm: false,
       slippage: 2, // 2% by default
-      tooLowVolume: false
+      tooLowVolume: false,
+      unlimitedApproval: false
     }
   },
 
@@ -185,6 +243,9 @@ export default {
     getTotal() {
       return Number(this.selectedOptionSize) * Number(this.optionPrice);
     },
+    getUniqueOptionId() {
+      return this.option.symbol.replace("/", "-");
+    },
     getUserStablecoinBalance() {
       if (this.buyWith === "DAI") {
         return this.getUserDaiBalance;
@@ -261,9 +322,14 @@ export default {
       }
 
       // define allowance value
-      const allowanceValue = component.getTotal * 1.05; // make it 5% bigger to avoid slippage issues
-      const allowanceValueWei = component.getWeb3.utils.toWei(String(allowanceValue.toFixed(4)), unit); // round to 4 decimals
+      let allowanceValue = component.getTotal * 1.05; // make it 5% bigger to avoid slippage issues
 
+      if (component.unlimitedApproval) {
+        allowanceValue = 10 ** 9; // 1B tokens as "unlimited" value
+      }
+
+      const allowanceValueWei = component.getWeb3.utils.toWei(String(allowanceValue.toFixed(4)), unit); // round to 4 decimals
+      
       // call the approve method
       try {
         await tokenContract.methods.approve(component.getLiquidityPoolAddress, allowanceValueWei).send({
@@ -311,6 +377,7 @@ export default {
       }
 
     },
+
     async buyOption() {
       let component = this;
       component.loading = true;
