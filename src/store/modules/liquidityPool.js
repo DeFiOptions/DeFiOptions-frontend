@@ -245,7 +245,7 @@ const mutations = {
           day: 'numeric', 
           month: 'short', 
           year: 'numeric' 
-        }) + " (UTC)";
+        });
       state.defaultMaturity = maturityHumanReadable;
       
       // strike price
