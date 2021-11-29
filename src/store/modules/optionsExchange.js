@@ -97,6 +97,8 @@ const actions = {
     if (!state.contract) {
       dispatch("fetchContract");
     }
+
+    commit("setUnderlyingPrice", "N/A");
     
     try {
       let underlyingPrice = await state.contract.methods.getUnderlyingPrice(String(data.symbol)).call();

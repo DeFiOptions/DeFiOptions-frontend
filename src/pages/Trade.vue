@@ -147,8 +147,13 @@ export default {
           this.selectedType = this.getLastSelectedTradeType;
         }
 
-        let symbol = this.getSymbolsListJson[this.selectedPair][this.selectedMaturity][this.selectedType][0].symbol;
-        this.$store.dispatch("optionsExchange/fetchUnderlyingPrice", {symbol});
+        try {
+          let symbol = this.getSymbolsListJson[this.selectedPair][this.selectedMaturity][this.selectedType][0].symbol;
+          this.$store.dispatch("optionsExchange/fetchUnderlyingPrice", {symbol});
+        } catch {
+          this.$store.dispatch("optionsExchange/fetchUnderlyingPrice", {symbol: "N/A"});
+        }
+        
       }
     });
   },
@@ -168,8 +173,12 @@ export default {
       this.$store.commit("accounts/setLastSelectedTradePair", pair);
 
       // fetch new underlying price
-      let symbol = this.getSymbolsListJson[this.selectedPair][this.selectedMaturity][this.selectedType][0].symbol;
-      this.$store.dispatch("optionsExchange/fetchUnderlyingPrice", {symbol});
+      try {
+        let symbol = this.getSymbolsListJson[this.selectedPair][this.selectedMaturity][this.selectedType][0].symbol;
+        this.$store.dispatch("optionsExchange/fetchUnderlyingPrice", {symbol});
+      } catch {
+        this.$store.dispatch("optionsExchange/fetchUnderlyingPrice", {symbol: "N/A"});
+      }
     },
     changeMaturity(maturity) {
       this.selectedMaturity = maturity;
