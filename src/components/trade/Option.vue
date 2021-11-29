@@ -411,23 +411,37 @@ export default {
             // refresh values
             if (component.buyWith === "DAI") {
               component.$store.dispatch("dai/fetchUserBalance");
-              component.$store.state.dai.lpAllowance = 0;
+
+              if (!component.unlimitedApproval) {
+                component.$store.state.dai.lpAllowance = 0;
+              }
               //component.$store.dispatch("dai/fetchLpAllowance");
 
             } else if (component.buyWith === "USDC") {
               component.$store.dispatch("usdc/fetchUserBalance");
-              component.$store.state.usdc.lpAllowance = 0;
+              
+              if (!component.unlimitedApproval) {
+                component.$store.state.usdc.lpAllowance = 0;
+              }
               //component.$store.dispatch("usdc/fetchLpAllowance");
 
             } else if (component.buyWith === "USDT") {
               // TODO
               //component.$store.dispatch("tether/fetchUserBalance");
-              //component.$store.state.tether.lpAllowance = 0;
+              
+              /*
+              if (!component.unlimitedApproval) {
+                component.$store.state.tether.lpAllowance = 0;
+              }*/
+
               //this.$store.dispatch("tether/fetchLpAllowance");
 
             } else if (component.buyWith === "Exchange Balance") {
               component.$store.dispatch("optionsExchange/fetchExchangeUserBalance");
-              component.$store.state.optionsExchange.userExchangeBalanceAllowance = 0;
+
+              if (!component.unlimitedApproval) {
+                component.$store.state.optionsExchange.userExchangeBalanceAllowance = 0;
+              }
               //component.$store.dispatch("optionsExchange/fetchExchangeBalanceAllowance");
             }
             
