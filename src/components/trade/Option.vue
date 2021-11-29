@@ -97,7 +97,9 @@
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-          Choose the amount of {{buyWith}} that you want to give DeFi Options spending approval for:
+          Choose the amount of {{buyWith}} that you want to give 
+          <a target="_blank" :href="'https://polygonscan.com/address/'+getLiquidityPoolAddress">this pool</a> 
+          on DeFi Options spending approval for:
 
           <div class="form-check" @click="unlimitedApproval=false">
             <input 

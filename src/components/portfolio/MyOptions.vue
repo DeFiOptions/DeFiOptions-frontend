@@ -70,7 +70,11 @@ export default {
 
   methods: {
     isOptionExpired(option) {
-      return Math.floor(Date.now()/1000) > Number(option.timestamp);
+      // only options that expired with intrinsic value 0 or less
+      return (
+        Math.floor(Date.now()/1000) > Number(option.timestamp) && 
+        (Number(option.intrinsicValue)*Number(option.holding)).toFixed(0) <= 0
+      );
     },
 
     toggleExpired() {
