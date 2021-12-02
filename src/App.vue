@@ -1,49 +1,107 @@
 <template>
-  <div id="wrapper">
+  <div class="container">
+    <Navbar />
 
-    <Sidebar />
-
-    <!-- Content Wrapper -->
-    <div id="content-wrapper" class="d-flex flex-column">
-
-      <!-- Main Content -->
-      <div id="content">
-
-        <Navbar />
-
-        <!-- Begin Page Content -->
-        <div class="container-fluid">
-          <router-view />
-        </div>
-        <!-- /.container-fluid -->
-      </div>
-      <!-- End of Main Content -->
-
-      <!-- Footer -->
-      <footer class="sticky-footer bg-white">
-          <div class="container my-auto">
-              <div class="copyright text-center my-auto">
-                  <span>Copyright &copy; DeFiOptions</span>
-              </div>
-          </div>
-      </footer>
-      <!-- End of Footer -->
-
+    <div v-if="isUserConnected && !getChainName" class="alert alert-danger" role="alert">
+      You are on an unsupported network. Click here to connect to either 
+      <span @click="switchToPolygon" class="network-switch-link">Polygon</span> or 
+      <span @click="switchToKovan" class="network-switch-link">Kovan testnet</span>.
     </div>
-    <!-- End of Content Wrapper -->
+
+    <router-view />
+
+    <Footer />
+
   </div>
-  <!-- End of Page Wrapper -->
 </template>
 
 <script>
+import { mapGetters } from "vuex";
+import Footer from './components/Footer.vue';
 import Navbar from './components/Navbar.vue';
-import Sidebar from './components/Sidebar.vue';
 
 export default {
   name: 'App',
+
   components: {
     Navbar,
-    Sidebar
+    Footer
+  },
+
+  computed: {
+    ...mapGetters("accounts", ["getChainName", "getSupportedChains", "isUserConnected"]),
+  },
+
+  methods: {
+    switchToPolygon() {
+      window.ethereum.request({ 
+        method: 'wallet_addEthereumChain', 
+        params: [{ 
+          chainId: '0x89', 
+          chainName: 'Polygon PoS Chain', 
+          nativeCurrency: { name: 'MATIC', symbol: 'MATIC', decimals: 18 }, 
+          rpcUrls: ['https://polygon-rpc.com/'], 
+          blockExplorerUrls: ['https://polygonscan.com/']
+        }] 
+      });
+    },
+    switchToKovan() {
+      window.ethereum.request({ 
+        method: 'wallet_switchEthereumChain', 
+        params: [{ 
+          chainId: '0x2a'
+        }] 
+      });
+    }
+  },
+
+  watch: {
+    getChainName: function () {
+      // update everything whenever the network is changed
+      this.$store.dispatch("optionsExchange/fetchContract");
+      this.$store.dispatch("optionsExchange/storeAddress");
+      this.$store.dispatch("liquidityPool/fetchContract");
+      this.$store.dispatch("liquidityPool/storeAddress");
+      this.$store.dispatch("dai/fetchContract");
+      this.$store.dispatch("dai/storeAddress");
+      this.$store.dispatch("usdc/fetchContract");
+      this.$store.dispatch("usdc/storeAddress");
+      this.$store.dispatch("creditToken/fetchContract");
+      this.$store.dispatch("creditToken/storeAddress");
+
+      this.$store.dispatch("dai/fetchUserBalance");
+      this.$store.dispatch("usdc/fetchUserBalance");
+      this.$store.dispatch("dai/fetchLpAllowance");
+      this.$store.dispatch("usdc/fetchLpAllowance");
+
+      this.$store.dispatch("optionsExchange/fetchExchangeUserBalance");
+      this.$store.dispatch("optionsExchange/fetchUserOptions");
+      this.$store.dispatch("optionsExchange/fetchExchangeBalanceAllowance");
+      this.$store.dispatch("optionsExchange/fetchLiquidityPoolBalance");
+
+      this.$store.dispatch("liquidityPool/fetchUserBalance");
+      this.$store.dispatch("liquidityPool/fetchSymbolsList");
+      this.$store.dispatch("liquidityPool/fetchApy");
+      this.$store.dispatch("liquidityPool/fetchUserPoolUsdValue");
+      this.$store.dispatch("liquidityPool/fetchPoolFreeBalance");
+      this.$store.dispatch("liquidityPool/fetchPoolWithdrawalFee");
+      this.$store.dispatch("liquidityPool/fetchPoolMaturityDate");
+
+      this.$store.dispatch("creditToken/fetchUserBalance");
+
+      this.$store.dispatch("accounts/fetchActiveBalance");
+    }
   }
 }
 </script>
+
+<style scoped>
+ .modal {
+   display: block;
+ }
+
+.network-switch-link {
+  text-decoration: underline;
+  cursor: pointer;
+}
+</style>

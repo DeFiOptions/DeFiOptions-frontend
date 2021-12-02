@@ -4,12 +4,15 @@ import addresses from "../../contracts/addresses.json";
 const state = {
   abi: null,
   address: null,
-  contract: null,
   apy: null,
-  symbolsListJson: [],
+  contract: null,
   defaultPair: null,
   defaultType: null,
   defaultMaturity: null,
+  poolFreeBalance: null,
+  poolMaturityDate: null,
+  poolWithdrawalFee: null,
+  symbolsListJson: [],
   userBalance: null,
   userPoolUsdValue: null // USD value of the pool balance
 };
@@ -36,11 +39,20 @@ const getters = {
   getLiquidityPoolContract(state) {
     return state.contract;
   },
-  getSymbolsListJson(state) {
-    return state.symbolsListJson;
+  getLiquidityPoolFreeBalance(state) {
+    return state.poolFreeBalance;
+  },
+  getLiquidityPoolMaturityDate(state) {
+    return state.poolMaturityDate;
   },
   getLiquidityPoolUserBalance(state) {
     return state.userBalance;
+  },
+  getLiquidityPoolWithdrawalFee(state) {
+    return state.poolWithdrawalFee;
+  },
+  getSymbolsListJson(state) {
+    return state.symbolsListJson;
   },
   getUserPoolUsdValue(state) {
     return state.userPoolUsdValue;
@@ -52,16 +64,23 @@ const actions = {
     let web3 = rootState.accounts.web3;
     let chainIdDec = parseInt(rootState.accounts.chainId);
     let address = addresses.LinearLiquidityPool[chainIdDec];
+
     let contract = new web3.eth.Contract(LiquidityPool.abi, address);
     commit("setContract", contract);
   },
-  async fetchApy({ commit, dispatch, state }) {
+  async fetchApy({ commit, dispatch, state, rootState }) {
     if (!state.contract) {
       dispatch("fetchContract");
     }
 
-    let apy = await state.contract.methods.yield(365 * 24 * 60 * 60).call();
+    const apy = await state.contract.methods.yield(365 * 24 * 60 * 60).call();
     let apyBig = ((apy-1e9)/1e9)*100;
+
+    if (parseInt(rootState.accounts.chainId) === 137) {
+      // needed for the soft launch in Nov 2021 to reset yield to 0%
+      const base = 1262535945;
+      apyBig = (apy / base  - 1) * 100;
+    }
 
     commit("setApy", apyBig);
   },
@@ -77,7 +96,44 @@ const actions = {
 
     commit("setSymbolsList", {web3, symbolsRaw});
   },
-  async fetchUserBalance({ commit, dispatch, rootState }) {
+  async fetchPoolFreeBalance({ commit, dispatch, state, rootState }) {
+    if (!state.contract) {
+      dispatch("fetchContract");
+    }
+
+    let freeBalanceWei = await state.contract.methods.calcFreeBalance().call();
+
+    let web3 = rootState.accounts.web3;
+    let balance = web3.utils.fromWei(freeBalanceWei, "ether");
+
+    commit("setPoolFreeBalance", balance);
+  },
+  async fetchPoolMaturityDate({ commit, dispatch, state }) {
+    if (!state.contract) {
+      dispatch("fetchContract");
+    }
+
+    let maturitySec = await state.contract.methods.maturity().call();
+
+    let maturityHumanReadable = new Date(Number(maturitySec)*1e3).toLocaleDateString('en-GB', { day: 'numeric', 
+        month: 'short', 
+        year: 'numeric' });
+
+    commit("setPoolMaturityDate", maturityHumanReadable);
+  },
+  async fetchPoolWithdrawalFee({ commit, dispatch, state }) {
+    if (!state.contract) {
+      dispatch("fetchContract");
+    }
+
+    const withdrawalFeeBig = await state.contract.methods.withdrawFee().call();
+
+    const wFeeSmall = Number(withdrawalFeeBig) / 1000000000; // divide to remove 9 decimal places
+    const wFeePercentage = wFeeSmall * 100; // the result is percentage
+
+    commit("setPoolWithdrawalFee", wFeePercentage);
+  },
+  async fetchUserBalance({ commit, dispatch, state, rootState }) {
     if (!state.contract) {
       dispatch("fetchContract");
     }
@@ -90,13 +146,20 @@ const actions = {
 
     commit("setUserLiquidityPoolBalance", balance);
   },
-  async fetchUserPoolUsdValue({ commit, dispatch, rootState }) {
+  async fetchUserPoolUsdValue({ commit, dispatch, state, rootState }) {
     if (!state.contract) {
       dispatch("fetchContract");
     }
 
     let activeAccount = rootState.accounts.activeAccount;
-    let balanceWei = await state.contract.methods.valueOf(activeAccount).call();
+
+    let balanceWei = "0";
+
+    try {
+      balanceWei = await state.contract.methods.valueOf(activeAccount).call();
+    } catch(e) {
+      console.log("The total pool balance is probably 0, which is why MetaMask may be showing the 'Internal JSON-RPC... division by 0' error.");
+    }
 
     let web3 = rootState.accounts.web3;
     let value = web3.utils.fromWei(balanceWei, "ether");
@@ -135,6 +198,15 @@ const mutations = {
   setDefaultType(state, type) {
     state.defaultType = type;
   },
+  setPoolFreeBalance(state, balance) {
+    state.poolFreeBalance = balance;
+  },
+  setPoolMaturityDate(state, date) {
+    state.poolMaturityDate = date;
+  },
+  setPoolWithdrawalFee(state, fee) {
+    state.poolWithdrawalFee = fee;
+  },
   setUserLiquidityPoolBalance(state, balance) {
     state.userBalance = balance;
   },
@@ -144,9 +216,14 @@ const mutations = {
   setSymbolsList(state, {web3, symbolsRaw}) {
     let symbolsLines = symbolsRaw.split("\n");
 
-    let symbolsArray = {};
+    let symbolsArray = {}; // to be populated in the for loop
 
     for (let item of symbolsLines) {
+      if (symbolsLines.length === 1 && symbolsLines[0] === '') {
+        // if the symbolsLines array is [''], skip the rest of the code in the loop
+        continue;
+      }
+
       let itemList = item.split("-");
 
       // pair
@@ -161,9 +238,14 @@ const mutations = {
       state.defaultType = typeName;
 
       // maturity
-      let maturityHumanReadable = new Date(Number(itemList[3])*1e3).toLocaleDateString('en-GB', { day: 'numeric', 
-        month: 'long', 
-        year: 'numeric' });
+      let maturityHumanReadable = new Date(Number(itemList[3])*1e3).toLocaleDateString('en-GB', 
+        { 
+          hour12 : true,
+          hour: 'numeric',
+          day: 'numeric', 
+          month: 'short', 
+          year: 'numeric' 
+        });
       state.defaultMaturity = maturityHumanReadable;
       
       // strike price

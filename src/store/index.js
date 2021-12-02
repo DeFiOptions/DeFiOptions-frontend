@@ -6,18 +6,16 @@ import liquidityPool from "./modules/liquidityPool";
 import creditToken from "./modules/creditToken";
 import dai from "./modules/dai";
 import usdc from "./modules/usdc";
-import sidebar from "./modules/sidebar";
 
 Vue.use(Vuex);
 
 export default new Vuex.Store({
     modules: {
         accounts,
-        optionsExchange,
-        liquidityPool,
         creditToken,
         dai,
-        usdc,
-        sidebar
+        liquidityPool,
+        optionsExchange,
+        usdc
     }
 });
