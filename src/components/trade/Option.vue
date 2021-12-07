@@ -13,8 +13,14 @@
 
     <!-- Action button -->
     <div>
-      <button @click="toggleForm" class="btn btn-success" v-if="!showForm">
+      <button @click="toggleForm" class="btn btn-success" v-if="!showForm && isGetBuy">
         Buy
+        <i class="fas fa-chevron-down"></i>
+        <i class="fas fa-chevron-up" v-if="showForm"></i>
+      </button>
+
+      <button @click="toggleForm" class="btn btn-success" v-if="!showForm && isGetSell">
+        Sell
         <i class="fas fa-chevron-down"></i>
         <i class="fas fa-chevron-up" v-if="showForm"></i>
       </button>
@@ -153,7 +159,7 @@ import OptionDataItem from '../OptionDataItem.vue';
 
 export default {
   name: "Option",
-  props: ["option"],
+  props: ["option", "side"],
   data() {
     return {
       buyWith: "DAI",
@@ -258,6 +264,12 @@ export default {
       }
 
       return null;
+    },
+    isGetBuy() {
+      return this.side == "BUY"
+    },
+    isGetSell() {
+      return this.side == "SELL"
     },
     isOptionSizeNotValid() { // validation for option size
       // option size bigger than volume.

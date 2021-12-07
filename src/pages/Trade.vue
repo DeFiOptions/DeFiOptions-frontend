@@ -23,6 +23,15 @@
           </div>
 
           <div class="mb-4">
+            <h3>Side</h3>
+
+            <div class="btn-group mt-2" role="group" aria-label="Basic example">
+              <button @click="changeOptionSide('BUY')" type="button" class="btn btn-outline-primary btn-md" :class="{'btn-outline-primary-active':'BUY' === selectedSide}">Buy</button>
+              <button @click="changeOptionSide('SELL')" type="button" class="btn btn-outline-primary btn-md" :class="{'btn-outline-primary-active':'SELL' === selectedSide}">Sell</button>
+            </div>
+          </div>
+
+          <div class="mb-4">
             <h3>Current price</h3>
 
             <button class="btn btn-primary mt-2 btn-md">
@@ -46,7 +55,7 @@
           </div>
         </div>
 
-        <OptionsList :symbols="getFilteredSymbols" />
+        <OptionsList :symbols="getFilteredSymbols" :side="getSelectedSide" />
         <h3 v-if="Object.keys(this.getSymbolsListJson).length === 0">No options available.</h3>
         
       </div>
@@ -68,9 +77,9 @@ export default {
     OptionsList
   },
   computed: {
-    ...mapGetters("accounts", ["getActiveAccount", "getActiveBalanceEth", "getWeb3", "isUserConnected", "getLastSelectedTradePair", "getLastSelectedTradeMaturity", "getLastSelectedTradeType"]),
+    ...mapGetters("accounts", ["getActiveAccount", "getActiveBalanceEth", "getWeb3", "isUserConnected", "getLastSelectedTradePair", "getLastSelectedTradeMaturity", "getLastSelectedTradeType", "getLastSelectedTradeSide"]),
     ...mapGetters("optionsExchange", ["getOptionsExchangeAddress", "getExchangeUserBalance", "getUnderlyingPrice"]),
-    ...mapGetters("liquidityPool", ["getLiquidityPoolContract", "getLiquidityPoolAddress", "getSymbolsListJson", "getDefaultMaturity", "getDefaultPair", "getDefaultType"]),
+    ...mapGetters("liquidityPool", ["getLiquidityPoolContract", "getLiquidityPoolAddress", "getSymbolsListJson", "getDefaultMaturity", "getDefaultPair", "getDefaultType", "getDefaultSide"]),
     ...mapGetters("dai", ["getDaiAddress", "getUserDaiBalance", "getDaiContract"]), // todo: delete
     ...mapGetters("usdc", ["getUsdcAddress", "getUserUsdcBalance", "getUsdcContract"]),
 
@@ -99,6 +108,12 @@ export default {
         return this.selectedType;
       }
       return this.getDefaultType;
+    },
+    getSelectedSide() {
+      if (this.selectedSide) {
+        return this.selectedSide;
+      }
+      return this.getDefaultSide;
     }
   },
   created() {
@@ -147,6 +162,11 @@ export default {
           this.selectedType = this.getLastSelectedTradeType;
         }
 
+        if (this.getLastSelectedTradeSide) {
+          // persistent storage for a user that's switching between pages
+          this.selectedSide = this.getLastSelectedTradeSide;
+        }
+
         try {
           let symbol = this.getSymbolsListJson[this.selectedPair][this.selectedMaturity][this.selectedType][0].symbol;
           this.$store.dispatch("optionsExchange/fetchUnderlyingPrice", {symbol});
@@ -164,6 +184,7 @@ export default {
       selectedMaturity: null,
       selectedPair: null,
       selectedType: null,
+      selectedSide: null,
       typeNames: null // PUT, CALL
     }
   },
@@ -187,6 +208,10 @@ export default {
     changeOptionType(optionType) {
       this.selectedType = optionType;
       this.$store.commit("accounts/setLastSelectedTradeType", optionType);
+    },
+    changeOptionSide(optionSide) {
+      this.selectedSide = optionSide;
+      this.$store.commit("accounts/setLastSelectedTradeSide", optionSide);
     }
   }
 }

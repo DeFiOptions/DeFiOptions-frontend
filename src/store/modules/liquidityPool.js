@@ -8,6 +8,7 @@ const state = {
   contract: null,
   defaultPair: null,
   defaultType: null,
+  defaultSide: null,
   defaultMaturity: null,
   poolFreeBalance: null,
   poolMaturityDate: null,
@@ -29,6 +30,9 @@ const getters = {
   },
   getDefaultType(state) {
     return state.defaultType;
+  },
+  getDefaultSide(state) {
+    return state.defaultSide;
   },
   getLiquidityPoolAbi(state) {
     return state.abi;
@@ -198,6 +202,9 @@ const mutations = {
   setDefaultType(state, type) {
     state.defaultType = type;
   },
+  setDefaultSide(state, side) {
+    state.defaultSide = side;
+  },
   setPoolFreeBalance(state, balance) {
     state.poolFreeBalance = balance;
   },
@@ -236,6 +243,9 @@ const mutations = {
         typeName = "PUT";
       }
       state.defaultType = typeName;
+
+      // side
+      state.defaultSide = "BUY";
 
       // maturity
       let maturityHumanReadable = new Date(Number(itemList[3])*1e3).toLocaleDateString('en-GB', 

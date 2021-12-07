@@ -241,7 +241,9 @@ export default {
           priceFeedType = "ChainlinkFeedEth";
         } else if (this.option.pair === "BTC/USD") {
           priceFeedType = "ChainlinkFeedBtc";
-        }
+        } /*else if (this.option.pair === "MATIC/USD") {
+          priceFeedType = "ChainlinkFeedBtc";
+        }*/
 
         const feedAddress = addresses[priceFeedType][parseInt(this.getChainId)];
         const feedContract = new this.getWeb3.eth.Contract(ChainlinkContractJson.abi, feedAddress);
