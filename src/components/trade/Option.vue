@@ -8,7 +8,8 @@
     <div class="div-flex justify-content-center flex-wrap">
       <OptionDataItem class="data-item" title="Strike" :data="'$' + option.strike" :divider="true" />
       <OptionDataItem class="data-item" title="Break even" :data="getBreakEvenPrice" :divider="true" />
-      <OptionDataItem class="data-item" title="Price" :green="true" :data="optionPriceFormatted" />
+      <OptionDataItem class="data-item" title="Price" :green="true" :data="optionPriceFormatted" v-if="isGetBuy" />
+      <OptionDataItem class="data-item" title="Price" :green="true" :data="optionPriceFormattedSell" v-if="isGetSell" />
     </div>
 
     <!-- Action button -->
@@ -165,7 +166,9 @@ export default {
       buyWith: "DAI",
       loading: false,
       optionPrice: null,
+      optionPriceSell: null,
       optionPriceFormatted: "loading",
+      optionPriceFormattedSell: "loading",
       selectedOptionSize: 0.1,
       selectedOptionVolume: null,
       showForm: false,
@@ -215,10 +218,14 @@ export default {
     },
 
     getBreakEvenPrice() {
-      if (this.option.symbol.includes("EC")) { // CALL
-        return "$" + Number(Number(this.optionPrice)+Number(this.option.strike)).toFixed(2);
-      } else if (this.option.symbol.includes("EP")) { // PUT
-        return "$" + Number(Number(this.option.strike)-Number(this.optionPrice)).toFixed(2);
+      if (this.side == "BUY") {
+        if (this.option.symbol.includes("EC")) { // CALL
+          return "$" + Number(Number(this.optionPrice)+Number(this.option.strike)).toFixed(2);
+        } else if (this.option.symbol.includes("EP")) { // PUT
+          return "$" + Number(Number(this.option.strike)-Number(this.optionPrice)).toFixed(2);
+        }
+      } else {
+        return "N/A";
       }
       return null;
     },
@@ -478,12 +485,16 @@ export default {
     async getOptionPrice() {
       // fetch option price
       let result = await this.getLiquidityPoolContract.methods.queryBuy(this.option.symbol).call();
+      let resultSell = await this.getLiquidityPoolContract.methods.querySell(this.option.symbol).call();
       
       if (result) {
-        
         this.optionPrice = this.getWeb3.utils.fromWei(result.price, "ether") * (1 + (this.slippage/100));
-        
         this.optionPriceFormatted = "$" + Number(this.optionPrice).toFixed(2);
+      }
+
+      if (resultSell) {
+        this.optionPriceSell = this.getWeb3.utils.fromWei(resultSell.price, "ether") * (1 + (this.slippage/100));
+        this.optionPriceFormattedSell = "$" + Number(this.optionPriceSell).toFixed(2);
       }
     },
 
@@ -494,11 +505,14 @@ export default {
     async setFormData() {
       this.selectedOptionSize = 0.1;
       this.optionPrice = null;
+      this.optionPriceSell = null;
       this.optionPriceFormatted = "loading";
+      this.optionPriceFormattedSell = "loading";
       this.selectedOptionVolume = null;
 
       // fetch option price and volume
       let result = await this.getLiquidityPoolContract.methods.queryBuy(this.option.symbol).call();
+      let resultSell = await this.getLiquidityPoolContract.methods.querySell(this.option.symbol).call();
       
       if (result) {
         this.optionPrice = this.getWeb3.utils.fromWei(result.price, "ether") * (1 + (this.slippage/100));
@@ -510,10 +524,23 @@ export default {
           this.tooLowVolume = true;
         }
       }
+
+      if (resultSell) {
+        this.optionPriceSell = this.getWeb3.utils.fromWei(resultSell.price, "ether") * (1 + (this.slippage/100));
+
+        this.optionPriceFormattedSell = "$" + Number(this.optionPriceSell).toFixed(2);
+        this.selectedOptionVolume = this.getWeb3.utils.fromWei(resultSell.volume, "ether");
+
+        if (this.selectedOptionVolume < 0.001) {
+          this.tooLowVolume = true;
+        }
+      }
       
     },
 
     toggleForm() {
+      this.getOptionPrice(); // refresh the option price
+
       if (this.showForm) {
         this.showForm = false;
       } else {

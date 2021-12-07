@@ -160,6 +160,44 @@ const actions = {
 
     commit("setUserOptions", optionsList);
   },
+  /*
+  async fetchCalcCollateral({ commit, dispatch, state, rootState }, data) {
+    // calculate collateral requirements for the currently selected symbol
+
+        address eth_usd_feed = address(0x987...);
+        uint volumeBase = 1e18;
+        uint strikePrice = 1300e18;
+        uint maturity = now + 30 days;
+
+        uint collateral = exchange.calcCollateral(
+            feed_address, 
+            10 * volumeBase, 
+            OptionsExchange.OptionType.CALL, 
+            strikePrice, 
+            maturity
+        );
+    if (!state.contract) {
+      dispatch("fetchContract");
+    }
+    String(data.symbol)
+    let collateralReq = await state.contract.methods.calcCollateral(
+      String(data.address),
+    ).call();
+
+    commit("setCollateralAmount", "N/A");
+    
+    try {
+      let underlyingPrice = await state.contract.methods.getUnderlyingPrice(String(data.symbol)).call();
+      
+      let web3 = rootState.accounts.web3;
+
+      let underlyingPriceBig = Math.round(web3.utils.fromWei(Number(underlyingPrice).toString(16), "ether")*100)/100;
+      commit("setCollateralAmount", underlyingPriceBig);
+    } catch {
+      commit("setCollateralAmount", "N/A");
+    }
+  },
+  */
   storeAbi({commit}) {
     commit("setAbi", OptionsExchange.abi);
   },
