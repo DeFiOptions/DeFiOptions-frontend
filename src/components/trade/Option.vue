@@ -130,24 +130,25 @@
         </div>
 
       </div>
-
-      <div class="form-button-mobile" v-if="isEnoughAllowance">
-        <button @click="sellOption" class="btn btn-success form-control" :disabled="isOptionSizeNotValid.status">
-          <span v-if="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-          Sell for ${{getTotal.toFixed(2)}}
-        </button>
-        <div></div>
-      </div>
-
-      <div class="form-button-mobile" v-if="!isEnoughAllowance">
-        <button @click="approveAllowanceOption" class="btn btn-success form-control" :disabled="isOptionSizeNotValid.status">
-          <span v-if="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-          Approve the sell (${{getTotal.toFixed(2)}})
-        </button>
-        <div></div>
-      </div>
-      
     </div>
+
+    <div class="row mt-3">
+      <button v-if="isEnoughAllowance" @click="sellOption" class="btn btn-success form-control" :disabled="isOptionSizeNotValid.status">
+        <span v-if="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+        Sell for ${{getTotal.toFixed(2)}}
+      </button>
+      <div></div>
+
+      <button v-if="!isEnoughAllowance" @click="approveAllowanceOption" class="btn btn-success form-control" :disabled="isOptionSizeNotValid.status">
+        <span v-if="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+        Approve the sell (${{getTotal.toFixed(2)}})
+      </button>
+      <div></div>
+    </div>
+
+    <small v-if="allowanceNeeded" class="show-text form-text text-center">
+        You'll need to make 2 transactions: approve & sell.
+      </small>
   </div>
 
   <!-- Approve Confirmation Modal -->
@@ -372,7 +373,14 @@ export default {
       }
 
       return {status: false, message: "Valid option size"};
-    }
+    },
+    isEnoughAllowance() {
+      if (Number(this.optionAllowance) >= Number(this.selectedOptionSize)) {
+        return true;
+      }
+
+      return false;
+    },
   },
 
   methods: {
