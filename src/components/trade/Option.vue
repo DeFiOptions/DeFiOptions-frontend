@@ -140,7 +140,7 @@
       </div>
 
       <div class="form-button-mobile" v-if="!isEnoughAllowance">
-        <button @click="approveAllowance" class="btn btn-success form-control" :disabled="isOptionSizeNotValid.status">
+        <button @click="approveAllowanceOption" class="btn btn-success form-control" :disabled="isOptionSizeNotValid.status">
           <span v-if="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
           Approve the sell (${{getTotal.toFixed(2)}})
         </button>
@@ -195,7 +195,7 @@
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal">Cancel</button>
-          <button @click="approveAllowanceOption" type="button" class="btn btn-success" data-bs-dismiss="modal">
+          <button @click="approveAllowance" type="button" class="btn btn-success" data-bs-dismiss="modal">
             <span v-if="!unlimitedApproval">Approve {{buyWith}} for ${{getTotal.toFixed(2)}}</span>
             <span v-if="unlimitedApproval">Approve {{buyWith}} (unlimited)</span>
           </button>
@@ -314,7 +314,7 @@ export default {
       return null;
     },
     getTotal() {
-      return Number(this.selectedOptionSize) * Number(this.optionPrice);
+      return Number(this.selectedOptionSize) * ((this.side == "BUY") ? Number(this.optionPrice) : Number(this.optionPriceSell));
     },
     getUniqueOptionId() {
       return this.option.symbol.replace("/", "-");
