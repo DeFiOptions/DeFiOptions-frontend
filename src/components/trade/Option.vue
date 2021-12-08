@@ -36,7 +36,7 @@
   </div>
 
   <!-- Buy option form -->
-  <div v-if="showForm" class="show-form">
+  <div v-if="showForm && isGetBuy" class="show-form">
     <h3>Option size</h3>
 
     <div class="d-flex flex-wrap">
@@ -95,8 +95,63 @@
     </div>
   </div>
 
+  <!-- Sell option form -->
+  <div v-if="showForm && isGetSell" class="sell-form">
+    <h3>
+      Option size
+      <i 
+        @mouseover="showInfo" 
+        id="infoEl" 
+        class="fas fa-info-circle" 
+        data-bs-toggle="tooltip" 
+        data-bs-placement="bottom" 
+        title="The Sell button shows the price the liquidity pool is willing to pay for your options, 
+        consisting of the option's intrinsic value and a potential premium on top of it. If you sell
+        your option before expiry, you may get a lesser value due to a spread."
+      ></i>
+    </h3>
+
+    <div class="d-flex flex-wrap">
+
+      <div>
+        <input type="text" v-model="selectedOptionSize" class="form-control sell-input" placeholder="0.0">
+
+        <div class="form-text sell-text">
+          <span v-if="isOptionSizeNotValid.status" >
+            {{ isOptionSizeNotValid.message }}
+          </span>
+
+          <span class="form-text sell-text">
+            Max size: <span class="max-sell" @click="selectedOptionSize = getMaxOptionSize">{{getMaxOptionSize}}</span>
+            <span v-if="Number(this.option.holding) > Number(getMaxOptionSize)"> 
+              (Your total holding is bigger: {{this.option.holding}})
+            </span>.
+          </span>
+        </div>
+
+      </div>
+
+      <div class="form-button-mobile" v-if="isEnoughAllowance">
+        <button @click="sellOption" class="btn btn-success form-control" :disabled="isOptionSizeNotValid.status">
+          <span v-if="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+          Sell for ${{getTotal.toFixed(2)}}
+        </button>
+        <div></div>
+      </div>
+
+      <div class="form-button-mobile" v-if="!isEnoughAllowance">
+        <button @click="approveAllowance" class="btn btn-success form-control" :disabled="isOptionSizeNotValid.status">
+          <span v-if="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+          Approve the sell (${{getTotal.toFixed(2)}})
+        </button>
+        <div></div>
+      </div>
+      
+    </div>
+  </div>
+
   <!-- Approve Confirmation Modal -->
-  <div class="modal fade" :id="'approveModal'+getUniqueOptionId" tabindex="-1" aria-labelledby="approveModalLabel" aria-hidden="true">
+  <div v-if="isGetBuy" class="modal fade" :id="'approveModal'+getUniqueOptionId" tabindex="-1" aria-labelledby="approveModalLabel" aria-hidden="true">
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
@@ -140,7 +195,7 @@
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal">Cancel</button>
-          <button @click="approveAllowance" type="button" class="btn btn-success" data-bs-dismiss="modal">
+          <button @click="approveAllowanceOption" type="button" class="btn btn-success" data-bs-dismiss="modal">
             <span v-if="!unlimitedApproval">Approve {{buyWith}} for ${{getTotal.toFixed(2)}}</span>
             <span v-if="unlimitedApproval">Approve {{buyWith}} (unlimited)</span>
           </button>
@@ -156,6 +211,9 @@
 <script>
 import { mapGetters } from "vuex";
 import OptionDataItem from '../OptionDataItem.vue';
+import OptionTokenContractJson from "../../contracts/RedeemableToken.json";
+import ChainlinkContractJson from "../../contracts/ChainlinkFeed.json";
+import addresses from "../../contracts/addresses.json";
 //import OptionTokenContractJson from "../../contracts/RedeemableToken.json";
 
 export default {
@@ -179,7 +237,7 @@ export default {
   },
 
   components: { 
-    OptionDataItem 
+    OptionDataItem
   },
 
   created() {
@@ -547,6 +605,159 @@ export default {
         this.setFormData();
         this.showForm = true;
       }
+    },
+    
+    // approve allowance to sell an option
+    async approveAllowanceOption() {
+      let component = this;
+      component.loading = true;
+
+      // convert selected option size to wei
+      let tokensWei = component.getWeb3.utils.toWei(String(component.selectedOptionSize), "ether");
+      const allowanceValue = component.selectedOptionSize;
+
+      // option token contract
+      const optionContract = new component.getWeb3.eth.Contract(OptionTokenContractJson.abi, this.option.address);
+
+      // call the approve method
+      await optionContract.methods.approve(component.getLiquidityPoolAddress, tokensWei).send({
+        from: component.getActiveAccount
+
+      }).on('transactionHash', function(hash){
+        console.log("tx hash: " + hash);
+        component.$toast.info("The transaction has been submitted. Please wait for it to be confirmed.");
+
+      }).on('receipt', function(receipt){
+        console.log(receipt);
+
+        if (receipt.status) {
+          component.$toast.success("The approval was successfull. You can sell the option now.");
+
+          component.optionAllowance += allowanceValue; // manually increase the allowance amount
+          component.$store.dispatch("optionsExchange/fetchUserOptions"); // refresh values
+          
+        } else {
+          component.$toast.error("The transaction has failed. Please contact the DeFi Options support.");
+        }
+        
+        component.loading = false;
+
+      }).on('error', function(error){
+        console.log(error);
+        component.loading = false;
+        component.$toast.error("There has been an error. Please contact the DeFi Options support.");
+      });
+
+    },
+
+    async fetchExpiryPrice() {
+      if (Number(this.option.timestamp)*1e3 < Date.now()) {
+        let priceFeedType = "";
+
+        if (this.option.pair === "ETH/USD") {
+          priceFeedType = "ChainlinkFeedEth";
+        } else if (this.option.pair === "BTC/USD") {
+          priceFeedType = "ChainlinkFeedBtc";
+        } /*else if (this.option.pair === "MATIC/USD") {
+          priceFeedType = "ChainlinkFeedBtc";
+        }*/
+
+        const feedAddress = addresses[priceFeedType][parseInt(this.getChainId)];
+        const feedContract = new this.getWeb3.eth.Contract(ChainlinkContractJson.abi, feedAddress);
+        const historicPriceObj = await feedContract.methods.getPrice(this.option.timestamp).call();
+        this.expiryPrice = Number(this.getWeb3.utils.fromWei(historicPriceObj.price, "ether")).toFixed(0);
+      }
+
+    },
+
+    async fetchOptionAllowance() {
+      const optionContract = new this.getWeb3.eth.Contract(OptionTokenContractJson.abi, this.option.address);
+
+      const allowanceWei = await optionContract.methods.allowance(this.getActiveAccount, this.getLiquidityPoolAddress).call();
+
+      this.optionAllowance = this.getWeb3.utils.fromWei(String(allowanceWei), "ether");
+    },
+
+    isOptionExpired(option) {
+      return Math.floor(Date.now()/1000) > Number(option.timestamp);
+    },
+
+    async sellOption() {
+      const component = this;
+      component.loading = true;
+
+      component.setSellData(component.option); // fetch price again to avoid errors 
+
+      const optionSizeWei = component.getWeb3.utils.toWei(String(component.selectedOptionSize), "ether");
+      const optionUnitPrice = component.getWeb3.utils.toWei(String(component.selectedOptionPrice), "ether");
+
+      // sell option transaction
+      await component.getLiquidityPoolContract.methods.sell(
+        component.option.symbol, // symbol
+        optionUnitPrice, // price per one option
+        optionSizeWei, // volume a.k.a. user's selected option size
+      ).send({
+        from: component.getActiveAccount
+      }).on('transactionHash', function(hash){
+        console.log("tx hash: " + hash);
+        component.$toast.info("The transaction has been submitted. Please wait for it to be confirmed.");
+
+      }).on('receipt', function(receipt){
+        console.log(receipt);
+
+        if (receipt.status) {
+          component.$toast.success("You have successfully sold an option. Please reload the website to refresh values.");
+
+          // reduce the amount of options user can sell
+          // needs to be reduced manually, because Polygon nodes have a lag
+          // BigNumber needs to be used to avoid precision errors
+          let bnHolding = component.getWeb3.utils.toBN(component.getWeb3.utils.toWei(String(component.option.holding), "ether"));
+          let bnSold = component.getWeb3.utils.toBN(component.getWeb3.utils.toWei(String(component.selectedOptionSize), "ether"));
+          component.option.holding = component.getWeb3.utils.fromWei(bnHolding.sub(bnSold), "ether").toString();
+        } else {
+          component.$toast.error("The transaction has failed. Please contact the DeFi Options support.");
+        }
+        
+        component.loading = false;
+
+      }).on('error', function(error){
+        console.log(error);
+        component.loading = false;
+        component.$toast.error("There has been an error. Please contact the DeFi Options support.");
+      });
+
+    },
+
+    async setSellData() {
+      const result = await this.getLiquidityPoolContract.methods.querySell(this.option.symbol).call();
+
+      if (result) {
+        this.selectedOptionPrice = this.getWeb3.utils.fromWei(String(result.price), "ether");
+        this.selectedOptionVolume = this.getWeb3.utils.fromWei(String(result.volume), "ether");
+
+        if (!this.selectedOptionSize) {
+          this.selectedOptionSize = this.getMaxOptionSize;
+        }
+
+        // hardcoded 1% slippage
+        this.selectedOptionPrice -= Number(this.selectedOptionPrice) * 0.01;
+      }
+    },
+
+    toggleSellForm() {
+      if (this.showSellForm) {
+        this.showSellForm = false;
+      } else {
+        this.setSellData();
+        this.showSellForm = true;
+      }
+    },
+
+    showInfo() {
+      // enable tooltip
+      var infoEl = document.getElementById('infoEl')
+      var tooltip = new window.bootstrap.Tooltip(infoEl)
+      tooltip.show();
     }
   }
 }
