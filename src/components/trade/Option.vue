@@ -364,7 +364,7 @@ export default {
       }
 
       // total bigger than balance
-      if (this.getTotal > Number(this.getUserStablecoinBalance)) {
+      if ((this.getTotal > Number(this.getUserStablecoinBalance)) && (this.side == "BUY")) {
         if (this.buyWith === "Exchange Balance") {
           return {status: true, message: "Your exchange balance is too low."};
         }
