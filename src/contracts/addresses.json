@@ -7,6 +7,14 @@
     "42":"0xF6DF43F27d51289703C2A93289D53C4D5AC79b7d",
     "137":"0xc6538CEC5cA383217Efe2C10B447d8D48453874A"
   },
+  "ChainlinkFeedMatic": {
+    "42":"",
+    "137":"0x822a5D26a5A8F881BF4C515E51cF00fC063C6C3C"
+  },
+  "ChainlinkFeedSolana": {
+    "42":"",
+    "137":"0x2863E94bEBa09F53888887F9d647bd406a593b43"
+  },
   "CreditToken": {
     "42":"0xae7512c5d996b12830a282eeb9eecb4cf01207d2",
     "137":"0x045f70e2e63907000c0ff511862c936fc0857979"
