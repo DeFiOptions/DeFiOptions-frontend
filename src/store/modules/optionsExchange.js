@@ -32,6 +32,10 @@ const getters = {
     // underlying price for the currently selected pair/symbol
     return state.underlyingPrice;
   },
+  getOptionTokenAddress(state) {
+    // option token address for the currently selected pair/symbol
+    return state.optionTokenAddress;
+  },
   getUserExchangeBalanceAllowance(state) {
     return state.userExchangeBalanceAllowance;
   },
@@ -109,6 +113,21 @@ const actions = {
       commit("setUnderlyingPrice", underlyingPriceBig);
     } catch {
       commit("setUnderlyingPrice", "N/A");
+    }
+  },
+  async fetchOptionTokenAddress({ commit, dispatch, state }, data) {
+    // option token address for the currently selected pair/symbol
+    if (!state.contract) {
+      dispatch("fetchContract");
+    }
+
+    commit("setOptionTokenAddress", "N/A");
+    
+    try {
+      let optionTokenAddress = await state.contract.methods.resolveToken(String(data.symbol)).call();
+      commit("setOptionTokenAddress", optionTokenAddress);
+    } catch {
+      commit("setOptionTokenAddress", "N/A");
     }
   },
   async fetchUserOptions({ commit, dispatch, state, rootState }) {
@@ -229,6 +248,9 @@ const mutations = {
   },
   setUnderlyingPrice(state, underlyingPrice) {
     state.underlyingPrice = underlyingPrice;
+  },
+  setOptionTokenAddress(state, optionTokenAddress) {
+    state.optionTokenAddress = optionTokenAddress;
   },
   setUserOptions(state, options) {
     state.userOptions = options;

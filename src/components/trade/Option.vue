@@ -256,7 +256,7 @@ export default {
     ...mapGetters("accounts", ["getActiveAccount", "getWeb3"]),
     ...mapGetters("liquidityPool", ["getLiquidityPoolContract", "getLiquidityPoolAddress"]),
     ...mapGetters("dai", ["getDaiAddress", "getUserDaiBalance", "getDaiContract", "getLpDaiAllowance"]),
-    ...mapGetters("optionsExchange", ["getOptionsExchangeAddress", "getOptionsExchangeContract", "getExchangeUserBalance", "getUserExchangeBalanceAllowance"]),
+    ...mapGetters("optionsExchange", ["getOptionsExchangeAddress", "getOptionsExchangeContract", "getExchangeUserBalance", "getUserExchangeBalanceAllowance, getOptionTokenAddress"]),
     ...mapGetters("usdc", ["getUsdcAddress", "getUserUsdcBalance", "getUsdcContract", "getLpUsdcAllowance"]),
 
     allowanceNeeded() {
@@ -624,6 +624,10 @@ export default {
       let tokensWei = component.getWeb3.utils.toWei(String(component.selectedOptionSize), "ether");
       const allowanceValue = component.selectedOptionSize;
 
+      if (this.option.address === undefined) {
+        this.option.address = await component.getOptionsExchangeContract.methods.resolveToken(this.option.symbol).call();
+      }
+
       // option token contract
       const optionContract = new component.getWeb3.eth.Contract(OptionTokenContractJson.abi, this.option.address);
 
@@ -679,6 +683,10 @@ export default {
     },
 
     async fetchOptionAllowance() {
+      if (this.option.address === undefined) {
+        this.option.address = await this.getOptionsExchangeContract.methods.resolveToken(this.option.symbol).call();
+      }
+      
       const optionContract = new this.getWeb3.eth.Contract(OptionTokenContractJson.abi, this.option.address);
 
       const allowanceWei = await optionContract.methods.allowance(this.getActiveAccount, this.getLiquidityPoolAddress).call();

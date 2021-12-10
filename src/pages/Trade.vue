@@ -78,7 +78,7 @@ export default {
   },
   computed: {
     ...mapGetters("accounts", ["getActiveAccount", "getActiveBalanceEth", "getWeb3", "isUserConnected", "getLastSelectedTradePair", "getLastSelectedTradeMaturity", "getLastSelectedTradeType", "getLastSelectedTradeSide"]),
-    ...mapGetters("optionsExchange", ["getOptionsExchangeAddress", "getExchangeUserBalance", "getUnderlyingPrice"]),
+    ...mapGetters("optionsExchange", ["getOptionsExchangeAddress", "getExchangeUserBalance", "getUnderlyingPrice", "getOptionTokenAddress"]),
     ...mapGetters("liquidityPool", ["getLiquidityPoolContract", "getLiquidityPoolAddress", "getSymbolsListJson", "getDefaultMaturity", "getDefaultPair", "getDefaultType", "getDefaultSide"]),
     ...mapGetters("dai", ["getDaiAddress", "getUserDaiBalance", "getDaiContract"]), // todo: delete
     ...mapGetters("usdc", ["getUsdcAddress", "getUserUsdcBalance", "getUsdcContract"]),
