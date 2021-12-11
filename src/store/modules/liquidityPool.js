@@ -245,7 +245,8 @@ const mutations = {
       state.defaultType = typeName;
 
       // side
-      state.defaultSide = "BUY";
+      let sideName = "BUY";
+      state.defaultSide = sideName;
 
       // maturity
       let maturityHumanReadable = new Date(Number(itemList[3])*1e3).toLocaleDateString('en-GB', 

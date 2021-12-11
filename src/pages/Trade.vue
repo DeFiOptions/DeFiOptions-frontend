@@ -26,8 +26,8 @@
             <h3>Side</h3>
 
             <div class="btn-group mt-2" role="group" aria-label="Basic example">
-              <button @click="changeOptionSide('BUY')" type="button" class="btn btn-outline-primary btn-md" :class="{'btn-outline-primary-active':'BUY' === selectedSide}">Buy</button>
-              <button @click="changeOptionSide('SELL')" type="button" class="btn btn-outline-primary btn-md" :class="{'btn-outline-primary-active':'SELL' === selectedSide}">Sell</button>
+              <button @click="changeOptionSide('BUY')" type="button" class="btn btn-outline-primary btn-md" :class="{'btn-outline-primary-active':'BUY' === selectedSide}">BUY</button>
+              <button @click="changeOptionSide('SELL')" type="button" class="btn btn-outline-primary btn-md" :class="{'btn-outline-primary-active':'SELL' === selectedSide}">SELL</button>
             </div>
           </div>
 
@@ -165,6 +165,8 @@ export default {
         if (this.getLastSelectedTradeSide) {
           // persistent storage for a user that's switching between pages
           this.selectedSide = this.getLastSelectedTradeSide;
+        } else {
+          this.selectedSide = "BUY";
         }
 
         try {
