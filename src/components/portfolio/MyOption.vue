@@ -234,20 +234,22 @@ export default {
     },
 
     async fetchExpiryPrice() {
-      if (Number(this.option.timestamp)*1e3 < Date.now()) {
+      if (Number(this.option.timestamp)*1000 < Date.now()) {
         let priceFeedType = "";
 
         if (this.option.pair === "ETH/USD") {
           priceFeedType = "ChainlinkFeedEth";
         } else if (this.option.pair === "BTC/USD") {
           priceFeedType = "ChainlinkFeedBtc";
-        } /*else if (this.option.pair === "MATIC/USD") {
-          priceFeedType = "ChainlinkFeedBtc";
-        }*/
+        } else if (this.option.pair === "MATIC/USD") {
+          priceFeedType = "ChainlinkFeedMatic";
+        } else if (this.option.pair === "SOL/USD") {
+          priceFeedType = "ChainlinkFeedSolana";
+        }
 
         const feedAddress = addresses[priceFeedType][parseInt(this.getChainId)];
         const feedContract = new this.getWeb3.eth.Contract(ChainlinkContractJson.abi, feedAddress);
-        const historicPriceObj = await feedContract.methods.getPrice(this.option.timestamp).call();
+        const historicPriceObj = await feedContract.methods.getPrice(Number(this.option.timestamp)).call();
         this.expiryPrice = Number(this.getWeb3.utils.fromWei(historicPriceObj.price, "ether")).toFixed(0);
       }
 
