@@ -214,6 +214,7 @@ import { mapGetters } from "vuex";
 import OptionDataItem from '../OptionDataItem.vue';
 import OptionTokenContractJson from "../../contracts/RedeemableToken.json";
 import ChainlinkContractJson from "../../contracts/ChainlinkFeed.json";
+import ERC20ContractJson from "../../contracts/ERC20.json";
 import addresses from "../../contracts/addresses.json";
 //import OptionTokenContractJson from "../../contracts/RedeemableToken.json";
 
@@ -243,6 +244,7 @@ export default {
 
   created() {
     this.getOptionPrice();
+    this.fetchUnderlyingAssetBalance();
 
     this.$store.dispatch("dai/fetchUserBalance");
     this.$store.dispatch("dai/fetchLpAllowance");
@@ -331,6 +333,10 @@ export default {
 
       return null;
     },
+
+    getUserUnderlyingBalance() {
+      return this.underlyingBalance;
+    }
     isGetBuy() {
       return this.side == "BUY"
     },
@@ -389,6 +395,7 @@ export default {
       component.loading = true;
 
       component.getOptionPrice(); // refresh the option price
+      component.fetchUnderlyingAssetBalance();
 
       // define unit and token contract
       let unit = "ether"; // Exchange Balance & DAI - 18 decimals
@@ -447,7 +454,7 @@ export default {
             }
 
             component.getOptionPrice(); // refresh the option price
-            
+
           } else {
             component.$toast.error("The transaction has failed. Please contact the DeFi Options support.");
           }
@@ -606,6 +613,7 @@ export default {
 
     toggleForm() {
       this.getOptionPrice(); // refresh the option price
+      this.fetchUnderlyingAssetBalance(); // refresh underlying balance
 
       if (this.showForm) {
         this.showForm = false;
@@ -682,11 +690,35 @@ export default {
 
     },
 
+    async fetchUnderlyingAssetBalance() {
+
+      let priceFeedType = "";
+
+      if (this.option.pair === "ETH/USD") {
+        priceFeedType = "ChainlinkFeedEth";
+      } else if (this.option.pair === "BTC/USD") {
+        priceFeedType = "ChainlinkFeedBtc";
+      } else if (this.option.pair === "MATIC/USD") {
+        priceFeedType = "ChainlinkFeedMatic";
+      } else if (this.option.pair === "SOL/USD") {
+        priceFeedType = "ChainlinkFeedSolana";
+      }
+
+      const feedAddress = addresses[priceFeedType][parseInt(this.getChainId)];
+      const feedContract = new this.getWeb3.eth.Contract(ChainlinkContractJson.abi, feedAddress);
+      const underlyingAddr = await feedContract.methods.getUnderlyingAddr().call();
+      const underlyingContract = new this.getWeb3.eth.Contract(ERC20ContractJson.abi, underlyingAddr);
+      const underlyingBalanceWei = await state.contract.methods.balanceOf(this.getActiveAccount).call();
+      const underlyingDecimals = await state.contract.methods.decimals().call();
+      this.underlyingBalance = Number(underlyingBalanceWei.div(this.getWeb3.utils.toBN(10 ** underlyingDecimals))).toFixed(0);
+
+    },
+
     async fetchOptionAllowance() {
       if (this.option.address === undefined) {
         this.option.address = await this.getOptionsExchangeContract.methods.resolveToken(this.option.symbol).call();
       }
-      
+
       const optionContract = new this.getWeb3.eth.Contract(OptionTokenContractJson.abi, this.option.address);
 
       const allowanceWei = await optionContract.methods.allowance(this.getActiveAccount, this.getLiquidityPoolAddress).call();
