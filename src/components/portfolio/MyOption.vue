@@ -1,6 +1,6 @@
 <template>
 
-<div class="section-small">
+<div class="section-small" v-if="!hide">
 
   <div class="d-flex justify-content-between flex-wrap">
 
@@ -108,9 +108,10 @@ export default {
   name: "MyOption",
   props: ["option"],
   data() {
-    return {
-      loading: false,
+    return { 
       expiryPrice: null, // price at the expiration date (if option expired already)
+      hide: false,
+      loading: false,
       optionAllowance: 0, // has user approved the option token yet and for what amount
       selectedOptionPrice: null, // sell option data
       selectedOptionSize: null, // sell option data
@@ -288,6 +289,9 @@ export default {
 
         if (receipt.status) {
           component.$toast.success("You have successfully redeemed your expired option. It may take 10 seconds or more for values to update.");
+
+          // hide the option manually, because Polygon's nodes have a lag
+          component.hide = true;
 
           // refresh values
           component.$store.dispatch("optionsExchange/fetchExchangeUserBalance");
