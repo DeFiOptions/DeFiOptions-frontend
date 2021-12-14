@@ -151,6 +151,7 @@ const actions = {
         let pair = itemList[0];
         let timestamp = itemList[3];
         let strike = Math.round(web3.utils.fromWei(Number(itemList[2]).toString(16), "ether"));
+        let strikeRaw = itemList[2];
 
         let holding = web3.utils.fromWei(options.holding[counter], "ether");
         let written = web3.utils.fromWei(options.written[counter], "ether");
@@ -170,7 +171,7 @@ const actions = {
           year: 'numeric' });
         
         // option object
-        let optionObject = {symbol, pair, type, maturity, strike, holding, written, intrinsicValue, timestamp, address}
+        let optionObject = {symbol, pair, type, maturity, strike, strikeRaw, holding, written, intrinsicValue, timestamp, address}
         optionsList.push(optionObject);
 
         counter++;
@@ -179,44 +180,6 @@ const actions = {
 
     commit("setUserOptions", optionsList);
   },
-  /*
-  async fetchCalcCollateral({ commit, dispatch, state, rootState }, data) {
-    // calculate collateral requirements for the currently selected symbol
-
-        address eth_usd_feed = address(0x987...);
-        uint volumeBase = 1e18;
-        uint strikePrice = 1300e18;
-        uint maturity = now + 30 days;
-
-        uint collateral = exchange.calcCollateral(
-            feed_address, 
-            10 * volumeBase, 
-            OptionsExchange.OptionType.CALL, 
-            strikePrice, 
-            maturity
-        );
-    if (!state.contract) {
-      dispatch("fetchContract");
-    }
-    String(data.symbol)
-    let collateralReq = await state.contract.methods.calcCollateral(
-      String(data.address),
-    ).call();
-
-    commit("setCollateralAmount", "N/A");
-    
-    try {
-      let underlyingPrice = await state.contract.methods.getUnderlyingPrice(String(data.symbol)).call();
-      
-      let web3 = rootState.accounts.web3;
-
-      let underlyingPriceBig = Math.round(web3.utils.fromWei(Number(underlyingPrice).toString(16), "ether")*100)/100;
-      commit("setCollateralAmount", underlyingPriceBig);
-    } catch {
-      commit("setCollateralAmount", "N/A");
-    }
-  },
-  */
   storeAbi({commit}) {
     commit("setAbi", OptionsExchange.abi);
   },

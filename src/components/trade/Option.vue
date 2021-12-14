@@ -336,7 +336,8 @@ export default {
 
     getUserUnderlyingBalance() {
       return this.underlyingBalance;
-    }
+    },
+
     isGetBuy() {
       return this.side == "BUY"
     },
@@ -708,8 +709,8 @@ export default {
       const feedContract = new this.getWeb3.eth.Contract(ChainlinkContractJson.abi, feedAddress);
       const underlyingAddr = await feedContract.methods.getUnderlyingAddr().call();
       const underlyingContract = new this.getWeb3.eth.Contract(ERC20ContractJson.abi, underlyingAddr);
-      const underlyingBalanceWei = await state.contract.methods.balanceOf(this.getActiveAccount).call();
-      const underlyingDecimals = await state.contract.methods.decimals().call();
+      const underlyingBalanceWei = await underlyingContract.methods.balanceOf(this.getActiveAccount).call();
+      const underlyingDecimals = await underlyingContract.methods.decimals().call();
       this.underlyingBalance = Number(underlyingBalanceWei.div(this.getWeb3.utils.toBN(10 ** underlyingDecimals))).toFixed(0);
 
     },
@@ -798,6 +799,350 @@ export default {
       } else {
         this.setSellData();
         this.showSellForm = true;
+      }
+    },
+
+    async calcWritable() {
+
+    },
+
+    // approve the amount of underlying to use as collateral
+    async approveAllowanceCovered() {
+      let component = this;
+      component.loading = true;
+
+      
+
+      let priceFeedType = "";
+
+      if (this.option.pair === "ETH/USD") {
+        priceFeedType = "ChainlinkFeedEth";
+      } else if (this.option.pair === "BTC/USD") {
+        priceFeedType = "ChainlinkFeedBtc";
+      } else if (this.option.pair === "MATIC/USD") {
+        priceFeedType = "ChainlinkFeedMatic";
+      } else if (this.option.pair === "SOL/USD") {
+        priceFeedType = "ChainlinkFeedSolana";
+      }
+
+      const feedAddress = addresses[priceFeedType][parseInt(component.getChainId)];
+      const feedContract = new component.getWeb3.eth.Contract(ChainlinkContractJson.abi, feedAddress);
+      const underlyingAddr = await feedContract.methods.getUnderlyingAddr().call();
+
+      // underlying token contract
+      const underlyingContract = new component.getWeb3.eth.Contract(ERC20ContractJson.abi, underlyingAddr);
+      // get underlying balance in wei
+      const underlyingBalanceWei = await underlyingContract.methods.balanceOf(this.getActiveAccount).call();
+      const underlyingDecimals = await underlyingContract.methods.decimals().call();
+      const allowanceValue = Number(underlyingBalanceWei.div(this.getWeb3.utils.toBN(10 ** underlyingDecimals))).toFixed(0);
+
+      // call the approve method
+      await underlyingContract.methods.approve(component.getOptionsExchangeAddress, underlyingBalanceWei).send({
+        from: component.getActiveAccount
+
+      }).on('transactionHash', function(hash){
+        console.log("tx hash: " + hash);
+        component.$toast.info("The transaction has been submitted. Please wait for it to be confirmed.");
+
+      }).on('receipt', function(receipt){
+        console.log(receipt);
+
+        if (receipt.status) {
+          component.$toast.success("The approval was successfull. You can sell the option now.");
+
+          component.underlyingAllowance = allowanceValue; // manually increase the allowance amount
+          
+        } else {
+          component.$toast.error("The transaction has failed. Please contact the DeFi Options support.");
+        }
+        
+        component.loading = false;
+
+      }).on('error', function(error){
+        console.log(error);
+        component.loading = false;
+        component.$toast.error("There has been an error. Please contact the DeFi Options support.");
+      });
+    },
+
+    // write option covered by underlying balance
+    async writeCovered() {
+      let component = this;
+      component.loading = true;
+
+      let priceFeedType = "";
+
+      if (this.option.pair === "ETH/USD") {
+        priceFeedType = "ChainlinkFeedEth";
+      } else if (this.option.pair === "BTC/USD") {
+        priceFeedType = "ChainlinkFeedBtc";
+      } else if (this.option.pair === "MATIC/USD") {
+        priceFeedType = "ChainlinkFeedMatic";
+      } else if (this.option.pair === "SOL/USD") {
+        priceFeedType = "ChainlinkFeedSolana";
+      }
+
+      // get underlying balance in wei
+      const feedAddress = addresses[priceFeedType][parseInt(this.getChainId)];
+      const feedContract = new this.getWeb3.eth.Contract(ChainlinkContractJson.abi, feedAddress);
+      const underlyingAddr = await feedContract.methods.getUnderlyingAddr().call();
+      const underlyingContract = new component.getWeb3.eth.Contract(ERC20ContractJson.abi, underlyingAddr);
+      const underlyingBalanceWei = await underlyingContract.methods.balanceOf(this.getActiveAccount).call();
+
+      // write covered option transaction
+      try {
+        await component.getOptionsExchangeContract.methods.writeCovered(
+          feedAddress, // feed address
+          underlyingBalanceWei.div(100), // volume of options to write, TODO: NEED TO FIX THIS TO ALLOW FOR USER DEFINABLE
+          component.option.strikeRaw, // stike price of option
+          component.option.timestamp, // maturity of option in utc
+          component.getActiveAccount, // option writer
+        ).send({
+          from: component.getActiveAccount
+        }).on('transactionHash', function(hash){
+          console.log("tx hash: " + hash);
+          component.$toast.info("The writeCovered transaction has been submitted. Please wait for it to be confirmed.");
+
+        }).on('receipt', function(receipt){
+          console.log(receipt);
+
+          if (receipt.status) {
+            component.$toast.success("You have successfully wrote an option. Now you may sell it.");
+            component.$store.dispatch("optionsExchange/fetchExchangeUserBalance");
+          } else {
+            component.$toast.error("The transaction has failed. Please contact the DeFi Options support.");
+          }
+
+        }).on('error', function(error){
+          console.log(error);
+          component.$toast.error("There has been an error. Please contact the DeFi Options support.");
+        });
+      } catch (e) {
+          window.console.log("Error:", e);
+          //component.$toast.error("The transaction has been reverted. Please contact DeFi Options support.");
+          
+      } finally {
+        component.loading = false;
+      }
+    },
+
+    //calculated the mount of collateral needed to write the option
+    async calcCollateral() {
+      let priceFeedType = "";
+
+      if (this.option.pair === "ETH/USD") {
+        priceFeedType = "ChainlinkFeedEth";
+      } else if (this.option.pair === "BTC/USD") {
+        priceFeedType = "ChainlinkFeedBtc";
+      } else if (this.option.pair === "MATIC/USD") {
+        priceFeedType = "ChainlinkFeedMatic";
+      } else if (this.option.pair === "SOL/USD") {
+        priceFeedType = "ChainlinkFeedSolana";
+      }
+
+      const feedAddress = addresses[priceFeedType][parseInt(this.getChainId)];
+
+      const collateralNeeded = await this.getOptionsExchangeContract.methods.calcCollateral(
+        feedAddress, // feed address
+        this.getUserStablecoinBalance().div(100), //volume of options to write, TODO: NEED TO FIX THIS TO ALLOW FOR USER DEFINABLE
+        (this.option.type === "CALL") ? 0 : 1, //option type
+        this.option.strikeRaw, // stike price of option
+        this.option.timestamp, // maturity of option in utc
+      ).call();
+
+      this.collateralNeededRaw = collateralNeeded.mul(1.0025) //estimate higher just in case
+    },
+
+    //
+
+    async approveStablecoinCollateralDeposit() {
+      let component = this;
+      component.loading = true;
+
+      component.fetchUnderlyingAssetBalance();
+
+      // define unit and token contract
+      let unit = "ether"; // Exchange Balance & DAI - 18 decimals
+      let tokenContract;
+
+      if (component.buyWith === "USDT") {
+        unit = "kwei"; // USDT (Tether) - 4 decimals
+        // TODO: tokenContract = ...; // USDT contract
+      }
+
+      if (component.buyWith === "USDC") {
+        unit = "mwei"; // USDC - 6 decimals
+        tokenContract = component.getUsdcContract; // USDC contract
+      }
+
+      if (component.buyWith === "DAI") {
+        tokenContract = component.getDaiContract; // DAI contract
+      }
+
+      // define allowance value
+      let allowanceValue = component.getTotal * 1.05; // make it 5% bigger to avoid slippage issues
+
+      if (component.unlimitedApproval) {
+        allowanceValue = 10 ** 9; // 1B tokens as "unlimited" value
+      }
+
+      const allowanceValueWei = component.getWeb3.utils.toWei(String(allowanceValue.toFixed(4)), unit); // round to 4 decimals
+      
+      // call the approve method
+      try {
+        await tokenContract.methods.approve(component.getOptionsExchangeAddress, allowanceValueWei).send({
+          from: component.getActiveAccount
+        }).on('transactionHash', function(hash){
+          console.log("tx hash: " + hash);
+          component.$toast.info("The transaction has been submitted. Please wait for it to be confirmed.");
+
+        }).on('receipt', function(receipt){
+          console.log(receipt);
+
+          if (receipt.status) {
+            component.$toast.success("The approval was successfull. You can write the option now.");
+
+            // refresh values
+            if (component.buyWith === "DAI") {
+              // needs to be updated this way because Polygon RPC nodes are slow with updating state
+              component.$store.state.dai.exchangeAllowance = allowanceValue;
+            } else if (component.buyWith === "USDC") {
+              // needs to be updated this way because Polygon RPC nodes are slow with updating state
+              component.$store.state.usdc.exchangeAllowance = allowanceValue;
+            } else if (component.buyWith === "USDT") {
+              // needs to be updated this way because Polygon RPC nodes are slow with updating state
+              // component.$store.state.tether.exchangeAllowance = allowanceValue;
+            }
+
+          } else {
+            component.$toast.error("The transaction has failed. Please contact the DeFi Options support.");
+          }
+
+        }).on('error', function(error){
+          console.log(error);
+          component.$toast.error("There has been an error. Please contact the DeFi Options support.");
+        });
+      } catch (e) {
+          window.console.log("Error:", e);
+          component.$toast.error("The transaction has been reverted. Please try again or contact DeFi Options support.");
+      } finally {
+        component.loading = false;
+      }
+
+    },
+
+    //deposit collateral into exchange if not avaialble exchnage balance
+    async depositCollateral() {
+      let component = this;
+      component.loading = true;
+
+      // define unit and token contract
+      let unit = "ether"; // Exchange Balance & DAI - 18 decimals
+
+      if (component.buyWith === "USDT") {
+        unit = "kwei"; // USDT (Tether) - 4 decimals
+        // TODO: tokenContract = ...; // USDT contract
+      }
+
+      if (component.buyWith === "USDC") {
+        unit = "mwei"; // USDC - 6 decimals
+      }
+
+      let tokensWei = component.getWeb3.utils.toWei(component.depositValue, unit);
+
+      // make a deposit
+      await component.getOptionsExchangeContract.methods.depositTokens(
+        component.getActiveAccount, 
+        component.getStablecoinContract._address, 
+        tokensWei
+      ).send({
+        from: component.getActiveAccount
+      }).on('transactionHash', function(hash){
+        console.log("tx hash: " + hash);
+        component.$toast.info("The transaction has been submitted. Please wait for it to be confirmed.");
+
+      }).on('receipt', function(receipt){
+        console.log(receipt);
+
+        if (receipt.status) {
+          component.$toast.success("Your collateral deposit was successfull.");
+
+          component.$store.dispatch("optionsExchange/fetchExchangeUserBalance");
+          
+          component.depositValue = null;
+        } else {
+          component.$toast.error("The transaction has failed. Please contact the DeFi Options support.");
+        }
+        
+        component.loading = false;
+
+      }).on('error', function(error){
+        console.log(error);
+        component.loading = false;
+        component.$toast.error("There has been an error. Please contact the DeFi Options support.");
+      });
+    },
+
+    // write stablecoin collateral options
+    async writeOptions() {
+      let component = this;
+      component.loading = true;
+
+      let priceFeedType = "";
+
+      if (this.option.pair === "ETH/USD") {
+        priceFeedType = "ChainlinkFeedEth";
+      } else if (this.option.pair === "BTC/USD") {
+        priceFeedType = "ChainlinkFeedBtc";
+      } else if (this.option.pair === "MATIC/USD") {
+        priceFeedType = "ChainlinkFeedMatic";
+      } else if (this.option.pair === "SOL/USD") {
+        priceFeedType = "ChainlinkFeedSolana";
+      }
+
+      // get underlying balance in wei
+      const feedAddress = addresses[priceFeedType][parseInt(this.getChainId)];
+      const feedContract = new this.getWeb3.eth.Contract(ChainlinkContractJson.abi, feedAddress);
+      const underlyingAddr = await feedContract.methods.getUnderlyingAddr().call();
+      const underlyingContract = new component.getWeb3.eth.Contract(ERC20ContractJson.abi, underlyingAddr);
+      const underlyingBalanceWei = await underlyingContract.methods.balanceOf(this.getActiveAccount).call();
+      //const underlyingDecimals = await underlyingContract.methods.decimals().call();
+      //const allowanceValue = Number(underlyingBalanceWei.div(this.getWeb3.utils.toBN(10 ** underlyingDecimals))).toFixed(0);
+
+      // write stablecoin collateral options transaction
+      try {
+        await component.getOptionsExchangeContract.methods.writeOptions(
+          feedAddress, // feed address
+          underlyingBalanceWei.div(100), // volume of options to write, TODO: NEED TO FIX THIS TO ALLOW FOR USER DEFINABLE
+          component.option.strikeRaw, // stike price of option
+          component.option.timestamp, // maturity of option in utc
+          component.getActiveAccount, // option writer
+        ).send({
+          from: component.getActiveAccount
+        }).on('transactionHash', function(hash){
+          console.log("tx hash: " + hash);
+          component.$toast.info("The writeOptions transaction has been submitted. Please wait for it to be confirmed.");
+
+        }).on('receipt', function(receipt){
+          console.log(receipt);
+
+          if (receipt.status) {
+            component.$toast.success("You have successfully wrote an option. Now you may sell it.");
+            component.$store.dispatch("optionsExchange/fetchExchangeUserBalance");
+          } else {
+            component.$toast.error("The transaction has failed. Please contact the DeFi Options support.");
+          }
+
+        }).on('error', function(error){
+          console.log(error);
+          component.$toast.error("There has been an error. Please contact the DeFi Options support.");
+        });
+      } catch (e) {
+          window.console.log("Error:", e);
+          //component.$toast.error("The transaction has been reverted. Please contact DeFi Options support.");
+          
+      } finally {
+        component.loading = false;
       }
     },
 
