@@ -802,10 +802,6 @@ export default {
       }
     },
 
-    async calcWritable() {
-
-    },
-
     // approve the amount of underlying to use as collateral
     async approveAllowanceCovered() {
       let component = this;
