@@ -97,6 +97,13 @@
 
   <!-- Sell option form -->
   <div v-if="showForm && isGetSell" class="sell-form">
+    <div class="row">
+      <div class="btn-group mt-2" role="group" aria-label="Basic example">
+          <button @click="changeSellType('WRITE')" type="button" class="btn btn-outline-primary btn-md" :class="{'btn-outline-primary-active':'WRITE' === selectedSellType}">WRITE</button>
+          <button @click="changeSellType('SELL')" type="button" class="btn btn-outline-primary btn-md" :class="{'btn-outline-primary-active':'SELL' === selectedSellType}">SELL</button>
+      </div>
+    </div>
+
     <h3>
       Option size
       <i 
@@ -130,9 +137,67 @@
         </div>
 
       </div>
+
+      <div role="group" aria-label="Basic example" v-if="!getSellType">
+          <button @click="changeCoveredType('COVERED')" type="button" class="btn btn-outline-primary btn-md" :class="{'btn-outline-primary-active':'COVERED' === selectedCoveredType}">COVERED</button>
+          <button @click="changeCoveredType('NAKED')" type="button" class="btn btn-outline-primary btn-md" :class="{'btn-outline-primary-active':'NAKED' === selectedCoveredType}">NAKED</button>
+      </div>
+
+      <div class="form-button-mobile" v-if="getCoveredType && !getSellType">
+        <div class="show-text form-text">
+          Balance: {{Number(getUserUnderlyingBalance).toFixed(2)}} {{getUnderlying}}.
+        </div>
+      </div>
+
+      <div class="form-button-mobile" v-if="!getCoveredType">
+        <div class="btn-group" aria-describedby="button-text">
+          <button type="button" class="btn btn-outline-success dropdown-toggle text-uppercase" data-bs-toggle="dropdown" aria-expanded="false">
+            {{buyWith}}
+          </button>
+          <ul class="dropdown-menu">
+            <li>
+              <span class="dropdown-item text-uppercase" @click="setBuyWith('DAI')">DAI</span>
+              <span class="dropdown-item text-uppercase" @click="setBuyWith('USDC')">USDC</span>
+              <span class="dropdown-item text-uppercase" @click="setBuyWith('Exchange Balance')">Exchange Balance</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="show-text form-text">
+          Balance: {{Number(getUserStablecoinBalance).toFixed(2)}} {{buyWith}}.
+        </div>
+      </div>
     </div>
 
-    <div class="row mt-3">
+     <!-- write to open (sell) -->
+    <div class="d-flex flex-row" v-if="!getSellType">
+      <div class="p-2">
+        <button @click="approveAllowanceOption" class="btn btn-success form-control" :disabled="isOptionSizeNotValid.status || isEnoughAllowance">
+          <span v-if="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+          Approve Exchange
+        </button>
+      </div>
+      <!-- <div></div> -->
+
+      <div class="p-2">
+        <button @click="approveAllowanceOption" class="btn btn-success form-control" :disabled="isOptionSizeNotValid.status || isEnoughAllowance">
+          <span v-if="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+          Approve Collateral
+        </button>
+      </div>
+      <!-- <div></div> -->
+
+      <div class="p-2">
+        <button @click="approveAllowanceOption" class="btn btn-success form-control" :disabled="isOptionSizeNotValid.status || isEnoughAllowance">
+          <span v-if="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+          Deposit Collateral
+        </button>
+      </div>
+      <!-- <div></div> -->
+    </div>
+
+     <!-- sell to pool -->
+    <div class="row mt-3" v-if="getSellType">
       <button v-if="isEnoughAllowance" @click="sellOption" class="btn btn-success form-control" :disabled="isOptionSizeNotValid.status">
         <span v-if="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
         Sell for ${{getTotal.toFixed(2)}}
@@ -146,9 +211,14 @@
       <div></div>
     </div>
 
-    <small v-if="allowanceNeeded" class="show-text form-text text-center">
-        You'll need to make 2 transactions: approve & sell.
-      </small>
+    <small v-if="allowanceNeeded && getSellType" class="show-text form-text text-center">
+      You'll need to make 2 transactions (if already holding options): approve & sell. If you want to sell to open, you must toggle "WRITE" first.
+    </small>
+    <div></div>
+
+    <small v-if="allowanceNeeded && !getSellType" class="show-text form-text text-center">
+        You'll need to make 1-3 transactions (if not holding options): approve (and deposit) collateral;
+    </small>
   </div>
 
   <!-- Approve Confirmation Modal -->
@@ -232,9 +302,12 @@ export default {
       selectedOptionSize: 0.1,
       selectedOptionVolume: null,
       showForm: false,
+      selectedSellType: "SELL",
+      selectedCoveredType: "COVERED",
       slippage: 2, // 2% by default
       tooLowVolume: false,
-      unlimitedApproval: false
+      unlimitedApproval: false,
+      underlyingBalance: 0,
     }
   },
 
@@ -255,7 +328,7 @@ export default {
   },
 
   computed: {
-    ...mapGetters("accounts", ["getActiveAccount", "getWeb3"]),
+    ...mapGetters("accounts", ["getActiveAccount", "getChainId", "getWeb3"]),
     ...mapGetters("liquidityPool", ["getLiquidityPoolContract", "getLiquidityPoolAddress"]),
     ...mapGetters("dai", ["getDaiAddress", "getUserDaiBalance", "getDaiContract", "getLpDaiAllowance"]),
     ...mapGetters("optionsExchange", ["getOptionsExchangeAddress", "getOptionsExchangeContract", "getExchangeUserBalance", "getUserExchangeBalanceAllowance, getOptionTokenAddress"]),
@@ -338,6 +411,10 @@ export default {
       return this.underlyingBalance;
     },
 
+    getUnderlying() {
+      return this.option.udlSymbol;
+    },
+
     isGetBuy() {
       return this.side == "BUY"
     },
@@ -388,6 +465,14 @@ export default {
 
       return false;
     },
+
+    getSellType() {
+      return this.selectedSellType == "SELL";
+    },
+
+    getCoveredType() {
+      return this.selectedCoveredType == "COVERED";
+    }
   },
 
   methods: {
@@ -711,8 +796,8 @@ export default {
       const underlyingContract = new this.getWeb3.eth.Contract(ERC20ContractJson.abi, underlyingAddr);
       const underlyingBalanceWei = await underlyingContract.methods.balanceOf(this.getActiveAccount).call();
       const underlyingDecimals = await underlyingContract.methods.decimals().call();
+      //TODO FIX ISSUE WITH BELOW (.div())
       this.underlyingBalance = Number(underlyingBalanceWei.div(this.getWeb3.utils.toBN(10 ** underlyingDecimals))).toFixed(0);
-
     },
 
     async fetchOptionAllowance() {
@@ -790,15 +875,6 @@ export default {
 
         // hardcoded 1% slippage
         this.selectedOptionPrice -= Number(this.selectedOptionPrice) * 0.01;
-      }
-    },
-
-    toggleSellForm() {
-      if (this.showSellForm) {
-        this.showSellForm = false;
-      } else {
-        this.setSellData();
-        this.showSellForm = true;
       }
     },
 
@@ -1147,6 +1223,14 @@ export default {
       var infoEl = document.getElementById('infoEl')
       var tooltip = new window.bootstrap.Tooltip(infoEl)
       tooltip.show();
+    },
+
+    changeSellType(sellType) {
+      this.selectedSellType = sellType;
+    },
+
+    changeCoveredType(sellType) {
+      this.selectedCoveredType = sellType;
     }
   }
 }

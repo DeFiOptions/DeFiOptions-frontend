@@ -149,6 +149,7 @@ const actions = {
       for (let symbol of symbolsList) {
         let itemList = symbol.split("-");
         let pair = itemList[0];
+        let udlSymbol = pair.split("/")[0];
         let timestamp = itemList[3];
         let strike = Math.round(web3.utils.fromWei(Number(itemList[2]).toString(16), "ether"));
         let strikeRaw = itemList[2];
@@ -171,7 +172,7 @@ const actions = {
           year: 'numeric' });
         
         // option object
-        let optionObject = {symbol, pair, type, maturity, strike, strikeRaw, holding, written, intrinsicValue, timestamp, address}
+        let optionObject = {symbol, pair, udlSymbol, type, maturity, strike, strikeRaw, holding, written, intrinsicValue, timestamp, address}
         optionsList.push(optionObject);
 
         counter++;

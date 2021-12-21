@@ -233,8 +233,13 @@ const mutations = {
 
       let itemList = item.split("-");
 
+      
+      let timestamp = itemList[3];
+      let strikeRaw = itemList[2];
+
       // pair
       let pair = itemList[0];
+      let udlSymbol = pair.split("/")[0];
       state.defaultPair = pair
 
       // type
@@ -267,17 +272,17 @@ const mutations = {
         if (maturityHumanReadable in symbolsArray[pair]) {
           if (typeName in symbolsArray[pair][maturityHumanReadable]) {
             if (!(strikePriceBigUnit in symbolsArray[pair][maturityHumanReadable][typeName])) {
-              symbolsArray[pair][maturityHumanReadable][typeName].push({strike: strikePriceBigUnit, symbol: item});
+              symbolsArray[pair][maturityHumanReadable][typeName].push({strike: strikePriceBigUnit, symbol: item, pair: pair, strikeRaw: strikeRaw, timestamp: timestamp, udlSymbol: udlSymbol});
             }
           } else {
             symbolsArray[pair][maturityHumanReadable][typeName] = [
-              {strike: strikePriceBigUnit, symbol: item}
+              {strike: strikePriceBigUnit, symbol: item, pair: pair, strikeRaw: strikeRaw, timestamp: timestamp, udlSymbol: udlSymbol}
             ]
           }
         } else {
           symbolsArray[pair][maturityHumanReadable] = {
             [typeName]: [
-              {strike: strikePriceBigUnit, symbol: item}
+              {strike: strikePriceBigUnit, symbol: item, pair: pair, strikeRaw: strikeRaw, timestamp: timestamp, udlSymbol: udlSymbol}
             ]
           }
         }
@@ -285,7 +290,7 @@ const mutations = {
         symbolsArray[pair] = {
           [maturityHumanReadable]: {
             [typeName]: [
-              {strike: strikePriceBigUnit, symbol: item}
+              {strike: strikePriceBigUnit, symbol: item, pair: pair, strikeRaw: strikeRaw, timestamp: timestamp, udlSymbol: udlSymbol}
             ]
           }
         }
