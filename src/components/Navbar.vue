@@ -46,12 +46,12 @@
             </a>
             <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
               <li>
-                <a class="dropdown-item" aria-current="page" target="_blank" href="https://snapshot.org/#/defioptionsdao.eth">
-                  <i class="fas fa-landmark"></i> Governance
+                <a class="dropdown-item" target="_blank" href="https://dune.xyz/dod/DeFi-Options?period=3months">
+                  <i class="fas fa-chart-bar"></i> Analytics
                 </a>
               </li>
               <li>
-                <a class="dropdown-item" aria-current="page" target="_blank" href="https://docs.defioptions.org/">
+                <a class="dropdown-item" target="_blank" href="https://docs.defioptions.org/">
                   <i class="fas fa-book"></i> Docs
                 </a>
               </li>
@@ -64,6 +64,11 @@
               <li><a class="dropdown-item" target="_blank" href="https://github.com/DeFiOptions">
                 <i class="fab fa-github"></i> GitHub
               </a></li>
+              <li>
+                <a class="dropdown-item" target="_blank" href="https://snapshot.org/#/defioptionsdao.eth">
+                  <i class="fas fa-landmark"></i> Governance
+                </a>
+              </li>
               <li><a class="dropdown-item" target="_blank" href="https://reddit.com/r/DeFiOptionsDAO/">
                 <i class="fab fa-reddit"></i> Reddit
               </a></li>
@@ -87,8 +92,8 @@
               Community
             </a>
             <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-              <li><a class="dropdown-item" target="_blank" href="https://snapshot.org/#/defioptionsdao.eth">
-                <i class="fas fa-landmark"></i> Governance
+              <li><a class="dropdown-item" target="_blank" href="https://dune.xyz/dod/DeFi-Options?period=3months">
+                <i class="fas fa-chart-bar"></i> Analytics
               </a></li>
               <li><a class="dropdown-item" target="_blank" href="https://discord.gg/WCeKgHNz3z">
                 <i class="fab fa-discord"></i> Discord
@@ -98,6 +103,9 @@
               </a></li>
               <li><a class="dropdown-item" target="_blank" href="https://github.com/DeFiOptions">
                 <i class="fab fa-github"></i> GitHub
+              </a></li>
+              <li><a class="dropdown-item" target="_blank" href="https://snapshot.org/#/defioptionsdao.eth">
+                <i class="fas fa-landmark"></i> Governance
               </a></li>
               <li><a class="dropdown-item" target="_blank" href="https://reddit.com/r/DeFiOptionsDAO/">
                 <i class="fab fa-reddit"></i> Reddit
