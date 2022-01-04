@@ -590,16 +590,23 @@ export default {
             if (component.buyWith === "DAI") {
               component.$store.dispatch("dai/fetchUserBalance");
 
-              if (!component.unlimitedApproval) {
+              if (component.getTotal === Number(component.$store.state.dai.lpAllowance)) {
+                console.log("equal")
                 component.$store.state.dai.lpAllowance = 0;
+              } else {
+                console.log("not equal")
+                component.$store.state.dai.lpAllowance = Number(component.$store.state.dai.lpAllowance) - component.getTotal;
               }
+
               //component.$store.dispatch("dai/fetchLpAllowance");
 
             } else if (component.buyWith === "USDC") {
               component.$store.dispatch("usdc/fetchUserBalance");
               
-              if (!component.unlimitedApproval) {
+              if (component.getTotal === Number(component.$store.state.usdc.lpAllowance)) {
                 component.$store.state.usdc.lpAllowance = 0;
+              } else {
+                component.$store.state.usdc.lpAllowance = Number(component.$store.state.usdc.lpAllowance) - component.getTotal;
               }
               //component.$store.dispatch("usdc/fetchLpAllowance");
 
@@ -607,19 +614,18 @@ export default {
               // TODO
               //component.$store.dispatch("tether/fetchUserBalance");
               
-              /*
-              if (!component.unlimitedApproval) {
-                component.$store.state.tether.lpAllowance = 0;
-              }*/
 
               //this.$store.dispatch("tether/fetchLpAllowance");
 
             } else if (component.buyWith === "Exchange Balance") {
               component.$store.dispatch("optionsExchange/fetchExchangeUserBalance");
 
-              if (!component.unlimitedApproval) {
+              if (component.getTotal === Number(component.$store.state.optionsExchange.userExchangeBalanceAllowance)) {
                 component.$store.state.optionsExchange.userExchangeBalanceAllowance = 0;
+              } else {
+                component.$store.state.optionsExchange.userExchangeBalanceAllowance = Number(component.$store.state.optionsExchange.userExchangeBalanceAllowance) - component.getTotal;
               }
+              
               //component.$store.dispatch("optionsExchange/fetchExchangeBalanceAllowance");
             }
             
