@@ -171,26 +171,42 @@
 
      <!-- write to open (sell) -->
     <div class="d-flex flex-row" v-if="!getSellType">
-      <div class="p-2">
-        <button @click="approveAllowanceOption" class="btn btn-success form-control" :disabled="isOptionSizeNotValid.status || isEnoughAllowance">
+      <div class="p-2" v-if="(!getCoveredType) && (!isBuyWithExchangeBalance)">
+        <button @click="approveStablecoinCollateralDeposit" class="btn btn-success form-control" :disabled="isOptionSizeNotValid.status || isEnoughAllowance">
           <span v-if="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-          Approve Exchange
+          Approve Stablecoin
         </button>
       </div>
       <!-- <div></div> -->
 
-      <div class="p-2">
-        <button @click="approveAllowanceOption" class="btn btn-success form-control" :disabled="isOptionSizeNotValid.status || isEnoughAllowance">
+      <div class="p-2" v-if="getCoveredType">
+        <button @click="approveAllowanceCovered" class="btn btn-success form-control" :disabled="isOptionSizeNotValid.status || isEnoughAllowance">
           <span v-if="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-          Approve Collateral
+          Approve Underlying
         </button>
       </div>
       <!-- <div></div> -->
 
-      <div class="p-2">
-        <button @click="approveAllowanceOption" class="btn btn-success form-control" :disabled="isOptionSizeNotValid.status || isEnoughAllowance">
+      <div class="p-2"  v-if="(!getCoveredType) && (!isBuyWithExchangeBalance)">
+        <button @click="depositCollateral" class="btn btn-success form-control" :disabled="isOptionSizeNotValid.status || isEnoughAllowance">
           <span v-if="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-          Deposit Collateral
+          Deposit Stablecoin
+        </button>
+      </div>
+      <!-- <div></div> -->
+
+      <div class="p-2" v-if="!getCoveredType">
+        <button @click="writeOptions" class="btn btn-success form-control" :disabled="isOptionSizeNotValid.status || isEnoughAllowance">
+          <span v-if="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+          Write Options
+        </button>
+      </div>
+      <!-- <div></div> -->
+
+      <div class="p-2" v-if="getCoveredType">
+        <button @click="writeCovered" class="btn btn-success form-control" :disabled="isOptionSizeNotValid.status || isEnoughAllowance">
+          <span v-if="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+          Write Covered
         </button>
       </div>
       <!-- <div></div> -->
@@ -217,7 +233,7 @@
     <div></div>
 
     <small v-if="allowanceNeeded && !getSellType" class="show-text form-text text-center">
-        You'll need to make 1-3 transactions (if not holding options): approve (and deposit) collateral;
+        You'll need to make 1-3 transactions (if not holding options): approve (and deposit) collateral.
     </small>
   </div>
 
@@ -464,6 +480,10 @@ export default {
       }
 
       return false;
+    },
+
+    isBuyWithExchangeBalance() {
+      return this.buyWith === "Exchange Balance";
     },
 
     getSellType() {
@@ -1031,7 +1051,7 @@ export default {
       this.collateralNeededRaw = collateralNeeded.mul(1.0025) //estimate higher just in case
     },
 
-    //
+    // approve the amount of stablecoins to use as collateral agaisnt exchange
 
     async approveStablecoinCollateralDeposit() {
       let component = this;
