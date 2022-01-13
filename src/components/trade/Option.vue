@@ -324,6 +324,8 @@ export default {
       tooLowVolume: false,
       unlimitedApproval: false,
       underlyingBalance: 0,
+      underlyingSymbol: "N/A",
+      underlyingAddr: "N/A",
     }
   },
 
@@ -428,7 +430,7 @@ export default {
     },
 
     getUnderlying() {
-      return this.option.udlSymbol;
+      return this.underlyingSymbol + " (" + this.underlyingAddr + ")";
     },
 
     isGetBuy() {
@@ -822,6 +824,9 @@ export default {
       const underlyingContract = new this.getWeb3.eth.Contract(ERC20ContractJson.abi, underlyingAddr);
       const underlyingBalanceWei = await underlyingContract.methods.balanceOf(this.getActiveAccount).call();
       const underlyingDecimals = await underlyingContract.methods.decimals().call();
+      const underlyingSymbol = await underlyingContract.methods.symbol().call();
+      this.underlyingSymbol = underlyingSymbol;
+      this.underlyingAddr = underlyingAddr;
       this.underlyingBalance = Number(underlyingBalanceWei / (this.getWeb3.utils.toBN(10 ** underlyingDecimals))).toFixed(0);
     },
 
