@@ -383,16 +383,40 @@ export default {
     },
     
     getMaxOptionSize() {
-      // max option size that current user can buy
       let availableOptionVolume = Math.floor(Number(this.selectedOptionVolume*1000))/1000;
       let optionPrice = Number(this.optionPrice);
       let maxTotal = availableOptionVolume * optionPrice;
-      let userBalance = Number(this.getUserStablecoinBalance);
 
-      if (maxTotal > Number(this.getUserStablecoinBalance)) {
-        return Math.floor(Number(userBalance / optionPrice * 1000))/1000;
+      if (this.isGetSell) {
+        // max option size that current user can write
+
+        if (this.selectedCoveredType === "COVERED") {
+          let maxTotal = availableOptionVolume;
+          let userBalance = Number(this.underlyingBalance);
+
+          if (maxTotal > userBalance) {
+            return userBalance;
+          } else {
+            return availableOptionVolume;
+          }
+        } else {
+          
+          let userBalance = Number(this.getUserStablecoinBalance);
+
+          if (maxTotal > Number(this.getUserStablecoinBalance)) {
+            return Math.floor(Number(userBalance / optionPrice * 1000))/1000;
+          } else {
+            return availableOptionVolume;
+          }
+        }
       } else {
-        return availableOptionVolume;
+        let userBalance = Number(this.getUserStablecoinBalance);
+
+        if (maxTotal > Number(this.getUserStablecoinBalance)) {
+          return Math.floor(Number(userBalance / optionPrice * 1000))/1000;
+        } else {
+          return availableOptionVolume;
+        }
       }
     },
 
@@ -989,13 +1013,13 @@ export default {
       const feedContract = new this.getWeb3.eth.Contract(ChainlinkContractJson.abi, feedAddress);
       const underlyingAddr = await feedContract.methods.getUnderlyingAddr().call();
       const underlyingContract = new component.getWeb3.eth.Contract(ERC20ContractJson.abi, underlyingAddr);
-      const underlyingBalanceWei = await underlyingContract.methods.balanceOf(this.getActiveAccount).call();
+      const underlyingDecimals = await underlyingContract.methods.decimals().call();
 
       // write covered option transaction
       try {
         await component.getOptionsExchangeContract.methods.writeCovered(
           feedAddress, // feed address
-          underlyingBalanceWei / (100), // volume of options to write, TODO: NEED TO FIX THIS TO ALLOW FOR USER DEFINABLE
+          component.selectedOptionSize * (10**underlyingDecimals) , // volume of options to write,
           component.option.strikeRaw, // stike price of option
           component.option.timestamp, // maturity of option in utc
           component.getActiveAccount, // option writer
