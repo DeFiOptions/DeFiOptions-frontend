@@ -822,8 +822,7 @@ export default {
       const underlyingContract = new this.getWeb3.eth.Contract(ERC20ContractJson.abi, underlyingAddr);
       const underlyingBalanceWei = await underlyingContract.methods.balanceOf(this.getActiveAccount).call();
       const underlyingDecimals = await underlyingContract.methods.decimals().call();
-      //TODO FIX ISSUE WITH BELOW (.div())
-      this.underlyingBalance = Number(underlyingBalanceWei.div(this.getWeb3.utils.toBN(10 ** underlyingDecimals))).toFixed(0);
+      this.underlyingBalance = Number(underlyingBalanceWei / (this.getWeb3.utils.toBN(10 ** underlyingDecimals))).toFixed(0);
     },
 
     async fetchOptionAllowance() {
@@ -932,7 +931,7 @@ export default {
       // get underlying balance in wei
       const underlyingBalanceWei = await underlyingContract.methods.balanceOf(this.getActiveAccount).call();
       const underlyingDecimals = await underlyingContract.methods.decimals().call();
-      const allowanceValue = Number(underlyingBalanceWei.div(this.getWeb3.utils.toBN(10 ** underlyingDecimals))).toFixed(0);
+      const allowanceValue = Number(underlyingBalanceWei / (this.getWeb3.utils.toBN(10 ** underlyingDecimals))).toFixed(0);
 
       // call the approve method
       await underlyingContract.methods.approve(component.getOptionsExchangeAddress, underlyingBalanceWei).send({
@@ -991,7 +990,7 @@ export default {
       try {
         await component.getOptionsExchangeContract.methods.writeCovered(
           feedAddress, // feed address
-          underlyingBalanceWei.div(100), // volume of options to write, TODO: NEED TO FIX THIS TO ALLOW FOR USER DEFINABLE
+          underlyingBalanceWei / (100), // volume of options to write, TODO: NEED TO FIX THIS TO ALLOW FOR USER DEFINABLE
           component.option.strikeRaw, // stike price of option
           component.option.timestamp, // maturity of option in utc
           component.getActiveAccount, // option writer
@@ -1042,13 +1041,13 @@ export default {
 
       const collateralNeeded = await this.getOptionsExchangeContract.methods.calcCollateral(
         feedAddress, // feed address
-        this.getUserStablecoinBalance().div(100), //volume of options to write, TODO: NEED TO FIX THIS TO ALLOW FOR USER DEFINABLE
+        this.getUserStablecoinBalance() / 100, //volume of options to write, TODO: NEED TO FIX THIS TO ALLOW FOR USER DEFINABLE
         (this.option.type === "CALL") ? 0 : 1, //option type
         this.option.strikeRaw, // stike price of option
         this.option.timestamp, // maturity of option in utc
       ).call();
 
-      this.collateralNeededRaw = collateralNeeded.mul(1.0025) //estimate higher just in case
+      this.collateralNeededRaw = collateralNeeded * 1.0025; //estimate higher just in case
     },
 
     // approve the amount of stablecoins to use as collateral agaisnt exchange
@@ -1205,13 +1204,13 @@ export default {
       const underlyingContract = new component.getWeb3.eth.Contract(ERC20ContractJson.abi, underlyingAddr);
       const underlyingBalanceWei = await underlyingContract.methods.balanceOf(this.getActiveAccount).call();
       //const underlyingDecimals = await underlyingContract.methods.decimals().call();
-      //const allowanceValue = Number(underlyingBalanceWei.div(this.getWeb3.utils.toBN(10 ** underlyingDecimals))).toFixed(0);
+      //const allowanceValue = Number(underlyingBalanceWei / (this.getWeb3.utils.toBN(10 ** underlyingDecimals))).toFixed(0);
 
       // write stablecoin collateral options transaction
       try {
         await component.getOptionsExchangeContract.methods.writeOptions(
           feedAddress, // feed address
-          underlyingBalanceWei.div(100), // volume of options to write, TODO: NEED TO FIX THIS TO ALLOW FOR USER DEFINABLE
+          underlyingBalanceWei / (100), // volume of options to write, TODO: NEED TO FIX THIS TO ALLOW FOR USER DEFINABLE
           component.option.strikeRaw, // stike price of option
           component.option.timestamp, // maturity of option in utc
           component.getActiveAccount, // option writer
