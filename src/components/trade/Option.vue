@@ -143,8 +143,8 @@
           <button @click="changeCoveredType('NAKED')" type="button" class="btn btn-outline-primary btn-md" :class="{'btn-outline-primary-active':'NAKED' === selectedCoveredType}">NAKED</button>
       </div>
 
-      <div class="form-button-mobile" v-if="getCoveredType && !getSellType" :key="writingOptionsBalance">
-        <div class="show-text form-text">
+      <div class="form-button-mobile" v-if="getCoveredType && !getSellType">
+        <div class="show-text form-text" :key="writingOptionsBalance">
           Balance: {{Number(getUserUnderlyingBalance).toFixed(2)}} {{getUnderlying}}.
         </div>
       </div>
@@ -172,7 +172,7 @@
      <!-- write to open (sell) -->
     <div class="d-flex flex-row" v-if="!getSellType">
       <div class="p-2" v-if="(!getCoveredType) && (!isBuyWithExchangeBalance)">
-        <button @click="approveStablecoinCollateralDeposit" class="btn btn-success form-control" :disabled="isOptionSizeNotValid.status || isEnoughAllowance">
+        <button @click="approveStablecoinCollateralDeposit" class="btn btn-success form-control" :disabled="(isOptionSizeNotValid.status || isEnoughAllowance) || (writingStepTx > 0)">
           <span v-if="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
           Approve Stablecoin
         </button>
@@ -180,7 +180,7 @@
       <!-- <div></div> -->
 
       <div class="p-2" v-if="getCoveredType">
-        <button @click="approveAllowanceCovered" class="btn btn-success form-control" :disabled="isOptionSizeNotValid.status || isEnoughAllowance">
+        <button @click="approveAllowanceCovered" class="btn btn-success form-control" :disabled="(isOptionSizeNotValid.status || isEnoughAllowance) || (writingStepTx > 0)">
           <span v-if="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
           Approve Underlying
         </button>
@@ -188,7 +188,7 @@
       <!-- <div></div> -->
 
       <div class="p-2"  v-if="(!getCoveredType) && (!isBuyWithExchangeBalance)">
-        <button @click="depositCollateral" class="btn btn-success form-control" :disabled="isOptionSizeNotValid.status || isEnoughAllowance">
+        <button @click="depositCollateral" class="btn btn-success form-control" :disabled="(isOptionSizeNotValid.status || isEnoughAllowance) || (writingStepTx < 1)">
           <span v-if="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
           Deposit Stablecoin
         </button>
@@ -196,7 +196,7 @@
       <!-- <div></div> -->
 
       <div class="p-2" v-if="!getCoveredType">
-        <button @click="writeOptions" class="btn btn-success form-control" :disabled="isOptionSizeNotValid.status || isEnoughAllowance">
+        <button @click="writeOptions" class="btn btn-success form-control" :disabled="(isOptionSizeNotValid.status || isEnoughAllowance) || ((writingStepTx < 2) && (!isBuyWithExchangeBalance))">
           <span v-if="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
           Write Options
         </button>
@@ -204,7 +204,7 @@
       <!-- <div></div> -->
 
       <div class="p-2" v-if="getCoveredType">
-        <button @click="writeCovered" class="btn btn-success form-control" :disabled="isOptionSizeNotValid.status || isEnoughAllowance">
+        <button @click="writeCovered" class="btn btn-success form-control" :disabled="(isOptionSizeNotValid.status || isEnoughAllowance) || (writingStepTx < 1)">
           <span v-if="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
           Write Covered
         </button>
@@ -327,6 +327,7 @@ export default {
       underlyingSymbol: "N/A",
       underlyingAddr: "N/A",
       writingOptionsBalance: 0,
+      writingStepTx: 0,
     }
   },
 
@@ -1003,6 +1004,7 @@ export default {
       }).on('error', function(error){
         console.log(error);
         component.loading = false;
+        component.writingStepTx = 1;
         component.$toast.error("There has been an error. Please contact the DeFi Options support.");
       });
     },
@@ -1065,6 +1067,7 @@ export default {
           
       } finally {
         component.loading = false;
+        component.writingStepTx = 0;
       }
     },
 
@@ -1179,6 +1182,7 @@ export default {
           component.$toast.error("The transaction has been reverted. Please try again or contact DeFi Options support.");
       } finally {
         component.loading = false;
+        component.writingStepTx = 1;
       }
 
     },
@@ -1227,6 +1231,7 @@ export default {
         }
         
         component.loading = false;
+        component.writingStepTx = 2;
 
       }).on('error', function(error){
         console.log(error);
@@ -1295,6 +1300,7 @@ export default {
           
       } finally {
         component.loading = false;
+        component.writingStepTx = 0;
       }
     },
 
