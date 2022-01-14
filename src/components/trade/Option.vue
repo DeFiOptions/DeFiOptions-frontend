@@ -143,7 +143,7 @@
           <button @click="changeCoveredType('NAKED')" type="button" class="btn btn-outline-primary btn-md" :class="{'btn-outline-primary-active':'NAKED' === selectedCoveredType}">NAKED</button>
       </div>
 
-      <div class="form-button-mobile" v-if="getCoveredType && !getSellType">
+      <div class="form-button-mobile" v-if="getCoveredType && !getSellType" :key="writingOptionsBalance">
         <div class="show-text form-text">
           Balance: {{Number(getUserUnderlyingBalance).toFixed(2)}} {{getUnderlying}}.
         </div>
@@ -326,6 +326,7 @@ export default {
       underlyingBalance: 0,
       underlyingSymbol: "N/A",
       underlyingAddr: "N/A",
+      writingOptionsBalance: 0,
     }
   },
 
@@ -391,7 +392,7 @@ export default {
         // max option size that current user can write
 
         if (this.selectedCoveredType === "COVERED") {
-          let maxTotal = availableOptionVolume;
+          console.log("in covered");
           let userBalance = Number(this.underlyingBalance);
 
           if (maxTotal > userBalance) {
@@ -400,13 +401,15 @@ export default {
             return availableOptionVolume;
           }
         } else {
-          
+          // NAKED
           let userBalance = Number(this.getUserStablecoinBalance);
-
-          if (maxTotal > Number(this.getUserStablecoinBalance)) {
-            return Math.floor(Number(userBalance / optionPrice * 1000))/1000;
+          console.log("userBalance: " + userBalance);
+          console.log("collateralNeededRaw: " + this.collateralNeededRaw);
+          console.log("selectedOptionSize: " + this.selectedOptionSize);
+          if (this.collateralNeededRaw > userBalance) {
+            return (this.selectedOptionSize * (userBalance / this.collateralNeededRaw)).toFixed(4);
           } else {
-            return availableOptionVolume;
+            return (this.selectedOptionSize * this.collateralNeededRaw).toFixed(4);
           }
         }
       } else {
@@ -451,6 +454,10 @@ export default {
 
     getUserUnderlyingBalance() {
       return this.underlyingBalance;
+    },
+
+    getReqiredCollateral() {
+      return this.collateralNeededRaw;
     },
 
     getUnderlying() {
@@ -519,6 +526,14 @@ export default {
     getCoveredType() {
       return this.selectedCoveredType == "COVERED";
     }
+  },
+
+  watch: {
+      selectedOptionSize: async function() {
+        console.log("before calcCollateral");
+        this.calcCollateral().then(this.writingOptionsBalance += 1);
+        console.log("after calcCollateral");
+      }
   },
 
   methods: {
@@ -757,6 +772,7 @@ export default {
         this.showForm = false;
       } else {
         this.setFormData();
+        this.calcCollateral();
         this.showForm = true;
       }
     },
@@ -1068,15 +1084,25 @@ export default {
 
       const feedAddress = addresses[priceFeedType][parseInt(this.getChainId)];
 
+      console.log("in calcCollateral ");
+      const optionSizeWei = this.getWeb3.utils.toWei(String(this.selectedOptionSize), "ether");
+      console.log("optionSizeWei: "+optionSizeWei);
+      console.log("this.option.strikeRaw: "+ this.option.strikeRaw);
+      console.log("this.option.timestamp: "+ this.option.timestamp);
+
       const collateralNeeded = await this.getOptionsExchangeContract.methods.calcCollateral(
         feedAddress, // feed address
-        this.getUserStablecoinBalance() / 100, //volume of options to write, TODO: NEED TO FIX THIS TO ALLOW FOR USER DEFINABLE
+        this.getWeb3.utils.toBN(optionSizeWei), //volume of options to write
         (this.option.type === "CALL") ? 0 : 1, //option type
-        this.option.strikeRaw, // stike price of option
-        this.option.timestamp, // maturity of option in utc
+        parseInt(this.option.strikeRaw), // strike price of option
+        parseInt(this.option.timestamp), // maturity of option in utc
       ).call();
 
+      console.log(collateralNeeded * 1.0025);
+
       this.collateralNeededRaw = collateralNeeded * 1.0025; //estimate higher just in case
+
+      console.log(this.collateralNeededRaw);
     },
 
     // approve the amount of stablecoins to use as collateral agaisnt exchange
