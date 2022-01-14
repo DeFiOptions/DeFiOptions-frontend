@@ -827,15 +827,7 @@ export default {
 
     async fetchExpiryPrice() {
       if (Number(this.option.timestamp)*1e3 < Date.now()) {
-        let priceFeedType = "";
-
-        if (this.option.pair === "ETH/USD") {
-          priceFeedType = "ChainlinkFeedEth";
-        } else if (this.option.pair === "BTC/USD") {
-          priceFeedType = "ChainlinkFeedBtc";
-        } /*else if (this.option.pair === "MATIC/USD") {
-          priceFeedType = "ChainlinkFeedBtc";
-        }*/
+        let priceFeedType = this.option.pair;
 
         const feedAddress = addresses[priceFeedType][parseInt(this.getChainId)];
         const feedContract = new this.getWeb3.eth.Contract(ChainlinkContractJson.abi, feedAddress);
@@ -847,17 +839,7 @@ export default {
 
     async fetchUnderlyingAssetBalance() {
 
-      let priceFeedType = "";
-
-      if (this.option.pair === "ETH/USD") {
-        priceFeedType = "ChainlinkFeedEth";
-      } else if (this.option.pair === "BTC/USD") {
-        priceFeedType = "ChainlinkFeedBtc";
-      } else if (this.option.pair === "MATIC/USD") {
-        priceFeedType = "ChainlinkFeedMatic";
-      } else if (this.option.pair === "SOL/USD") {
-        priceFeedType = "ChainlinkFeedSolana";
-      }
+      let priceFeedType = this.option.pair;
 
       const feedAddress = addresses[priceFeedType][parseInt(this.getChainId)];
       const feedContract = new this.getWeb3.eth.Contract(ChainlinkContractJson.abi, feedAddress);
@@ -954,19 +936,7 @@ export default {
       let component = this;
       component.loading = true;
 
-      
-
-      let priceFeedType = "";
-
-      if (this.option.pair === "ETH/USD") {
-        priceFeedType = "ChainlinkFeedEth";
-      } else if (this.option.pair === "BTC/USD") {
-        priceFeedType = "ChainlinkFeedBtc";
-      } else if (this.option.pair === "MATIC/USD") {
-        priceFeedType = "ChainlinkFeedMatic";
-      } else if (this.option.pair === "SOL/USD") {
-        priceFeedType = "ChainlinkFeedSolana";
-      }
+      let priceFeedType = this.option.pair;
 
       const feedAddress = addresses[priceFeedType][parseInt(component.getChainId)];
       const feedContract = new component.getWeb3.eth.Contract(ChainlinkContractJson.abi, feedAddress);
@@ -1014,17 +984,7 @@ export default {
       let component = this;
       component.loading = true;
 
-      let priceFeedType = "";
-
-      if (this.option.pair === "ETH/USD") {
-        priceFeedType = "ChainlinkFeedEth";
-      } else if (this.option.pair === "BTC/USD") {
-        priceFeedType = "ChainlinkFeedBtc";
-      } else if (this.option.pair === "MATIC/USD") {
-        priceFeedType = "ChainlinkFeedMatic";
-      } else if (this.option.pair === "SOL/USD") {
-        priceFeedType = "ChainlinkFeedSolana";
-      }
+      let priceFeedType = this.option.pair;
 
       // get underlying balance in wei
       const feedAddress = addresses[priceFeedType][parseInt(this.getChainId)];
@@ -1073,17 +1033,7 @@ export default {
 
     //calculated the mount of collateral needed to write the option
     async calcCollateral() {
-      let priceFeedType = "";
-
-      if (this.option.pair === "ETH/USD") {
-        priceFeedType = "ChainlinkFeedEth";
-      } else if (this.option.pair === "BTC/USD") {
-        priceFeedType = "ChainlinkFeedBtc";
-      } else if (this.option.pair === "MATIC/USD") {
-        priceFeedType = "ChainlinkFeedMatic";
-      } else if (this.option.pair === "SOL/USD") {
-        priceFeedType = "ChainlinkFeedSolana";
-      }
+      let priceFeedType = this.option.pair;
 
       const feedAddress = addresses[priceFeedType][parseInt(this.getChainId)];
 
@@ -1245,17 +1195,7 @@ export default {
       let component = this;
       component.loading = true;
 
-      let priceFeedType = "";
-
-      if (this.option.pair === "ETH/USD") {
-        priceFeedType = "ChainlinkFeedEth";
-      } else if (this.option.pair === "BTC/USD") {
-        priceFeedType = "ChainlinkFeedBtc";
-      } else if (this.option.pair === "MATIC/USD") {
-        priceFeedType = "ChainlinkFeedMatic";
-      } else if (this.option.pair === "SOL/USD") {
-        priceFeedType = "ChainlinkFeedSolana";
-      }
+      let priceFeedType = this.option.pair;
 
       // get underlying balance in wei
       const feedAddress = addresses[priceFeedType][parseInt(this.getChainId)];
