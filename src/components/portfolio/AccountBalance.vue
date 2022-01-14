@@ -25,7 +25,7 @@
           class="fas fa-info-circle" 
           data-bs-toggle="tooltip" 
           data-bs-placement="bottom" 
-          title="Withdraw stablecoins from your DeFi Options account balance to your Polygon account."
+          title="Withdraw stablecoins from your DeFi Options account balance to your Polygon account. Important: you may recieve multiple types of stablecoins (DAI, USDC etc.), not just one."
         ></i>
       </h3>
 
