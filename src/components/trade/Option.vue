@@ -317,6 +317,7 @@ export default {
       optionPriceFormattedSell: "loading",
       selectedOptionSize: 0.1,
       selectedOptionVolume: null,
+      selectedOptionPrice: null,
       showForm: false,
       selectedSellType: "SELL",
       selectedCoveredType: "COVERED",
@@ -338,6 +339,8 @@ export default {
   created() {
     this.getOptionPrice();
     this.fetchUnderlyingAssetBalance();
+    this.setHoldingOptions();
+    this.fetchOptionAllowance();
 
     this.$store.dispatch("dai/fetchUserBalance");
     this.$store.dispatch("dai/fetchLpAllowance");
@@ -351,7 +354,7 @@ export default {
     ...mapGetters("accounts", ["getActiveAccount", "getChainId", "getWeb3"]),
     ...mapGetters("liquidityPool", ["getLiquidityPoolContract", "getLiquidityPoolAddress"]),
     ...mapGetters("dai", ["getDaiAddress", "getUserDaiBalance", "getDaiContract", "getLpDaiAllowance"]),
-    ...mapGetters("optionsExchange", ["getOptionsExchangeAddress", "getOptionsExchangeContract", "getExchangeUserBalance", "getUserExchangeBalanceAllowance, getOptionTokenAddress"]),
+    ...mapGetters("optionsExchange", ["getOptionsExchangeAddress", "getOptionsExchangeContract", "getExchangeUserBalance", "getUserExchangeBalanceAllowance", "getOptionTokenAddress", "getUserOptions"]),
     ...mapGetters("usdc", ["getUsdcAddress", "getUserUsdcBalance", "getUsdcContract", "getLpUsdcAllowance"]),
 
     allowanceNeeded() {
@@ -383,35 +386,53 @@ export default {
       }
       return null;
     },
+
+    getHoldingOptions() {
+      let sym = this.option.symbol;
+      let matchingUserOptions = this.getUserOptions.filter(option => option.symbol === sym);
+      if (matchingUserOptions.length > 0){
+        return matchingUserOptions[0].holding;
+      } else {
+        return 0;
+      }
+    },
     
     getMaxOptionSize() {
       let availableOptionVolume = Math.floor(Number(this.selectedOptionVolume*1000))/1000;
       let optionPrice = Number(this.optionPrice);
       let maxTotal = availableOptionVolume * optionPrice;
+      
+      
 
       if (this.isGetSell) {
         // max option size that current user can write
 
-        if (this.selectedCoveredType === "COVERED") {
-          console.log("in covered");
-          let userBalance = Number(this.underlyingBalance);
+        if (this.option.holding == 0) {
 
-          if (maxTotal > userBalance) {
-            return userBalance;
+          if (this.selectedCoveredType === "COVERED") {
+            console.log("in covered");
+            let userBalance = Number(this.underlyingBalance);
+
+            if (maxTotal > userBalance) {
+              return userBalance;
+            } else {
+              return availableOptionVolume;
+            }
           } else {
-            return availableOptionVolume;
+            // NAKED
+            let userBalance = Number(this.getUserStablecoinBalance);
+            console.log("userBalance: " + userBalance);
+            console.log("collateralNeededRaw: " + this.collateralNeededRaw);
+            console.log("selectedOptionSize: " + this.selectedOptionSize);
+            if (this.collateralNeededRaw > userBalance) {
+              return (this.selectedOptionSize * (userBalance / this.collateralNeededRaw)).toFixed(4);
+            } else {
+              return (this.selectedOptionSize * this.collateralNeededRaw).toFixed(4);
+            }
           }
         } else {
-          // NAKED
-          let userBalance = Number(this.getUserStablecoinBalance);
-          console.log("userBalance: " + userBalance);
-          console.log("collateralNeededRaw: " + this.collateralNeededRaw);
-          console.log("selectedOptionSize: " + this.selectedOptionSize);
-          if (this.collateralNeededRaw > userBalance) {
-            return (this.selectedOptionSize * (userBalance / this.collateralNeededRaw)).toFixed(4);
-          } else {
-            return (this.selectedOptionSize * this.collateralNeededRaw).toFixed(4);
-          }
+          console.log("this.option.holding: " + this.option.holding);
+          return this.option.holding;
         }
       } else {
         let userBalance = Number(this.getUserStablecoinBalance);
@@ -730,7 +751,7 @@ export default {
     },
 
     async setFormData() {
-      this.selectedOptionSize = 0.1;
+      this.selectedOptionSize = this.option.holding || 0.1;
       this.optionPrice = null;
       this.optionPriceSell = null;
       this.optionPriceFormatted = "loading";
@@ -765,9 +786,15 @@ export default {
       
     },
 
+    setHoldingOptions() {
+      this.option.holding = this.getHoldingOptions;
+    },
+
     toggleForm() {
       this.getOptionPrice(); // refresh the option price
       this.fetchUnderlyingAssetBalance(); // refresh underlying balance
+      this.setHoldingOptions(); //refresh holding balance
+      this.fetchOptionAllowance();//get option allowance
 
       if (this.showForm) {
         this.showForm = false;
@@ -873,9 +900,15 @@ export default {
       const component = this;
       component.loading = true;
 
-      component.setSellData(component.option); // fetch price again to avoid errors 
+      await component.setSellData(); // fetch price again to avoid errors 
 
-      const optionSizeWei = component.getWeb3.utils.toWei(String(component.selectedOptionSize), "ether");
+      console.log("in sell option to pool");
+
+      console.log("component.option.holding: "+ component.option.holding);
+      console.log("component.selectedOptionPrice: "+ component.selectedOptionPrice);
+      console.log("component.option.symbol: "+ component.option.symbol);
+
+      const optionSizeWei = component.getWeb3.utils.toWei(String(component.option.holding), "ether");
       const optionUnitPrice = component.getWeb3.utils.toWei(String(component.selectedOptionPrice), "ether");
 
       // sell option transaction
@@ -945,9 +978,10 @@ export default {
       // underlying token contract
       const underlyingContract = new component.getWeb3.eth.Contract(ERC20ContractJson.abi, underlyingAddr);
       // get underlying balance in wei
-      const underlyingBalanceWei = await underlyingContract.methods.balanceOf(this.getActiveAccount).call();
-      const selectedUnderlyingBalanceWei = component.selectedOptionSize * underlyingBalanceWei;
+      //const underlyingBalanceWei = await underlyingContract.methods.balanceOf(this.getActiveAccount).call();
+      
       const underlyingDecimals = await underlyingContract.methods.decimals().call();
+      const selectedUnderlyingBalanceWei = this.getWeb3.utils.toBN(parseInt(component.selectedOptionSize * (10 ** underlyingDecimals)));
       const allowanceValue = Number(selectedUnderlyingBalanceWei / (this.getWeb3.utils.toBN(10 ** underlyingDecimals))).toFixed(4);
 
       // call the approve method
@@ -997,14 +1031,14 @@ export default {
       console.log("optionSizeWei: "+optionSizeWei);
       console.log("strikeRaw: "+ component.option.strikeRaw);
       console.log("strikeInWei: "+ strikeInWei);
-      console.log("timestamp: " + parseInt(component.option.timestamp));
+      console.log("timestamp: " + component.option.timestamp);
       console.log("getActiveAccount: "+ component.getActiveAccount);
       try {
         await component.getOptionsExchangeContract.methods.writeCovered(
           feedAddress, // feed address
           component.getWeb3.utils.toBN(optionSizeWei), // volume of options to write,
-          strikeInWei, // strike price of option
-          parseInt(component.option.timestamp), // maturity of option in utc
+          component.getWeb3.utils.toBN(strikeInWei), // strike price of option
+          String(component.option.timestamp), // maturity of option in utc
           component.getActiveAccount, // option writer
         ).send({
           from: component.getActiveAccount
