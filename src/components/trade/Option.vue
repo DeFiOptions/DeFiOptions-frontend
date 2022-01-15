@@ -946,11 +946,12 @@ export default {
       const underlyingContract = new component.getWeb3.eth.Contract(ERC20ContractJson.abi, underlyingAddr);
       // get underlying balance in wei
       const underlyingBalanceWei = await underlyingContract.methods.balanceOf(this.getActiveAccount).call();
+      const selectedUnderlyingBalanceWei = component.selectedOptionSize * underlyingBalanceWei;
       const underlyingDecimals = await underlyingContract.methods.decimals().call();
-      const allowanceValue = Number(underlyingBalanceWei / (this.getWeb3.utils.toBN(10 ** underlyingDecimals))).toFixed(4);
+      const allowanceValue = Number(selectedUnderlyingBalanceWei / (this.getWeb3.utils.toBN(10 ** underlyingDecimals))).toFixed(4);
 
       // call the approve method
-      await underlyingContract.methods.approve(component.getOptionsExchangeAddress, underlyingBalanceWei).send({
+      await underlyingContract.methods.approve(component.getOptionsExchangeAddress, selectedUnderlyingBalanceWei).send({
         from: component.getActiveAccount
 
       }).on('transactionHash', function(hash){
@@ -961,9 +962,10 @@ export default {
         console.log(receipt);
 
         if (receipt.status) {
-          component.$toast.success("The approval was successfull. You can sell the option now.");
+          component.$toast.success("The approval was successfull. You can write the option now.");
 
           component.underlyingAllowance = allowanceValue; // manually increase the allowance amount
+          component.writingStepTx = 1;
           
         } else {
           component.$toast.error("The transaction has failed. Please contact the DeFi Options support.");
@@ -974,7 +976,7 @@ export default {
       }).on('error', function(error){
         console.log(error);
         component.loading = false;
-        component.writingStepTx = 1;
+        component.writingStepTx = 0;
         component.$toast.error("There has been an error. Please contact the DeFi Options support.");
       });
     },
@@ -988,18 +990,21 @@ export default {
 
       // get underlying balance in wei
       const feedAddress = addresses[priceFeedType][parseInt(this.getChainId)];
-      const feedContract = new this.getWeb3.eth.Contract(ChainlinkContractJson.abi, feedAddress);
-      const underlyingAddr = await feedContract.methods.getUnderlyingAddr().call();
-      const underlyingContract = new component.getWeb3.eth.Contract(ERC20ContractJson.abi, underlyingAddr);
-      const underlyingDecimals = await underlyingContract.methods.decimals().call();
+      const optionSizeWei = this.getWeb3.utils.toWei(String(component.selectedOptionSize), "ether");
+      const strikeInWei = this.getWeb3.utils.toWei(String(component.option.strikeRaw / 10 **18), "ether");
 
       // write covered option transaction
+      console.log("optionSizeWei: "+optionSizeWei);
+      console.log("strikeRaw: "+ component.option.strikeRaw);
+      console.log("strikeInWei: "+ strikeInWei);
+      console.log("timestamp: " + parseInt(component.option.timestamp));
+      console.log("getActiveAccount: "+ component.getActiveAccount);
       try {
         await component.getOptionsExchangeContract.methods.writeCovered(
           feedAddress, // feed address
-          component.selectedOptionSize * (10**underlyingDecimals) , // volume of options to write,
-          component.option.strikeRaw, // stike price of option
-          component.option.timestamp, // maturity of option in utc
+          component.getWeb3.utils.toBN(optionSizeWei), // volume of options to write,
+          strikeInWei, // strike price of option
+          parseInt(component.option.timestamp), // maturity of option in utc
           component.getActiveAccount, // option writer
         ).send({
           from: component.getActiveAccount
@@ -1013,6 +1018,7 @@ export default {
           if (receipt.status) {
             component.$toast.success("You have successfully wrote an option. Now you may sell it.");
             component.$store.dispatch("optionsExchange/fetchExchangeUserBalance");
+            component.writingStepTx = 0;
           } else {
             component.$toast.error("The transaction has failed. Please contact the DeFi Options support.");
           }
@@ -1027,7 +1033,7 @@ export default {
           
       } finally {
         component.loading = false;
-        component.writingStepTx = 0;
+        
       }
     },
 
