@@ -850,7 +850,7 @@ export default {
       const underlyingSymbol = await underlyingContract.methods.symbol().call();
       this.underlyingSymbol = underlyingSymbol;
       this.underlyingAddr = underlyingAddr;
-      this.underlyingBalance = Number(underlyingBalanceWei / (this.getWeb3.utils.toBN(10 ** underlyingDecimals))).toFixed(0);
+      this.underlyingBalance = Number(underlyingBalanceWei / (this.getWeb3.utils.toBN(10 ** underlyingDecimals))).toFixed(4);
     },
 
     async fetchOptionAllowance() {
@@ -947,7 +947,7 @@ export default {
       // get underlying balance in wei
       const underlyingBalanceWei = await underlyingContract.methods.balanceOf(this.getActiveAccount).call();
       const underlyingDecimals = await underlyingContract.methods.decimals().call();
-      const allowanceValue = Number(underlyingBalanceWei / (this.getWeb3.utils.toBN(10 ** underlyingDecimals))).toFixed(0);
+      const allowanceValue = Number(underlyingBalanceWei / (this.getWeb3.utils.toBN(10 ** underlyingDecimals))).toFixed(4);
 
       // call the approve method
       await underlyingContract.methods.approve(component.getOptionsExchangeAddress, underlyingBalanceWei).send({
