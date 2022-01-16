@@ -328,6 +328,8 @@ export default {
       underlyingSymbol: "N/A",
       underlyingAddr: "N/A",
       writingOptionsBalance: 0,
+      collateralNeededRaw: 0,
+      collateralDepositValue: 0,
       writingStepTx: 0,
     }
   },
@@ -425,9 +427,9 @@ export default {
             console.log("collateralNeededRaw: " + this.collateralNeededRaw);
             console.log("selectedOptionSize: " + this.selectedOptionSize);
             if (this.collateralNeededRaw > userBalance) {
-              return (this.selectedOptionSize * (userBalance / this.collateralNeededRaw)).toFixed(4);
+              return (this.selectedOptionSize * (userBalance / this.collateralNeededRaw)).toFixed(8);
             } else {
-              return (this.selectedOptionSize * this.collateralNeededRaw).toFixed(4);
+              return (this.selectedOptionSize * this.collateralNeededRaw).toFixed(8);
             }
           }
         } else {
@@ -457,7 +459,7 @@ export default {
       return null;
     },
     getTotal() {
-      return Number(this.selectedOptionSize) * ((this.side == "BUY") ? Number(this.optionPrice) : Number(this.optionPriceSell));
+      return (this.side == "BUY") ? (Number(this.selectedOptionSize) * Number(this.optionPrice)) : Number(this.collateralNeededRaw);
     },
     getUniqueOptionId() {
       return this.option.symbol.replace("/", "-");
@@ -552,9 +554,7 @@ export default {
 
   watch: {
       selectedOptionSize: async function() {
-        console.log("before calcCollateral");
         this.calcCollateral().then(this.writingOptionsBalance += 1);
-        console.log("after calcCollateral");
       }
   },
 
@@ -902,12 +902,6 @@ export default {
 
       await component.setSellData(); // fetch price again to avoid errors 
 
-      console.log("in sell option to pool");
-
-      console.log("component.option.holding: "+ component.option.holding);
-      console.log("component.selectedOptionPrice: "+ component.selectedOptionPrice);
-      console.log("component.option.symbol: "+ component.option.symbol);
-
       const optionSizeWei = component.getWeb3.utils.toWei(String(component.option.holding), "ether");
       const optionUnitPrice = component.getWeb3.utils.toWei(String(component.selectedOptionPrice), "ether");
 
@@ -1028,11 +1022,6 @@ export default {
       const strikeInWei = this.getWeb3.utils.toWei(String(component.option.strikeRaw / 10 **18), "ether");
 
       // write covered option transaction
-      console.log("optionSizeWei: "+optionSizeWei);
-      console.log("strikeRaw: "+ component.option.strikeRaw);
-      console.log("strikeInWei: "+ strikeInWei);
-      console.log("timestamp: " + component.option.timestamp);
-      console.log("getActiveAccount: "+ component.getActiveAccount);
       try {
         await component.getOptionsExchangeContract.methods.writeCovered(
           feedAddress, // feed address
@@ -1076,26 +1065,19 @@ export default {
       let priceFeedType = this.option.pair;
 
       const feedAddress = addresses[priceFeedType][parseInt(this.getChainId)];
-
-      console.log("in calcCollateral ");
       const optionSizeWei = this.getWeb3.utils.toWei(String(this.selectedOptionSize), "ether");
-      console.log("optionSizeWei: "+optionSizeWei);
-      console.log("this.option.strikeRaw: "+ this.option.strikeRaw);
-      console.log("this.option.timestamp: "+ this.option.timestamp);
+      const strikeInWei = this.getWeb3.utils.toWei(String(this.option.strikeRaw / 10 **18), "ether");
+
 
       const collateralNeeded = await this.getOptionsExchangeContract.methods.calcCollateral(
         feedAddress, // feed address
         this.getWeb3.utils.toBN(optionSizeWei), //volume of options to write
         (this.option.type === "CALL") ? 0 : 1, //option type
-        parseInt(this.option.strikeRaw), // strike price of option
+        this.getWeb3.utils.toBN(strikeInWei), // strike price of option
         parseInt(this.option.timestamp), // maturity of option in utc
       ).call();
 
-      console.log(collateralNeeded * 1.0025);
-
-      this.collateralNeededRaw = collateralNeeded * 1.0025; //estimate higher just in case
-
-      console.log(this.collateralNeededRaw);
+      this.collateralNeededRaw = (collateralNeeded * 1.0025) / 10**18; //estimate higher just in case
     },
 
     // approve the amount of stablecoins to use as collateral agaisnt exchange
@@ -1124,6 +1106,7 @@ export default {
         tokenContract = component.getDaiContract; // DAI contract
       }
 
+      console.log("component.getTotal: "+ component.getTotal);
       // define allowance value
       let allowanceValue = component.getTotal * 1.05; // make it 5% bigger to avoid slippage issues
 
@@ -1146,6 +1129,8 @@ export default {
 
           if (receipt.status) {
             component.$toast.success("The approval was successfull. You can write the option now.");
+            component.writingStepTx = 1;
+            component.collateralDepositValue = String(component.getTotal.toFixed(4));
 
             // refresh values
             if (component.buyWith === "DAI") {
@@ -1172,7 +1157,6 @@ export default {
           component.$toast.error("The transaction has been reverted. Please try again or contact DeFi Options support.");
       } finally {
         component.loading = false;
-        component.writingStepTx = 1;
       }
 
     },
@@ -1194,7 +1178,7 @@ export default {
         unit = "mwei"; // USDC - 6 decimals
       }
 
-      let tokensWei = component.getWeb3.utils.toWei(component.depositValue, unit);
+      let tokensWei = component.getWeb3.utils.toWei(component.collateralDepositValue, unit);
 
       // make a deposit
       await component.getOptionsExchangeContract.methods.depositTokens(
@@ -1212,16 +1196,15 @@ export default {
 
         if (receipt.status) {
           component.$toast.success("Your collateral deposit was successfull.");
-
           component.$store.dispatch("optionsExchange/fetchExchangeUserBalance");
-          
-          component.depositValue = null;
+          component.writingStepTx = 2;
+          component.collateralDepositValue = null;
         } else {
           component.$toast.error("The transaction has failed. Please contact the DeFi Options support.");
         }
         
         component.loading = false;
-        component.writingStepTx = 2;
+        
 
       }).on('error', function(error){
         console.log(error);
@@ -1239,20 +1222,17 @@ export default {
 
       // get underlying balance in wei
       const feedAddress = addresses[priceFeedType][parseInt(this.getChainId)];
-      const feedContract = new this.getWeb3.eth.Contract(ChainlinkContractJson.abi, feedAddress);
-      const underlyingAddr = await feedContract.methods.getUnderlyingAddr().call();
-      const underlyingContract = new component.getWeb3.eth.Contract(ERC20ContractJson.abi, underlyingAddr);
-      const underlyingBalanceWei = await underlyingContract.methods.balanceOf(this.getActiveAccount).call();
-      //const underlyingDecimals = await underlyingContract.methods.decimals().call();
-      //const allowanceValue = Number(underlyingBalanceWei / (this.getWeb3.utils.toBN(10 ** underlyingDecimals))).toFixed(0);
+      const optionSizeWei = component.getWeb3.utils.toWei(String(component.selectedOptionSize), "ether");
+      const strikeInWei = component.getWeb3.utils.toWei(String(component.option.strikeRaw / 10 **18), "ether");
 
       // write stablecoin collateral options transaction
       try {
         await component.getOptionsExchangeContract.methods.writeOptions(
           feedAddress, // feed address
-          underlyingBalanceWei / (100), // volume of options to write, TODO: NEED TO FIX THIS TO ALLOW FOR USER DEFINABLE
-          component.option.strikeRaw, // stike price of option
-          component.option.timestamp, // maturity of option in utc
+          component.getWeb3.utils.toBN(optionSizeWei), // volume of options to write
+          (component.option.type === "CALL") ? 0 : 1, //option type
+          component.getWeb3.utils.toBN(strikeInWei), // srtike price of option
+          parseInt(component.option.timestamp), // maturity of option in utc
           component.getActiveAccount, // option writer
         ).send({
           from: component.getActiveAccount
@@ -1266,6 +1246,7 @@ export default {
           if (receipt.status) {
             component.$toast.success("You have successfully wrote an option. Now you may sell it.");
             component.$store.dispatch("optionsExchange/fetchExchangeUserBalance");
+            component.writingStepTx = 0;
           } else {
             component.$toast.error("The transaction has failed. Please contact the DeFi Options support.");
           }
@@ -1280,7 +1261,7 @@ export default {
           
       } finally {
         component.loading = false;
-        component.writingStepTx = 0;
+        
       }
     },
 
