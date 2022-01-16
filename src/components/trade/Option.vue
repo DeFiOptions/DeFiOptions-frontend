@@ -412,7 +412,6 @@ export default {
         if (this.option.holding == 0) {
 
           if (this.selectedCoveredType === "COVERED") {
-            console.log("in covered");
             let userBalance = Number(this.underlyingBalance);
 
             if (maxTotal > userBalance) {
@@ -423,9 +422,6 @@ export default {
           } else {
             // NAKED
             let userBalance = Number(this.getUserStablecoinBalance);
-            console.log("userBalance: " + userBalance);
-            console.log("collateralNeededRaw: " + this.collateralNeededRaw);
-            console.log("selectedOptionSize: " + this.selectedOptionSize);
             if (this.collateralNeededRaw > userBalance) {
               return (this.selectedOptionSize * (userBalance / this.collateralNeededRaw)).toFixed(8);
             } else {
@@ -433,7 +429,6 @@ export default {
             }
           }
         } else {
-          console.log("this.option.holding: " + this.option.holding);
           return this.option.holding;
         }
       } else {
@@ -1165,7 +1160,7 @@ export default {
     async depositCollateral() {
       let component = this;
       component.loading = true;
-
+      let tokenContract;
       // define unit and token contract
       let unit = "ether"; // Exchange Balance & DAI - 18 decimals
 
@@ -1176,6 +1171,11 @@ export default {
 
       if (component.buyWith === "USDC") {
         unit = "mwei"; // USDC - 6 decimals
+        tokenContract = component.getUsdcContract; // USDC contract
+      }
+
+      if (component.buyWith === "DAI") {
+        tokenContract = component.getDaiContract; // DAI contract
       }
 
       let tokensWei = component.getWeb3.utils.toWei(component.collateralDepositValue, unit);
@@ -1183,7 +1183,7 @@ export default {
       // make a deposit
       await component.getOptionsExchangeContract.methods.depositTokens(
         component.getActiveAccount, 
-        component.getStablecoinContract._address, 
+        tokenContract._address, 
         tokensWei
       ).send({
         from: component.getActiveAccount
