@@ -16,7 +16,8 @@ const state = {
   supportedChains: ["Kovan Testnet", "Polygon PoS Chain"],
   lastSelectedTradePair: null,
   lastSelectedTradeMaturity: null,
-  lastSelectedTradeType: null
+  lastSelectedTradeType: null,
+  lastSelectedTradeSide: null
 };
 
 const getters = {
@@ -47,6 +48,9 @@ const getters = {
   },
   getLastSelectedTradeType(state) {
     return state.lastSelectedTradeType;
+  },
+  getLastSelectedTradeSide(state) {
+    return state.lastSelectedTradeSide;
   },
   getSupportedChains(state) {
     return state.supportedChains;
@@ -211,6 +215,10 @@ const mutations = {
 
   setLastSelectedTradeType(state, type) {
     state.lastSelectedTradeType = type;
+  },
+
+  setLastSelectedTradeSide(state, side) {
+    state.lastSelectedTradeSide = side;
   },
 
   async setWeb3Provider(state, providerW3m) {
