@@ -1034,7 +1034,7 @@ export default {
           console.log(receipt);
 
           if (receipt.status) {
-            component.$toast.success("You have successfully wrote an option. Now you may sell it.");
+            component.$toast.success("You have successfully wrote an option. Now you may sell it. ");
             component.$store.dispatch("optionsExchange/fetchExchangeUserBalance");
             component.writingStepTx = 0;
           } else {
@@ -1244,7 +1244,7 @@ export default {
           console.log(receipt);
 
           if (receipt.status) {
-            component.$toast.success("You have successfully wrote an option. Now you may sell it.");
+            component.$toast.success("You have successfully wrote an option. Now you may sell it. Please reload the website to refresh values.");
             component.$store.dispatch("optionsExchange/fetchExchangeUserBalance");
             component.writingStepTx = 0;
           } else {
