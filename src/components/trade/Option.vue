@@ -454,7 +454,7 @@ export default {
       return null;
     },
     getTotal() {
-      return (this.side == "BUY") ? (Number(this.selectedOptionSize) * Number(this.optionPrice)) : Number(this.collateralNeededRaw);
+      return Number(this.selectedOptionSize) * Number(this.optionPrice);
     },
     getUniqueOptionId() {
       return this.option.symbol.replace("/", "-");
@@ -1101,9 +1101,9 @@ export default {
         tokenContract = component.getDaiContract; // DAI contract
       }
 
-      console.log("component.getTotal: "+ component.getTotal);
+      console.log("component.collateralNeededRaw: "+ component.collateralNeededRaw);
       // define allowance value
-      let allowanceValue = component.getTotal * 1.05; // make it 5% bigger to avoid slippage issues
+      let allowanceValue = component.collateralNeededRaw * 1.05; // make it 5% bigger to avoid slippage issues
 
       if (component.unlimitedApproval) {
         allowanceValue = 10 ** 9; // 1B tokens as "unlimited" value
@@ -1125,7 +1125,7 @@ export default {
           if (receipt.status) {
             component.$toast.success("The approval was successfull. You can write the option now.");
             component.writingStepTx = 1;
-            component.collateralDepositValue = String(component.getTotal.toFixed(4));
+            component.collateralDepositValue = String(component.collateralNeededRaw.toFixed(4));
 
             // refresh values
             if (component.buyWith === "DAI") {
