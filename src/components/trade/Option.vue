@@ -104,7 +104,7 @@
       </div>
     </div>
 
-    <h3>
+    <h3 class="mt-3">
       Option size
       <i 
         @mouseover="showInfo" 
@@ -118,7 +118,12 @@
       ></i>
     </h3>
 
-    <div class="d-flex flex-wrap">
+    <div class="btn-group mt-1" role="group" aria-label="Basic example" v-if="!getSellType">
+      <button @click="changeCoveredType('COVERED')" type="button" class="btn btn-outline-primary btn-md" :class="{'btn-outline-primary-active':'COVERED' === selectedCoveredType}">COVERED</button>
+      <button @click="changeCoveredType('NAKED')" type="button" class="btn btn-outline-primary btn-md" :class="{'btn-outline-primary-active':'NAKED' === selectedCoveredType}">NAKED</button>
+    </div>
+
+    <div class="d-flex flex-wrap mt-3">
 
       <div>
         <input type="text" v-model="selectedOptionSize" class="form-control sell-input" placeholder="0.0">
@@ -136,17 +141,13 @@
           </span>
         </div>
 
-      </div>
-
-      <div role="group" aria-label="Basic example" v-if="!getSellType">
-          <button @click="changeCoveredType('COVERED')" type="button" class="btn btn-outline-primary btn-md" :class="{'btn-outline-primary-active':'COVERED' === selectedCoveredType}">COVERED</button>
-          <button @click="changeCoveredType('NAKED')" type="button" class="btn btn-outline-primary btn-md" :class="{'btn-outline-primary-active':'NAKED' === selectedCoveredType}">NAKED</button>
-      </div>
-
-      <div class="form-button-mobile" v-if="getCoveredType && !getSellType">
-        <div class="show-text form-text" :key="writingOptionsBalance">
-          Balance: {{Number(getUserUnderlyingBalance).toFixed(2)}} {{getUnderlying}}.
+        <div class="form-button-mobile" v-if="getCoveredType && !getSellType">
+          <div class="show-text form-text" :key="writingOptionsBalance">
+            Balance: {{Number(getUserUnderlyingBalance).toFixed(2)}} 
+            <a target="_blank" :href="'https://polygonscan.com/token/'+this.underlyingAddr">{{underlyingSymbol}}</a>.
+          </div>
         </div>
+
       </div>
 
       <div class="form-button-mobile" v-if="!getCoveredType">
@@ -174,15 +175,15 @@
       <div class="p-2" v-if="(!getCoveredType) && (!isBuyWithExchangeBalance)">
         <button @click="approveStablecoinCollateralDeposit" class="btn btn-success form-control" :disabled="(isOptionSizeNotValid.status || isEnoughAllowance) || (writingStepTx > 0)">
           <span v-if="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-          Approve Stablecoin
+          Approve {{buyWith}}
         </button>
       </div>
       <!-- <div></div> -->
 
       <div class="p-2" v-if="getCoveredType">
-        <button @click="approveAllowanceCovered" class="btn btn-success form-control" :disabled="(isOptionSizeNotValid.status || isEnoughAllowance) || (writingStepTx > 0)">
+        <button @click="approveAllowanceCovered" class="btn btn-success form-control" :disabled="(isOptionSizeNotValid.status || isEnoughAllowance) || (writingStepTx > 0) || getMaxOptionSize === 0">
           <span v-if="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-          Approve Underlying
+          Approve Stablecoin
         </button>
       </div>
       <!-- <div></div> -->
@@ -190,7 +191,7 @@
       <div class="p-2"  v-if="(!getCoveredType) && (!isBuyWithExchangeBalance)">
         <button @click="depositCollateral" class="btn btn-success form-control" :disabled="(isOptionSizeNotValid.status || isEnoughAllowance) || (writingStepTx < 1)">
           <span v-if="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-          Deposit Stablecoin
+          Deposit {{buyWith}}
         </button>
       </div>
       <!-- <div></div> -->
@@ -423,6 +424,8 @@ export default {
             // NAKED
             let userBalance = Number(this.getUserStablecoinBalance);
             if (this.collateralNeededRaw > userBalance) {
+              // TODO bugfix: calling selectedOptionSize here inteferes with 
+              // setting "selectedOptionSize = getMaxOptionSize" in lines 46 and 137
               return (this.selectedOptionSize * (userBalance / this.collateralNeededRaw)).toFixed(8);
             } else {
               return (this.selectedOptionSize * this.collateralNeededRaw).toFixed(8);
@@ -480,7 +483,7 @@ export default {
     },
 
     getUnderlying() {
-      return this.underlyingSymbol + " (" + this.underlyingAddr + ")";
+      return this.underlyingSymbol + " (<a>" + this.underlyingAddr + ")</a>";
     },
 
     isGetBuy() {
@@ -493,6 +496,10 @@ export default {
       // option size bigger than volume.
       if (Number(this.selectedOptionSize) > Number(this.selectedOptionVolume)) {
         return {status: true, message: "Must not be bigger than " + Math.floor(Number(this.selectedOptionVolume*1000))/1000 + "!"};
+      }
+
+      if (Number(this.selectedOptionSize) > Number(this.getMaxOptionSize)) {
+        return {status: true, message: "Must not be bigger than " + this.getMaxOptionSize + "!"};
       }
 
       // too many digits
