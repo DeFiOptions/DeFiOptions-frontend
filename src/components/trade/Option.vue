@@ -482,10 +482,6 @@ export default {
       return this.collateralNeededRaw;
     },
 
-    getUnderlying() {
-      return this.underlyingSymbol + " (<a>" + this.underlyingAddr + ")</a>";
-    },
-
     isGetBuy() {
       return this.side == "BUY"
     },
