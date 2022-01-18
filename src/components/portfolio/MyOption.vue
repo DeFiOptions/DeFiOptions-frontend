@@ -17,7 +17,7 @@
 
     <!-- Action button -->
     <div>
-      <button @click="toggleSellForm" v-if="!isOptionExpired(option) && !showSellForm" class="btn btn-success">
+      <button @click="toggleSellForm" v-if="!isOptionExpired(option) && !showSellForm && (option.holding >= option.written)" class="btn btn-success">
         Sell
         <i class="fas fa-chevron-down"></i>
       </button>
