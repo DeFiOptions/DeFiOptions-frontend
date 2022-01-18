@@ -8,7 +8,7 @@
     <div class="div-flex justify-content-center">
       <OptionDataItem class="data-item" title="Option" :data="option.pair+' · ' + option.type" :divider="true" />
       <OptionDataItem class="data-item" title="Side" :data="optionSide" :divider="true" />
-      <OptionDataItem class="data-item" title="Size" :data="option.holding" :divider="true" />
+      <OptionDataItem class="data-item" title="Size" :data="optionAmount" :divider="true" />
       <OptionDataItem class="data-item" title="Strike" :data="strikePrice" :divider="true" />
       <OptionDataItem v-if="Number(option.timestamp)*1e3 < Date.now()" class="data-item" title="Expiry price" :data="'$'+expiryPrice" :divider="true" />
       <OptionDataItem class="data-item" title="Expiration" :data="option.maturity" :divider="true" />
@@ -144,7 +144,7 @@ export default {
       return Number(this.selectedOptionSize) * Number(this.selectedOptionPrice);
     },
     intrinsicValue() {
-      return (Number(this.option.intrinsicValue)*Number(this.option.holding)).toFixed(2);
+      return (this.option.holding > 0) ? (Number(this.option.intrinsicValue)*Number(this.option.holding)).toFixed(2) : (Number(this.option.intrinsicValue)*Number(-1)*Number(this.option.written)).toFixed(2);
     },
     isEnoughAllowance() {
       if (Number(this.optionAllowance) >= Number(this.selectedOptionSize)) {
@@ -186,7 +186,10 @@ export default {
     },
     optionSide() {
       return (this.option.written > this.option.holding) ? "NET SHORT": "NET LONG";
-    }
+    },
+    optionAmount(){
+      return (this.option.written > this.option.holding) ? (this.option.written-this.option.holding) : this.option.holding
+    },
   },
 
   created() {
