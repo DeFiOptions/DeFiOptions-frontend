@@ -425,7 +425,7 @@ export default {
             if (this.collateralNeededRaw > userBalance) {
               return (this.selectedOptionSize * (userBalance / this.collateralNeededRaw)).toFixed(8);
             } else {
-              return (this.selectedOptionSize * this.collateralNeededRaw).toFixed(8);
+              return this.selectedOptionSize;
             }
           }
         } else {
