@@ -16,6 +16,13 @@
         :text="creditTokens" class="mb-3" 
         info="Your Credit Tokens balance, which accrues interest over time and is redeemable for stablecoins at a 1:1 value conversion ratio in the options exchange as long as there's enough stablecoin supply available."
       />
+
+      <Card 
+        cardClass="card-blueblue" 
+        title="Collateral Surplus" 
+        :text="'$'+collateralSurplus" class="mb-3" 
+        info="How much your exchange balance is exceeding collateral requirements for all options positons. If this reaches $0 and you are naked short any positions, you are at risk of being liquidated."
+      />
     </div>
 
     <div class="col-md-9">
@@ -58,7 +65,7 @@ import Card from '../Card.vue';
 export default {
   components: { Card },
   name: "AccountBalance",
-  props: ["exchangeBalance", "creditTokens"],
+  props: ["exchangeBalance", "creditTokens", "collateralSurplus"],
 
   computed: {
     ...mapGetters("accounts", ["getActiveAccount", "getWeb3"]),
