@@ -9,6 +9,7 @@ const state = {
   contract: null,
   decimals: 18,
   lpAllowance: 0, // liquidity pool contract Dai allowance for current user
+  exchangeAllowance: 0,// exchange contract dai allowance for current user
   permit: true, // does this token have the permit() method?
   userBalance: null
 };
@@ -28,6 +29,9 @@ const getters = {
   },
   getLpDaiAllowance(state) {
     return state.lpAllowance;
+  },
+  getExchangeDaiAllowance(state) {
+    return state.exchangeAllowance;
   },
   getUserDaiBalance(state) {
     return state.userBalance;
@@ -60,6 +64,22 @@ const actions = {
     let allowance = web3.utils.fromWei(allowanceWei, "ether");
 
     commit("setLpAllowance", allowance);
+  },
+  async fetchExchangeAllowance({ commit, dispatch, state, rootState }) {
+    if (!state.contract) {
+      dispatch("fetchContract");
+    }
+
+    let userAddress = rootState.accounts.activeAccount;
+    let chainIdDec = parseInt(rootState.accounts.chainId);
+    let exchangeAddress = addresses.OptionsExchange[chainIdDec];
+
+    let allowanceWei = await state.contract.methods.allowance(userAddress, exchangeAddress).call();
+
+    let web3 = rootState.accounts.web3;
+    let allowance = web3.utils.fromWei(allowanceWei, "ether");
+
+    commit("setExchangeAllowance", allowance);
   },
   async fetchUserBalance({ commit, dispatch, state, rootState }) {
     if (!state.contract) {
@@ -95,6 +115,9 @@ const mutations = {
   },
   setLpAllowance(state, allowance) {
     state.lpAllowance = allowance;
+  },
+  setExchangeAllowance(state, allowance) {
+    state.exchangeAllowance = allowance;
   },
   setUserBalance(state, balance) {
     state.userBalance = balance;
