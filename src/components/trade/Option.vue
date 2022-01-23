@@ -7,7 +7,7 @@
     <!-- Option data -->
     <div class="div-flex justify-content-center flex-wrap">
       <OptionDataItem class="data-item" title="Strike" :data="'$' + option.strike" :divider="true" />
-      <OptionDataItem class="data-item" title="Break even" :data="getBreakEvenPrice" :divider="true" />
+      <OptionDataItem v-if="getBreakEvenPrice" class="data-item" title="Break even" :data="getBreakEvenPrice" :divider="true" />
       <OptionDataItem class="data-item" title="Price" :green="true" :data="optionPriceFormatted" v-if="isGetBuy" />
       <OptionDataItem class="data-item" title="Price" :green="true" :data="optionPriceFormattedSell" v-if="isGetSell" />
     </div>
@@ -134,10 +134,13 @@
           </span>
 
           <span class="form-text sell-text">
-            Max size: <span class="max-sell" @click="selectedOptionSize = getMaxOptionSize">{{getMaxOptionSize}}</span>
+            <span v-if="Number(selectedOptionSize) > Number(getMaxOptionSize)"> 
+            Max size: <span class="max-sell" @click="selectedOptionSize = getMaxOptionSize">{{getMaxOptionSize}}</span>.
+            </span>
+            
             <span v-if="Number(this.option.holding) > Number(getMaxOptionSize)"> 
               (Your total holding is bigger: {{this.option.holding}})
-            </span>.
+            </span>
           </span>
         </div>
 
@@ -385,7 +388,7 @@ export default {
           return "$" + Number(Number(this.option.strike)-Number(this.optionPrice)).toFixed(2);
         }
       } else {
-        return "N/A";
+        return null;
       }
       return null;
     },
@@ -424,11 +427,9 @@ export default {
             // NAKED
             let userBalance = Number(this.getUserStablecoinBalance);
             if (this.collateralNeededRaw > userBalance) {
-              // TODO bugfix: calling selectedOptionSize here inteferes with 
-              // setting "selectedOptionSize = getMaxOptionSize" in lines 46 and 137
               return (this.selectedOptionSize * (userBalance / this.collateralNeededRaw)).toFixed(8);
             } else {
-              return (this.selectedOptionSize * this.collateralNeededRaw).toFixed(8);
+              return this.selectedOptionSize;
             }
           }
         } else {
@@ -495,7 +496,7 @@ export default {
       }
 
       if (Number(this.selectedOptionSize) > Number(this.getMaxOptionSize)) {
-        return {status: true, message: "Must not be bigger than " + this.getMaxOptionSize + "!"};
+        return {status: true, message: "Too big!"};
       }
 
       // too many digits
