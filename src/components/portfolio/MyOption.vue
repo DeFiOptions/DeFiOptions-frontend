@@ -402,17 +402,6 @@ export default {
   margin-left: 10px;
 }
 
-.max-sell {
-  color: #5AFFB0;
-  text-decoration: underline;
-}
-
-.max-sell:hover {
-  color: #5AFFB0;
-  text-decoration: none;
-  cursor: pointer;
-}
-
 .sell-form {
   margin-top: 24px;
 }

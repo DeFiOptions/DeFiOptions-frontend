@@ -142,6 +142,17 @@ h3 {
   color: #FFFFFF;
 }
 
+.max-sell, .max-buy {
+  color: #5AFFB0;
+  text-decoration: underline;
+}
+
+.max-sell:hover, .max-buy:hover {
+  color: #5AFFB0;
+  text-decoration: none;
+  cursor: pointer;
+}
+
 .mr-10-px {
   margin-right: 10px;
 }
