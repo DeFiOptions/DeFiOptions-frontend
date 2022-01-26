@@ -32,6 +32,10 @@ const getters = {
     // underlying price for the currently selected pair/symbol
     return state.underlyingPrice;
   },
+  getOptionTokenAddress(state) {
+    // option token address for the currently selected pair/symbol
+    return state.optionTokenAddress;
+  },
   getUserExchangeBalanceAllowance(state) {
     return state.userExchangeBalanceAllowance;
   },
@@ -111,6 +115,21 @@ const actions = {
       commit("setUnderlyingPrice", "N/A");
     }
   },
+  async fetchOptionTokenAddress({ commit, dispatch, state }, data) {
+    // option token address for the currently selected pair/symbol
+    if (!state.contract) {
+      dispatch("fetchContract");
+    }
+
+    commit("setOptionTokenAddress", "N/A");
+    
+    try {
+      let optionTokenAddress = await state.contract.methods.resolveToken(String(data.symbol)).call();
+      commit("setOptionTokenAddress", optionTokenAddress);
+    } catch {
+      commit("setOptionTokenAddress", "N/A");
+    }
+  },
   async fetchUserOptions({ commit, dispatch, state, rootState }) {
     if (!state.contract) {
       dispatch("fetchContract");
@@ -130,8 +149,10 @@ const actions = {
       for (let symbol of symbolsList) {
         let itemList = symbol.split("-");
         let pair = itemList[0];
+        let udlSymbol = pair.split("/")[0];
         let timestamp = itemList[3];
         let strike = Math.round(web3.utils.fromWei(Number(itemList[2]).toString(16), "ether"));
+        let strikeRaw = itemList[2];
 
         let holding = web3.utils.fromWei(options.holding[counter], "ether");
         let written = web3.utils.fromWei(options.written[counter], "ether");
@@ -151,7 +172,7 @@ const actions = {
           year: 'numeric' });
         
         // option object
-        let optionObject = {symbol, pair, type, maturity, strike, holding, written, intrinsicValue, timestamp, address}
+        let optionObject = {symbol, pair, udlSymbol, type, maturity, strike, strikeRaw, holding, written, intrinsicValue, timestamp, address}
         optionsList.push(optionObject);
 
         counter++;
@@ -191,6 +212,9 @@ const mutations = {
   },
   setUnderlyingPrice(state, underlyingPrice) {
     state.underlyingPrice = underlyingPrice;
+  },
+  setOptionTokenAddress(state, optionTokenAddress) {
+    state.optionTokenAddress = optionTokenAddress;
   },
   setUserOptions(state, options) {
     state.userOptions = options;

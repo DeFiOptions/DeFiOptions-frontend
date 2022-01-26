@@ -8,6 +8,7 @@ const state = {
   contract: null,
   defaultPair: null,
   defaultType: null,
+  defaultSide: null,
   defaultMaturity: null,
   poolFreeBalance: null,
   poolMaturityDate: null,
@@ -29,6 +30,9 @@ const getters = {
   },
   getDefaultType(state) {
     return state.defaultType;
+  },
+  getDefaultSide(state) {
+    return state.defaultSide;
   },
   getLiquidityPoolAbi(state) {
     return state.abi;
@@ -198,6 +202,9 @@ const mutations = {
   setDefaultType(state, type) {
     state.defaultType = type;
   },
+  setDefaultSide(state, side) {
+    state.defaultSide = side;
+  },
   setPoolFreeBalance(state, balance) {
     state.poolFreeBalance = balance;
   },
@@ -226,8 +233,13 @@ const mutations = {
 
       let itemList = item.split("-");
 
+      
+      let timestamp = itemList[3];
+      let strikeRaw = itemList[2];
+
       // pair
       let pair = itemList[0];
+      let udlSymbol = pair.split("/")[0];
       state.defaultPair = pair
 
       // type
@@ -236,6 +248,10 @@ const mutations = {
         typeName = "PUT";
       }
       state.defaultType = typeName;
+
+      // side
+      let sideName = "BUY";
+      state.defaultSide = sideName;
 
       // maturity
       let maturityHumanReadable = new Date(Number(itemList[3])*1e3).toLocaleDateString('en-GB', 
@@ -256,17 +272,17 @@ const mutations = {
         if (maturityHumanReadable in symbolsArray[pair]) {
           if (typeName in symbolsArray[pair][maturityHumanReadable]) {
             if (!(strikePriceBigUnit in symbolsArray[pair][maturityHumanReadable][typeName])) {
-              symbolsArray[pair][maturityHumanReadable][typeName].push({strike: strikePriceBigUnit, symbol: item});
+              symbolsArray[pair][maturityHumanReadable][typeName].push({strike: strikePriceBigUnit, symbol: item, pair: pair, strikeRaw: strikeRaw, timestamp: timestamp, udlSymbol: udlSymbol});
             }
           } else {
             symbolsArray[pair][maturityHumanReadable][typeName] = [
-              {strike: strikePriceBigUnit, symbol: item}
+              {strike: strikePriceBigUnit, symbol: item, pair: pair, strikeRaw: strikeRaw, timestamp: timestamp, udlSymbol: udlSymbol}
             ]
           }
         } else {
           symbolsArray[pair][maturityHumanReadable] = {
             [typeName]: [
-              {strike: strikePriceBigUnit, symbol: item}
+              {strike: strikePriceBigUnit, symbol: item, pair: pair, strikeRaw: strikeRaw, timestamp: timestamp, udlSymbol: udlSymbol}
             ]
           }
         }
@@ -274,7 +290,7 @@ const mutations = {
         symbolsArray[pair] = {
           [maturityHumanReadable]: {
             [typeName]: [
-              {strike: strikePriceBigUnit, symbol: item}
+              {strike: strikePriceBigUnit, symbol: item, pair: pair, strikeRaw: strikeRaw, timestamp: timestamp, udlSymbol: udlSymbol}
             ]
           }
         }
