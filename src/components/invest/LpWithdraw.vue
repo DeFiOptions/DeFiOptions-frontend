@@ -129,7 +129,9 @@ export default {
 
       // make a withdrawal
       await component.getLiquidityPoolContract.methods.withdraw(amountWei).send({
-        from: component.getActiveAccount
+        from: component.getActiveAccount,
+        maxPriorityFeePerGas: null,
+        maxFeePerGas: null
       }).on('transactionHash', function(hash){
         console.log("tx hash: " + hash);
         component.$toast.info("The transaction has been submitted. Please wait for it to be confirmed.");
