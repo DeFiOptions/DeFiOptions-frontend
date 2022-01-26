@@ -273,7 +273,9 @@ export default {
       // call the approve method
       try {
         await tokenContract.methods.approve(component.getLiquidityPoolAddress, allowanceValueWei).send({
-          from: component.getActiveAccount
+          from: component.getActiveAccount,
+          maxPriorityFeePerGas: null,
+          maxFeePerGas: null
         }).on('transactionHash', function(hash){
           console.log("tx hash: " + hash);
           component.$toast.info("The transaction has been submitted. Please wait for it to be confirmed.");
@@ -326,7 +328,9 @@ export default {
           optionSizeWei, // volume a.k.a. user's selected option size
           component.getStablecoinAddress, // selected stablecoin
         ).send({
-          from: component.getActiveAccount
+          from: component.getActiveAccount,
+          maxPriorityFeePerGas: null,
+          maxFeePerGas: null
         }).on('transactionHash', function(hash){
           console.log("tx hash: " + hash);
           component.$toast.info("The Buy transaction has been submitted. Please wait for it to be confirmed.");

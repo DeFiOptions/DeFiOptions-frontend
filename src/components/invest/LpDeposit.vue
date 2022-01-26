@@ -199,7 +199,9 @@ export default {
 
       // call the approve method
       await component.getStablecoinContract.methods.approve(component.getLiquidityPoolAddress, tokensWei).send({
-        from: component.getActiveAccount
+        from: component.getActiveAccount,
+        maxPriorityFeePerGas: null,
+        maxFeePerGas: null
 
       }).on('transactionHash', function(hash){
         console.log("tx hash: " + hash);
@@ -254,7 +256,9 @@ export default {
         component.getStablecoinContract._address, 
         tokensWei
       ).send({
-        from: component.getActiveAccount
+        from: component.getActiveAccount,
+        maxPriorityFeePerGas: null,
+        maxFeePerGas: null
       }).on('transactionHash', function(hash){
         console.log("tx hash: " + hash);
         component.$toast.info("The transaction has been submitted. Please wait for it to be confirmed.");

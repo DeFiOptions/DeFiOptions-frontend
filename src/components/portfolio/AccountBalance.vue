@@ -86,7 +86,9 @@ export default {
       let tokensWei = this.getWeb3.utils.toWei(this.withdrawValue, "ether");
 
       await this.getOptionsExchangeContract.methods.withdrawTokens(tokensWei).send({
-        from: this.getActiveAccount
+        from: this.getActiveAccount,
+        maxPriorityFeePerGas: null,
+        maxFeePerGas: null
       }).on('transactionHash', function(hash){
         console.log("tx hash: " + hash);
         component.$toast.info("The transaction has been submitted. Please wait for it to be confirmed.");

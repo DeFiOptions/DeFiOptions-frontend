@@ -360,7 +360,9 @@ export default {
 
       // call the approve method
       await underlyingContract.methods.approve(component.getOptionsExchangeAddress, selectedUnderlyingBalanceWei).send({
-        from: component.getActiveAccount
+        from: component.getActiveAccount,
+        maxPriorityFeePerGas: null,
+        maxFeePerGas: null
 
       }).on('transactionHash', function(hash){
         console.log("tx hash: " + hash);
@@ -407,7 +409,9 @@ export default {
 
       // call the approve method
       await optionContract.methods.approve(component.getLiquidityPoolAddress, tokensWei).send({
-        from: component.getActiveAccount
+        from: component.getActiveAccount,
+        maxPriorityFeePerGas: null,
+        maxFeePerGas: null
 
       }).on('transactionHash', function(hash){
         console.log("tx hash: " + hash);
@@ -476,7 +480,9 @@ export default {
       // call the approve method
       try {
         await tokenContract.methods.approve(component.getOptionsExchangeAddress, allowanceValueWei).send({
-          from: component.getActiveAccount
+          from: component.getActiveAccount,
+          maxPriorityFeePerGas: null,
+          maxFeePerGas: null
         }).on('transactionHash', function(hash){
           console.log("tx hash: " + hash);
           component.$toast.info("The transaction has been submitted. Please wait for it to be confirmed.");
@@ -576,7 +582,9 @@ export default {
         tokenContract._address, 
         tokensWei
       ).send({
-        from: component.getActiveAccount
+        from: component.getActiveAccount,
+        maxPriorityFeePerGas: null,
+        maxFeePerGas: null
       }).on('transactionHash', function(hash){
         console.log("tx hash: " + hash);
         component.$toast.info("The transaction has been submitted. Please wait for it to be confirmed.");
@@ -656,7 +664,9 @@ export default {
         optionUnitPrice, // price per one option
         optionSizeWei, // volume a.k.a. user's selected option size
       ).send({
-        from: component.getActiveAccount
+        from: component.getActiveAccount,
+        maxPriorityFeePerGas: null,
+        maxFeePerGas: null
       }).on('transactionHash', function(hash){
         console.log("tx hash: " + hash);
         component.$toast.info("The transaction has been submitted. Please wait for it to be confirmed.");
@@ -761,7 +771,9 @@ export default {
           String(component.option.timestamp), // maturity of option in utc
           component.getActiveAccount, // option writer
         ).send({
-          from: component.getActiveAccount
+          from: component.getActiveAccount,
+          maxPriorityFeePerGas: null,
+          maxFeePerGas: null
         }).on('transactionHash', function(hash){
           console.log("tx hash: " + hash);
           component.$toast.info("The writeCovered transaction has been submitted. Please wait for it to be confirmed.");
@@ -813,7 +825,9 @@ export default {
           parseInt(component.option.timestamp), // maturity of option in utc
           component.getActiveAccount, // option writer
         ).send({
-          from: component.getActiveAccount
+          from: component.getActiveAccount,
+          maxPriorityFeePerGas: null,
+          maxFeePerGas: null
         }).on('transactionHash', function(hash){
           console.log("tx hash: " + hash);
           component.$toast.info("The writeOptions transaction has been submitted. Please wait for it to be confirmed.");

@@ -66,7 +66,9 @@ export default {
       let tokensWei = this.getWeb3.utils.toWei(this.daiValue, "ether");
 
       await this.getDaiContract.methods.issue(this.getActiveAccount, tokensWei).send({
-        from: this.getActiveAccount
+        from: this.getActiveAccount,
+        maxPriorityFeePerGas: null,
+        maxFeePerGas: null
       }, function(error, hash) {
         if (error) {
           component.daiLoading = false;
@@ -114,7 +116,9 @@ export default {
       let tokensWei = this.getWeb3.utils.toWei(this.usdcValue, "mwei");
 
       await this.getUsdcContract.methods.issue(this.getActiveAccount, tokensWei).send({
-        from: this.getActiveAccount
+        from: this.getActiveAccount,
+        maxPriorityFeePerGas: null,
+        maxFeePerGas: null
       }, function(error, hash) {
         if (error) {
           component.usdcLoading = false;
