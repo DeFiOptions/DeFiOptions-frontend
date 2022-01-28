@@ -212,8 +212,9 @@ export default {
 
       // call the approve method
       await optionContract.methods.approve(component.getLiquidityPoolAddress, tokensWei).send({
-        from: component.getActiveAccount
-
+        from: component.getActiveAccount,
+        maxPriorityFeePerGas: null,
+        maxFeePerGas: null
       }).on('transactionHash', function(hash){
         console.log("tx hash: " + hash);
         component.$toast.info("The transaction has been submitted. Please wait for it to be confirmed.");
@@ -277,6 +278,8 @@ export default {
         component.getActiveAccount
       ).send({
         from: component.getActiveAccount,
+        maxPriorityFeePerGas: null,
+        maxFeePerGas: null
       }).on('transactionHash', function(hash){
         console.log("tx hash: " + hash);
         component.$toast.info("The transaction has been submitted. Please wait for it to be confirmed.");
@@ -322,7 +325,9 @@ export default {
         optionUnitPrice, // price per one option
         optionSizeWei, // volume a.k.a. user's selected option size
       ).send({
-        from: component.getActiveAccount
+        from: component.getActiveAccount,
+        maxPriorityFeePerGas: null,
+        maxFeePerGas: null
       }).on('transactionHash', function(hash){
         console.log("tx hash: " + hash);
         component.$toast.info("The transaction has been submitted. Please wait for it to be confirmed.");
@@ -400,17 +405,6 @@ export default {
 
 .fa-chevron-down, .fa-chevron-up {
   margin-left: 10px;
-}
-
-.max-sell {
-  color: #5AFFB0;
-  text-decoration: underline;
-}
-
-.max-sell:hover {
-  color: #5AFFB0;
-  text-decoration: none;
-  cursor: pointer;
 }
 
 .sell-form {
