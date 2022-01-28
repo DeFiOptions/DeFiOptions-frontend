@@ -89,7 +89,7 @@
       <div class="p-2" v-if="getCoveredType">
         <button @click="approveAllowanceCovered" class="btn btn-success form-control" :disabled="(isOptionSizeNotValid.status || isEnoughAllowance) || (writingStepTx > 0) || getMaxOptionSize === 0">
           <span v-if="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-          Approve Stablecoin
+          Approve {{underlyingSymbol}}
         </button>
       </div>
       <!-- <div></div> -->
