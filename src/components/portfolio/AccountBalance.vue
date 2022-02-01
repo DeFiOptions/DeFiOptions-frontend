@@ -122,6 +122,29 @@
         </div>
     
       </div>
+
+      <br>
+
+      <h3>
+        Force Reset Cached Collateral Requriements
+        <i 
+          class="fas fa-info-circle" 
+          data-bs-toggle="tooltip" 
+          data-bs-placement="bottom" 
+          title="Occasionally, collateral requirmements cached within the smart contracts will become out of date with the volitility of the underlying when writing, so if you run into issues with writing you may try to force reset the contracts collateral requirements to match the live calculation."
+        ></i>
+      </h3>
+
+      <div class="section-small d-flex flex-wrap">
+        <div class="form-button-mobile">
+          <button @click="setCollateral" class="btn btn-success btn-user btn-block text-uppercase form-control">
+            <span v-if="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+            Reset
+          </button>
+          <div></div>
+        </div>
+        
+      </div>
     </div>
   </div>
 </template>
@@ -363,7 +386,43 @@ export default {
         component.$toast.error("There has been an error. Please contact the DeFi Options support.");
       });
  
-    }
+    },
+    async setCollateral() {
+      let component = this;
+      component.loading = true;
+
+      // set transaction
+      await component.getOptionsExchangeContract.methods.setCollateral(
+        component.getActiveAccount
+      ).send({
+        from: component.getActiveAccount,
+        maxPriorityFeePerGas: null,
+        maxFeePerGas: null
+      }).on('transactionHash', function(hash){
+        console.log("tx hash: " + hash);
+        component.$toast.info("The transaction has been submitted. Please wait for it to be confirmed.");
+
+      }).on('receipt', function(receipt){
+        console.log(receipt);
+
+        if (receipt.status) {
+          component.$toast.success("You have reset your collateral requirements on-chain.");
+
+          // hide the option manually, because Polygon's nodes have a lag
+          component.hide = true;
+          
+        } else {
+          component.$toast.error("The transaction has failed. Please contact the DeFi Options support.");
+        }
+        
+        component.loading = false;
+
+      }).on('error', function(error){
+        console.log(error);
+        component.loading = false;
+        component.$toast.error("There has been an error. Please contact the DeFi Options support.");
+      });
+    },
   }
 }
 </script>
