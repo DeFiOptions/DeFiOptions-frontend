@@ -271,8 +271,8 @@
 
         
         <li class="nav-item col mt-4">
-          <a href="irc://web.libera.chat/DeFiOptionsDAO" target="_blank" class="btn btn-social">
-            <i class="fab fa-irc"></i>
+          <a href="https://web.libera.chat/#DeFiOptionsDAO" target="_blank" class="btn btn-social">
+            <i class="fab fa-hashtag"></i>
           </a>
         </li>
 
