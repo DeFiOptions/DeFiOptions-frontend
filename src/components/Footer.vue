@@ -2,6 +2,7 @@
   <div class="text-center text-white mt-5 mb-5">
     <p>
       <a target="_blank" href="https://docs.defioptions.org/">Docs</a> |
+      <a href="irc://web.libera.chat/DeFiOptionsDAO" target="_blank">IRC</a> |
       <a target="_blank" href="https://discord.gg/WCeKgHNz3z">Discord</a> |
       <a target="_blank" href="https://forum.defioptions.org/">Forum</a> |
       <a target="_blank" href="https://github.com/DeFiOptions">Github</a> |
