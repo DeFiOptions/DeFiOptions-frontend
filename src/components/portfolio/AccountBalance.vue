@@ -313,10 +313,10 @@ export default {
           // refresh values
           if (component.selectedToken === "DAI") {
             // needs to be updated this way because Polygon RPC nodes are slow with updating state
-            component.$store.state.dai.lpAllowance = allowanceValue;
+            component.$store.state.dai.exchangeAllowance = allowanceValue;
           } else if (component.selectedToken === "USDC") {
             // needs to be updated this way because Polygon RPC nodes are slow with updating state
-            component.$store.state.usdc.lpAllowance = allowanceValue;
+            component.$store.state.usdc.exchangeAllowance = allowanceValue;
           }
           
           
@@ -367,10 +367,10 @@ export default {
           // refresh values
           if (component.selectedToken === "DAI") {
             component.$store.dispatch("dai/fetchUserBalance");
-            component.$store.dispatch("dai/fetchLpAllowance");
+            component.$store.dispatch("dai/fetchExchangeAllowance");
           } else if (component.selectedToken === "USDC") {
             component.$store.dispatch("usdc/fetchUserBalance");
-            component.$store.dispatch("usdc/fetchLpAllowance");
+            component.$store.dispatch("usdc/fetchExchangeAllowance");
           }
           
           component.depositValue = null;
