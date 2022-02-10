@@ -277,7 +277,7 @@ export default {
 
       // get option contract
       let optionContract = new this.getWeb3.eth.Contract(OptionTokenContractJson.abi, this.option.address);
-      const optionBalanceWei = await optionContract.methods.balanceOf(this.getActiveAccount).call(); 
+      const optionBalanceWei = await optionContract.methods.balanceOf(component.getActiveAccount).call(); 
 
       // burn option transaction
       await optionContract.methods.burn(
