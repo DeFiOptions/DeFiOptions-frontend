@@ -99,7 +99,6 @@ export default {
       }
       return null;
     },
-
     isGetBuy() {
       return this.side == "BUY"
     },

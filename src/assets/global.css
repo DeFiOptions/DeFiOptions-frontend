@@ -131,6 +131,10 @@ h3 {
   background: #105685;
 }
 
+.card-blueblue {
+  background: #1E90FF;
+}
+
 .form-check-input[role=switch]:checked {
   background-color: #5AFFB0;
   border-color: #5AFFB0;

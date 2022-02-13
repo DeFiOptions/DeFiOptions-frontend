@@ -65,7 +65,7 @@
             <li>
               <span class="dropdown-item text-uppercase" @click="setBuyWith('DAI')">DAI</span>
               <span class="dropdown-item text-uppercase" @click="setBuyWith('USDC')">USDC</span>
-              <span class="dropdown-item text-uppercase" @click="setBuyWith('Exchange Balance')">Exchange Balance</span>
+              <span class="dropdown-item text-uppercase" @click="setBuyWith('Exchange Surplus Balance')">Exchange Surplus Balance</span>
             </li>
           </ul>
         </div>
@@ -89,7 +89,7 @@
       <div class="p-2" v-if="getCoveredType">
         <button @click="approveAllowanceCovered" class="btn btn-success form-control" :disabled="(isOptionSizeNotValid.status || isEnoughAllowance) || (writingStepTx > 0) || getMaxOptionSize === 0">
           <span v-if="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-          Approve Stablecoin
+          Approve {{underlyingSymbol}}
         </button>
       </div>
       <!-- <div></div> -->
@@ -191,7 +191,7 @@ export default {
     ...mapGetters("accounts", ["getActiveAccount", "getChainId", "getWeb3"]),
     ...mapGetters("liquidityPool", ["getLiquidityPoolContract", "getLiquidityPoolAddress"]),
     ...mapGetters("dai", ["getUserDaiBalance", "getDaiContract", "getLpDaiAllowance"]),
-    ...mapGetters("optionsExchange", ["getOptionsExchangeAddress", "getOptionsExchangeContract", "getExchangeUserBalance", "getUserExchangeBalanceAllowance", "getUserOptions"]),
+    ...mapGetters("optionsExchange", ["getOptionsExchangeAddress", "getOptionsExchangeContract", "getExchangeUserBalance", "getUserCollateralSurplus", "getUserExchangeBalanceAllowance", "getUserOptions"]),
     ...mapGetters("usdc", ["getUserUsdcBalance", "getUsdcContract", "getLpUsdcAllowance"]),
 
     allowanceNeeded() {
@@ -204,9 +204,9 @@ export default {
       } else if (this.buyWith === "USDT") { // Tether
         return true; // TODO
 
-      } else if (this.buyWith === "Exchange Balance") {
+      } else if (this.buyWith === "Exchange Surplus Balance") {
         return this.getUserExchangeBalanceAllowance < this.getTotal;
-      } 
+      }
 
       return false;
     },
@@ -260,8 +260,8 @@ export default {
         return this.getUserDaiBalance;
       } else if (this.buyWith === "USDC") {
         return this.getUserUsdcBalance;
-      } else if (this.buyWith === "Exchange Balance") {
-        return this.getExchangeUserBalance;
+      } else if (this.buyWith === "Exchange Surplus Balance") {
+        return this.getUserCollateralSurplus;
       }
 
       return null;
@@ -299,8 +299,8 @@ export default {
 
       // total bigger than balance
       if ((this.getTotal > Number(this.getUserStablecoinBalance)) && (this.side == "BUY")) {
-        if (this.buyWith === "Exchange Balance") {
-          return {status: true, message: "Your exchange balance is too low."};
+        if (this.buyWith === "Exchange Surplus Balance") {
+          return {status: true, message: "Your exchange balance is too low. Some aleady allocated for colateral."};
         }
 
         return {status: true, message: "Your " + this.buyWith + " balance is too low."};
@@ -318,7 +318,7 @@ export default {
     },
 
     isBuyWithExchangeBalance() {
-      return this.buyWith === "Exchange Balance";
+      return this.buyWith === "Exchange Surplus Balance";
     },
 
     getSellType() {
