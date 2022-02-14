@@ -4,6 +4,7 @@
     <AccountBalance 
       :exchangeBalance="Number(getExchangeUserBalance)" 
       :creditTokens="Number(getCreditTokenUserBalance).toFixed(2)" 
+      :collateralSurplus="Number(getUserCollateralSurplus).toFixed(2)" 
     />
 
     <MyOptions :getUserOptions="getUserOptions" class="mb-5" />
@@ -28,7 +29,7 @@ export default {
   },
   computed: {
     ...mapGetters("accounts", ["getActiveAccount", "getChainName", "getWeb3", "isUserConnected"]),
-    ...mapGetters("optionsExchange", ["getExchangeUserBalance", "getUserOptions"]),
+    ...mapGetters("optionsExchange", ["getExchangeUserBalance", "getUserOptions", "getUserCollateralSurplus"]),
     ...mapGetters("creditToken", ["getCreditTokenUserBalance"]),
   },
   created() {
@@ -46,6 +47,7 @@ export default {
     this.$store.dispatch("dai/fetchUserBalance");
     this.$store.dispatch("usdc/fetchUserBalance");
     this.$store.dispatch("optionsExchange/fetchExchangeUserBalance");
+    this.$store.dispatch("optionsExchange/fetchExchangeCollateralSurplus");
     this.$store.dispatch("optionsExchange/fetchUserOptions");
     this.$store.dispatch("creditToken/fetchUserBalance");
     this.$store.dispatch("accounts/fetchActiveBalance");

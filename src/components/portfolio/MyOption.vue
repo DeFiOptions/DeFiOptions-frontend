@@ -22,6 +22,11 @@
         <i class="fas fa-chevron-down"></i>
       </button>
 
+      <button @click="burnOption" v-if="!isOptionExpired(option) && !showSellForm && (option.holding > 0) && (option.holding == option.written)" class="btn btn-success">
+        Burn
+        <i class="fas fa-chevron-down"></i>
+      </button>
+
       <button @click="toggleSellForm" v-if="!isOptionExpired(option) && showSellForm" class="btn btn-outline-success">
         Close
         <i class="fas fa-chevron-up"></i>
@@ -101,7 +106,7 @@
 <script>
 import { mapGetters } from "vuex";
 import OptionDataItem from '../OptionDataItem.vue';
-import OptionTokenContractJson from "../../contracts/RedeemableToken.json";
+import OptionTokenContractJson from "../../contracts/OptionToken.json";
 import ChainlinkContractJson from "../../contracts/ChainlinkFeed.json";
 import addresses from "../../contracts/addresses.json";
 
@@ -264,6 +269,51 @@ export default {
 
     isOptionExpired(option) {
       return Math.floor(Date.now()/1000) > Number(option.timestamp);
+    },
+
+    async burnOption() {
+      let component = this;
+      component.loading = true;
+
+      // get option contract
+      let optionContract = new this.getWeb3.eth.Contract(OptionTokenContractJson.abi, this.option.address);
+      const optionBalanceWei = await optionContract.methods.balanceOf(component.getActiveAccount).call(); 
+
+      // burn option transaction
+      await optionContract.methods.burn(
+        optionBalanceWei
+      ).send({
+        from: component.getActiveAccount,
+        maxPriorityFeePerGas: null,
+        maxFeePerGas: null
+      }).on('transactionHash', function(hash){
+        console.log("tx hash: " + hash);
+        component.$toast.info("The transaction has been submitted. Please wait for it to be confirmed.");
+
+      }).on('receipt', function(receipt){
+        console.log(receipt);
+
+        if (receipt.status) {
+          component.$toast.success("You have successfully burned your written option. It may take 10 seconds or more for values to update.");
+
+          // hide the option manually, because Polygon's nodes have a lag
+          component.hide = true;
+
+          // refresh values
+          component.$store.dispatch("optionsExchange/fetchExchangeUserBalance");
+          component.$store.dispatch("optionsExchange/fetchUserOptions");
+          
+        } else {
+          component.$toast.error("The transaction has failed. Please contact the DeFi Options support.");
+        }
+        
+        component.loading = false;
+
+      }).on('error', function(error){
+        console.log(error);
+        component.loading = false;
+        component.$toast.error("There has been an error. Please contact the DeFi Options support.");
+      });
     },
 
     async redeemOption() {

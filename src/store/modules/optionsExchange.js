@@ -7,6 +7,7 @@ const state = {
   contract: null,
   poolBalance: null,
   userBalance: null,
+  userSurplusBalance: null,
   userExchangeBalanceAllowance: null,
   userOptions: null,
   underlyingPrice: null
@@ -15,6 +16,9 @@ const state = {
 const getters = {
   getExchangeUserBalance(state) {
     return state.userBalance;
+  },
+  getUserCollateralSurplus(state) {
+    return state.userSurplusBalance;
   },
   getLiquidityPoolBalance(state) {
     return state.poolBalance;
@@ -81,6 +85,19 @@ const actions = {
     let balance = web3.utils.fromWei(balanceWei, "ether");
 
     commit("setUserExchangeBalance", balance);
+  },
+  async fetchExchangeCollateralSurplus({ commit, dispatch, state, rootState }) {
+    if (!state.contract) {
+      dispatch("fetchContract");
+    }
+
+    let activeAccount = rootState.accounts.activeAccount;
+    let balanceWei = await state.contract.methods.calcSurplus(activeAccount).call();
+
+    let web3 = rootState.accounts.web3;
+    let balance = web3.utils.fromWei(balanceWei, "ether");
+
+    commit("setUserExchangeCollateralSurplus", balance);
   },
   async fetchLiquidityPoolBalance({ commit, dispatch, state, rootState }) {
     if (!state.contract) {
@@ -209,6 +226,9 @@ const mutations = {
   },
   setUserExchangeBalance(state, balance) {
     state.userBalance = balance;
+  },
+  setUserExchangeCollateralSurplus(state, balance) {
+    state.userSurplusBalance = balance;
   },
   setUnderlyingPrice(state, underlyingPrice) {
     state.underlyingPrice = underlyingPrice;
