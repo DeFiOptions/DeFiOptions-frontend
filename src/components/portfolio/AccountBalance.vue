@@ -18,7 +18,7 @@
       />
 
       <Card 
-        cardClass="card-blueblue" 
+        cardClass="card-blue" 
         title="Collateral Surplus" 
         :text="'$'+collateralSurplus" class="mb-3" 
         info="How much your exchange balance is exceeding collateral requirements for all options positons. If this reaches $0 and you are naked short any positions, you are at risk of being liquidated."
@@ -131,7 +131,7 @@
           class="fas fa-info-circle" 
           data-bs-toggle="tooltip" 
           data-bs-placement="bottom" 
-          title="Occasionally, collateral requirmements cached within the smart contracts will become out of date with the volitility of the underlying when writing, so if you run into issues with writing you may try to force reset the contracts collateral requirements to match the live calculation."
+          title="Occasionally, collateral requirements cached within the smart contracts will become out of date with the volatility of the underlying when writing, so if you run into issues with writing you may try to force reset the contracts collateral requirements to match the live calculation."
         ></i>
       </h3>
 
