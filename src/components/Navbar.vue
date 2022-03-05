@@ -56,7 +56,7 @@
                 </a>
               </li>
               <li><a class="dropdown-item" target="_blank" href="https://web.libera.chat/#DeFiOptionsDAO">
-                <i class="fab fa-hashtag"></i> IRC
+                <i class="fas fa-hashtag"></i> IRC
               </a></li>
               <li><a class="dropdown-item" target="_blank" href="https://discord.gg/WCeKgHNz3z">
                 <i class="fab fa-discord"></i> Discord

@@ -33,10 +33,11 @@
 
       <div class="d-flex flex-wrap flex-row justify-content-center text-uppercase hero-buttons" v-if="!isUserConnected">
         <a href="irc://web.libera.chat/DeFiOptionsDAO" target="_blank" class="btn btn-outline-success m-1">Join IRC</a>
-        <a class="btn btn-outline-success m-1" target="_blank" href="https://discord.gg/WCeKgHNz3z">Join Discord</a>
-
+        
         <button class="btn btn-success m-1" v-if="!isUserConnected && isCompliant" @click="connectWeb3Modal">Connect wallet</button>
         <button class="btn btn-success m-1" v-if="!isUserConnected && !isCompliant" data-bs-toggle="modal" data-bs-target="#complianceModal">Connect wallet</button>
+        
+        <a class="btn btn-outline-success m-1" target="_blank" href="https://discord.gg/WCeKgHNz3z">Join Discord</a>
       </div> 
 
       <div class="row mt-5">
@@ -272,7 +273,7 @@
         
         <li class="nav-item col mt-4">
           <a href="https://web.libera.chat/#DeFiOptionsDAO" target="_blank" class="btn btn-social">
-            <i class="fab fa-hashtag"></i>
+            <i class="fas fa-hashtag"></i>
           </a>
         </li>
 
